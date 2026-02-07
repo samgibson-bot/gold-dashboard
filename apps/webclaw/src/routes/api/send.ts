@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto'
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../server/gateway'
+import { sanitizeError } from '../../server/errors'
+
+const MAX_MESSAGE_BYTES = 100 * 1024
 
 type SessionsResolveResponse = {
   ok?: boolean
@@ -30,6 +33,13 @@ export const Route = createFileRoute('/api/send')({
             return json(
               { ok: false, error: 'message required' },
               { status: 400 },
+            )
+          }
+
+          if (new TextEncoder().encode(message).byteLength > MAX_MESSAGE_BYTES) {
+            return json(
+              { ok: false, error: 'message too large' },
+              { status: 413 },
             )
           }
 
@@ -74,10 +84,7 @@ export const Route = createFileRoute('/api/send')({
           return json({ ok: true, ...res, sessionKey })
         } catch (err) {
           return json(
-            {
-              ok: false,
-              error: err instanceof Error ? err.message : String(err),
-            },
+            { ok: false, error: sanitizeError(err) },
             { status: 500 },
           )
         }

@@ -81,9 +81,11 @@ const INITIAL_COMPONENTS: Partial<Components> = {
     return <li className="leading-relaxed">{children}</li>
   },
   a: function AComponent({ children, href }) {
+    const safeHref =
+      href && /^javascript:/i.test(href.trim()) ? undefined : href
     return (
       <a
-        href={href}
+        href={safeHref}
         className="text-primary-950 underline decoration-primary-300 underline-offset-4 transition-colors hover:text-primary-950 hover:decoration-primary-500"
         target="_blank"
         rel="noopener noreferrer"

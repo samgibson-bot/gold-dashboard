@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayConnectCheck } from '../../server/gateway'
+import { sanitizeError } from '../../server/errors'
 
 export const Route = createFileRoute('/api/ping')({
   server: {
@@ -11,10 +12,7 @@ export const Route = createFileRoute('/api/ping')({
           return json({ ok: true })
         } catch (err) {
           return json(
-            {
-              ok: false,
-              error: err instanceof Error ? err.message : String(err),
-            },
+            { ok: false, error: sanitizeError(err) },
             { status: 503 },
           )
         }

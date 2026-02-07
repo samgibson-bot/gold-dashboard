@@ -29,16 +29,23 @@ type ConnectParams = {
 }
 
 type GatewayWaiter = {
-  waitForRes: (id: string) => Promise<unknown>
+  waitForRes: (id: string, timeoutMs?: number) => Promise<unknown>
   handleMessage: (evt: MessageEvent) => void
+  cleanup: () => void
 }
+
+const DEFAULT_TIMEOUT_MS = 30_000
+
+let cachedWs: WebSocket | null = null
+let cachedWaiter: GatewayWaiter | null = null
+let cachedConnected = false
+let connectionPromise: Promise<void> | null = null
 
 function getGatewayConfig() {
   const url = process.env.CLAWDBOT_GATEWAY_URL?.trim() || 'ws://127.0.0.1:18789'
   const token = process.env.CLAWDBOT_GATEWAY_TOKEN?.trim() || ''
   const password = process.env.CLAWDBOT_GATEWAY_PASSWORD?.trim() || ''
 
-  // For a minimal dashboard we require shared auth, otherwise we'd need a device identity signature.
   if (!token && !password) {
     throw new Error(
       'Missing gateway auth. Set CLAWDBOT_GATEWAY_TOKEN (recommended) or CLAWDBOT_GATEWAY_PASSWORD in the server environment.',
@@ -48,13 +55,21 @@ function getGatewayConfig() {
   return { url, token, password }
 }
 
+function getGatewayScopes(): Array<string> {
+  const envScopes = process.env.CLAWDBOT_GATEWAY_SCOPES?.trim()
+  if (envScopes) {
+    return envScopes.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  return ['operator.admin']
+}
+
 function buildConnectParams(token: string, password: string): ConnectParams {
   return {
     minProtocol: 3,
     maxProtocol: 3,
     client: {
       id: 'gateway-client',
-      displayName: 'webclaw',
+      displayName: 'gold-dashboard',
       version: 'dev',
       platform: process.platform,
       mode: 'ui',
@@ -65,7 +80,7 @@ function buildConnectParams(token: string, password: string): ConnectParams {
       password: password || undefined,
     },
     role: 'operator',
-    scopes: ['operator.admin'],
+    scopes: getGatewayScopes(),
   }
 }
 
@@ -75,12 +90,18 @@ function createGatewayWaiter(): GatewayWaiter {
     {
       resolve: (v: unknown) => void
       reject: (e: Error) => void
+      timer: ReturnType<typeof setTimeout>
     }
   >()
 
-  function waitForRes(id: string) {
+  function waitForRes(id: string, timeoutMs = DEFAULT_TIMEOUT_MS) {
     return new Promise<unknown>((resolve, reject) => {
-      waiters.set(id, { resolve, reject })
+      const timer = setTimeout(() => {
+        waiters.delete(id)
+        reject(new Error(`Gateway request timed out after ${timeoutMs}ms`))
+      }, timeoutMs)
+
+      waiters.set(id, { resolve, reject, timer })
     })
   }
 
@@ -91,6 +112,7 @@ function createGatewayWaiter(): GatewayWaiter {
       if (parsed.type !== 'res') return
       const w = waiters.get(parsed.id)
       if (!w) return
+      clearTimeout(w.timer)
       waiters.delete(parsed.id)
       if (parsed.ok) w.resolve(parsed.payload)
       else w.reject(new Error(parsed.error?.message ?? 'gateway error'))
@@ -99,7 +121,15 @@ function createGatewayWaiter(): GatewayWaiter {
     }
   }
 
-  return { waitForRes, handleMessage }
+  function cleanup() {
+    for (const [id, w] of waiters) {
+      clearTimeout(w.timer)
+      w.reject(new Error('Gateway connection closed'))
+    }
+    waiters.clear()
+  }
+
+  return { waitForRes, handleMessage, cleanup }
 }
 
 async function wsOpen(ws: WebSocket): Promise<void> {
@@ -122,90 +152,92 @@ async function wsOpen(ws: WebSocket): Promise<void> {
   })
 }
 
-async function wsClose(ws: WebSocket): Promise<void> {
-  if (ws.readyState === ws.CLOSED || ws.readyState === ws.CLOSING) return
-  await new Promise<void>((resolve) => {
-    ws.addEventListener('close', () => resolve(), { once: true })
-    ws.close()
-  })
+function resetCachedConnection() {
+  if (cachedWaiter) {
+    cachedWaiter.cleanup()
+    cachedWaiter = null
+  }
+  if (cachedWs) {
+    try { cachedWs.close() } catch { /* ignore */ }
+    cachedWs = null
+  }
+  cachedConnected = false
+  connectionPromise = null
+}
+
+async function getConnection(): Promise<{ ws: WebSocket; waiter: GatewayWaiter }> {
+  if (cachedWs && cachedWs.readyState === WebSocket.OPEN && cachedConnected && cachedWaiter) {
+    return { ws: cachedWs, waiter: cachedWaiter }
+  }
+
+  if (connectionPromise) {
+    await connectionPromise
+    if (cachedWs && cachedWs.readyState === WebSocket.OPEN && cachedConnected && cachedWaiter) {
+      return { ws: cachedWs, waiter: cachedWaiter }
+    }
+  }
+
+  resetCachedConnection()
+
+  const { url, token, password } = getGatewayConfig()
+
+  connectionPromise = (async () => {
+    const ws = new WebSocket(url)
+    const waiter = createGatewayWaiter()
+
+    ws.addEventListener('message', waiter.handleMessage)
+    ws.addEventListener('close', () => {
+      resetCachedConnection()
+    })
+    ws.addEventListener('error', () => {
+      resetCachedConnection()
+    })
+
+    await wsOpen(ws)
+
+    const connectId = randomUUID()
+    const connectParams = buildConnectParams(token, password)
+    const connectReq: GatewayFrame = {
+      type: 'req',
+      id: connectId,
+      method: 'connect',
+      params: connectParams,
+    }
+
+    ws.send(JSON.stringify(connectReq))
+    await waiter.waitForRes(connectId)
+
+    cachedWs = ws
+    cachedWaiter = waiter
+    cachedConnected = true
+  })()
+
+  await connectionPromise
+  connectionPromise = null
+
+  return { ws: cachedWs!, waiter: cachedWaiter! }
 }
 
 export async function gatewayRpc<TPayload = unknown>(
   method: string,
   params?: unknown,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
 ): Promise<TPayload> {
-  const { url, token, password } = getGatewayConfig()
+  const { ws, waiter } = await getConnection()
 
-  const ws = new WebSocket(url)
-  try {
-    await wsOpen(ws)
-
-    // 1) connect handshake (must be first request)
-    const connectId = randomUUID()
-    const connectParams = buildConnectParams(token, password)
-
-    const connectReq: GatewayFrame = {
-      type: 'req',
-      id: connectId,
-      method: 'connect',
-      params: connectParams,
-    }
-
-    const requestId = randomUUID()
-    const req: GatewayFrame = {
-      type: 'req',
-      id: requestId,
-      method,
-      params,
-    }
-
-    const waiter = createGatewayWaiter()
-
-    ws.addEventListener('message', waiter.handleMessage)
-
-    ws.send(JSON.stringify(connectReq))
-    await waiter.waitForRes(connectId)
-
-    ws.send(JSON.stringify(req))
-    const payload = await waiter.waitForRes(requestId)
-
-    ws.removeEventListener('message', waiter.handleMessage)
-    return payload as TPayload
-  } finally {
-    try {
-      await wsClose(ws)
-    } catch {
-      // ignore
-    }
+  const requestId = randomUUID()
+  const req: GatewayFrame = {
+    type: 'req',
+    id: requestId,
+    method,
+    params,
   }
+
+  ws.send(JSON.stringify(req))
+  const payload = await waiter.waitForRes(requestId, timeoutMs)
+  return payload as TPayload
 }
 
 export async function gatewayConnectCheck(): Promise<void> {
-  const { url, token, password } = getGatewayConfig()
-
-  const ws = new WebSocket(url)
-  try {
-    await wsOpen(ws)
-
-    const connectId = randomUUID()
-    const connectParams = buildConnectParams(token, password)
-    const connectReq: GatewayFrame = {
-      type: 'req',
-      id: connectId,
-      method: 'connect',
-      params: connectParams,
-    }
-
-    const waiter = createGatewayWaiter()
-    ws.addEventListener('message', waiter.handleMessage)
-    ws.send(JSON.stringify(connectReq))
-    await waiter.waitForRes(connectId)
-    ws.removeEventListener('message', waiter.handleMessage)
-  } finally {
-    try {
-      await wsClose(ws)
-    } catch {
-      // ignore
-    }
-  }
+  await getConnection()
 }

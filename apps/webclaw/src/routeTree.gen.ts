@@ -11,13 +11,27 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as ConnectRouteImport } from './routes/connect'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatSessionKeyRouteImport } from './routes/chat/$sessionKey'
 import { Route as ApiSessionsRouteImport } from './routes/api/sessions'
 import { Route as ApiSendRouteImport } from './routes/api/send'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
-import { Route as ApiPathsRouteImport } from './routes/api/paths'
 import { Route as ApiHistoryRouteImport } from './routes/api/history'
+import { Route as AdminTokensRouteImport } from './routes/admin/tokens'
+import { Route as AdminStatusRouteImport } from './routes/admin/status'
+import { Route as AdminMissionsRouteImport } from './routes/admin/missions'
+import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminCronRouteImport } from './routes/admin/cron'
+import { Route as AdminConfigRouteImport } from './routes/admin/config'
+import { Route as AdminBrowserRouteImport } from './routes/admin/browser'
+import { Route as ApiAdminTokensRouteImport } from './routes/api/admin/tokens'
+import { Route as ApiAdminStatusRouteImport } from './routes/api/admin/status'
+import { Route as ApiAdminMissionsRouteImport } from './routes/api/admin/missions'
+import { Route as ApiAdminLogsRouteImport } from './routes/api/admin/logs'
+import { Route as ApiAdminCronRouteImport } from './routes/api/admin/cron'
+import { Route as ApiAdminConfigRouteImport } from './routes/api/admin/config'
+import { Route as ApiAdminBrowserRouteImport } from './routes/api/admin/browser'
 
 const NewRoute = NewRouteImport.update({
   id: '/new',
@@ -27,6 +41,11 @@ const NewRoute = NewRouteImport.update({
 const ConnectRoute = ConnectRouteImport.update({
   id: '/connect',
   path: '/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -54,97 +73,253 @@ const ApiPingRoute = ApiPingRouteImport.update({
   path: '/api/ping',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPathsRoute = ApiPathsRouteImport.update({
-  id: '/api/paths',
-  path: '/api/paths',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiHistoryRoute = ApiHistoryRouteImport.update({
   id: '/api/history',
   path: '/api/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTokensRoute = AdminTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStatusRoute = AdminStatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMissionsRoute = AdminMissionsRouteImport.update({
+  id: '/missions',
+  path: '/missions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCronRoute = AdminCronRouteImport.update({
+  id: '/cron',
+  path: '/cron',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConfigRoute = AdminConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBrowserRoute = AdminBrowserRouteImport.update({
+  id: '/browser',
+  path: '/browser',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ApiAdminTokensRoute = ApiAdminTokensRouteImport.update({
+  id: '/api/admin/tokens',
+  path: '/api/admin/tokens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminStatusRoute = ApiAdminStatusRouteImport.update({
+  id: '/api/admin/status',
+  path: '/api/admin/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminMissionsRoute = ApiAdminMissionsRouteImport.update({
+  id: '/api/admin/missions',
+  path: '/api/admin/missions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminLogsRoute = ApiAdminLogsRouteImport.update({
+  id: '/api/admin/logs',
+  path: '/api/admin/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminCronRoute = ApiAdminCronRouteImport.update({
+  id: '/api/admin/cron',
+  path: '/api/admin/cron',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminConfigRoute = ApiAdminConfigRouteImport.update({
+  id: '/api/admin/config',
+  path: '/api/admin/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminBrowserRoute = ApiAdminBrowserRouteImport.update({
+  id: '/api/admin/browser',
+  path: '/api/admin/browser',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/connect': typeof ConnectRoute
   '/new': typeof NewRoute
+  '/admin/browser': typeof AdminBrowserRoute
+  '/admin/config': typeof AdminConfigRoute
+  '/admin/cron': typeof AdminCronRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/missions': typeof AdminMissionsRoute
+  '/admin/status': typeof AdminStatusRoute
+  '/admin/tokens': typeof AdminTokensRoute
   '/api/history': typeof ApiHistoryRoute
-  '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
+  '/api/admin/browser': typeof ApiAdminBrowserRoute
+  '/api/admin/config': typeof ApiAdminConfigRoute
+  '/api/admin/cron': typeof ApiAdminCronRoute
+  '/api/admin/logs': typeof ApiAdminLogsRoute
+  '/api/admin/missions': typeof ApiAdminMissionsRoute
+  '/api/admin/status': typeof ApiAdminStatusRoute
+  '/api/admin/tokens': typeof ApiAdminTokensRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/connect': typeof ConnectRoute
   '/new': typeof NewRoute
+  '/admin/browser': typeof AdminBrowserRoute
+  '/admin/config': typeof AdminConfigRoute
+  '/admin/cron': typeof AdminCronRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/missions': typeof AdminMissionsRoute
+  '/admin/status': typeof AdminStatusRoute
+  '/admin/tokens': typeof AdminTokensRoute
   '/api/history': typeof ApiHistoryRoute
-  '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
+  '/api/admin/browser': typeof ApiAdminBrowserRoute
+  '/api/admin/config': typeof ApiAdminConfigRoute
+  '/api/admin/cron': typeof ApiAdminCronRoute
+  '/api/admin/logs': typeof ApiAdminLogsRoute
+  '/api/admin/missions': typeof ApiAdminMissionsRoute
+  '/api/admin/status': typeof ApiAdminStatusRoute
+  '/api/admin/tokens': typeof ApiAdminTokensRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/connect': typeof ConnectRoute
   '/new': typeof NewRoute
+  '/admin/browser': typeof AdminBrowserRoute
+  '/admin/config': typeof AdminConfigRoute
+  '/admin/cron': typeof AdminCronRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/missions': typeof AdminMissionsRoute
+  '/admin/status': typeof AdminStatusRoute
+  '/admin/tokens': typeof AdminTokensRoute
   '/api/history': typeof ApiHistoryRoute
-  '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
+  '/api/admin/browser': typeof ApiAdminBrowserRoute
+  '/api/admin/config': typeof ApiAdminConfigRoute
+  '/api/admin/cron': typeof ApiAdminCronRoute
+  '/api/admin/logs': typeof ApiAdminLogsRoute
+  '/api/admin/missions': typeof ApiAdminMissionsRoute
+  '/api/admin/status': typeof ApiAdminStatusRoute
+  '/api/admin/tokens': typeof ApiAdminTokensRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/connect'
     | '/new'
+    | '/admin/browser'
+    | '/admin/config'
+    | '/admin/cron'
+    | '/admin/logs'
+    | '/admin/missions'
+    | '/admin/status'
+    | '/admin/tokens'
     | '/api/history'
-    | '/api/paths'
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
     | '/chat/$sessionKey'
+    | '/api/admin/browser'
+    | '/api/admin/config'
+    | '/api/admin/cron'
+    | '/api/admin/logs'
+    | '/api/admin/missions'
+    | '/api/admin/status'
+    | '/api/admin/tokens'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/connect'
     | '/new'
+    | '/admin/browser'
+    | '/admin/config'
+    | '/admin/cron'
+    | '/admin/logs'
+    | '/admin/missions'
+    | '/admin/status'
+    | '/admin/tokens'
     | '/api/history'
-    | '/api/paths'
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
     | '/chat/$sessionKey'
+    | '/api/admin/browser'
+    | '/api/admin/config'
+    | '/api/admin/cron'
+    | '/api/admin/logs'
+    | '/api/admin/missions'
+    | '/api/admin/status'
+    | '/api/admin/tokens'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/connect'
     | '/new'
+    | '/admin/browser'
+    | '/admin/config'
+    | '/admin/cron'
+    | '/admin/logs'
+    | '/admin/missions'
+    | '/admin/status'
+    | '/admin/tokens'
     | '/api/history'
-    | '/api/paths'
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
     | '/chat/$sessionKey'
+    | '/api/admin/browser'
+    | '/api/admin/config'
+    | '/api/admin/cron'
+    | '/api/admin/logs'
+    | '/api/admin/missions'
+    | '/api/admin/status'
+    | '/api/admin/tokens'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ConnectRoute: typeof ConnectRoute
   NewRoute: typeof NewRoute
   ApiHistoryRoute: typeof ApiHistoryRoute
-  ApiPathsRoute: typeof ApiPathsRoute
   ApiPingRoute: typeof ApiPingRoute
   ApiSendRoute: typeof ApiSendRoute
   ApiSessionsRoute: typeof ApiSessionsRoute
   ChatSessionKeyRoute: typeof ChatSessionKeyRoute
+  ApiAdminBrowserRoute: typeof ApiAdminBrowserRoute
+  ApiAdminConfigRoute: typeof ApiAdminConfigRoute
+  ApiAdminCronRoute: typeof ApiAdminCronRoute
+  ApiAdminLogsRoute: typeof ApiAdminLogsRoute
+  ApiAdminMissionsRoute: typeof ApiAdminMissionsRoute
+  ApiAdminStatusRoute: typeof ApiAdminStatusRoute
+  ApiAdminTokensRoute: typeof ApiAdminTokensRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -161,6 +336,13 @@ declare module '@tanstack/react-router' {
       path: '/connect'
       fullPath: '/connect'
       preLoaderRoute: typeof ConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -198,13 +380,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/paths': {
-      id: '/api/paths'
-      path: '/api/paths'
-      fullPath: '/api/paths'
-      preLoaderRoute: typeof ApiPathsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/history': {
       id: '/api/history'
       path: '/api/history'
@@ -212,19 +387,146 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/tokens': {
+      id: '/admin/tokens'
+      path: '/tokens'
+      fullPath: '/admin/tokens'
+      preLoaderRoute: typeof AdminTokensRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/status': {
+      id: '/admin/status'
+      path: '/status'
+      fullPath: '/admin/status'
+      preLoaderRoute: typeof AdminStatusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/missions': {
+      id: '/admin/missions'
+      path: '/missions'
+      fullPath: '/admin/missions'
+      preLoaderRoute: typeof AdminMissionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/cron': {
+      id: '/admin/cron'
+      path: '/cron'
+      fullPath: '/admin/cron'
+      preLoaderRoute: typeof AdminCronRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/config': {
+      id: '/admin/config'
+      path: '/config'
+      fullPath: '/admin/config'
+      preLoaderRoute: typeof AdminConfigRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/browser': {
+      id: '/admin/browser'
+      path: '/browser'
+      fullPath: '/admin/browser'
+      preLoaderRoute: typeof AdminBrowserRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/api/admin/tokens': {
+      id: '/api/admin/tokens'
+      path: '/api/admin/tokens'
+      fullPath: '/api/admin/tokens'
+      preLoaderRoute: typeof ApiAdminTokensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/status': {
+      id: '/api/admin/status'
+      path: '/api/admin/status'
+      fullPath: '/api/admin/status'
+      preLoaderRoute: typeof ApiAdminStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/missions': {
+      id: '/api/admin/missions'
+      path: '/api/admin/missions'
+      fullPath: '/api/admin/missions'
+      preLoaderRoute: typeof ApiAdminMissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/logs': {
+      id: '/api/admin/logs'
+      path: '/api/admin/logs'
+      fullPath: '/api/admin/logs'
+      preLoaderRoute: typeof ApiAdminLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/cron': {
+      id: '/api/admin/cron'
+      path: '/api/admin/cron'
+      fullPath: '/api/admin/cron'
+      preLoaderRoute: typeof ApiAdminCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/config': {
+      id: '/api/admin/config'
+      path: '/api/admin/config'
+      fullPath: '/api/admin/config'
+      preLoaderRoute: typeof ApiAdminConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/browser': {
+      id: '/api/admin/browser'
+      path: '/api/admin/browser'
+      fullPath: '/api/admin/browser'
+      preLoaderRoute: typeof ApiAdminBrowserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminBrowserRoute: typeof AdminBrowserRoute
+  AdminConfigRoute: typeof AdminConfigRoute
+  AdminCronRoute: typeof AdminCronRoute
+  AdminLogsRoute: typeof AdminLogsRoute
+  AdminMissionsRoute: typeof AdminMissionsRoute
+  AdminStatusRoute: typeof AdminStatusRoute
+  AdminTokensRoute: typeof AdminTokensRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminBrowserRoute: AdminBrowserRoute,
+  AdminConfigRoute: AdminConfigRoute,
+  AdminCronRoute: AdminCronRoute,
+  AdminLogsRoute: AdminLogsRoute,
+  AdminMissionsRoute: AdminMissionsRoute,
+  AdminStatusRoute: AdminStatusRoute,
+  AdminTokensRoute: AdminTokensRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   ConnectRoute: ConnectRoute,
   NewRoute: NewRoute,
   ApiHistoryRoute: ApiHistoryRoute,
-  ApiPathsRoute: ApiPathsRoute,
   ApiPingRoute: ApiPingRoute,
   ApiSendRoute: ApiSendRoute,
   ApiSessionsRoute: ApiSessionsRoute,
   ChatSessionKeyRoute: ChatSessionKeyRoute,
+  ApiAdminBrowserRoute: ApiAdminBrowserRoute,
+  ApiAdminConfigRoute: ApiAdminConfigRoute,
+  ApiAdminCronRoute: ApiAdminCronRoute,
+  ApiAdminLogsRoute: ApiAdminLogsRoute,
+  ApiAdminMissionsRoute: ApiAdminMissionsRoute,
+  ApiAdminStatusRoute: ApiAdminStatusRoute,
+  ApiAdminTokensRoute: ApiAdminTokensRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../server/gateway'
+import { sanitizeError } from '../../server/errors'
 
 type ChatHistoryResponse = {
   sessionKey: string
@@ -59,9 +60,7 @@ export const Route = createFileRoute('/api/history')({
           return json(payload)
         } catch (err) {
           return json(
-            {
-              error: err instanceof Error ? err.message : String(err),
-            },
+            { error: sanitizeError(err) },
             { status: 500 },
           )
         }

@@ -30,11 +30,13 @@ export function useDeleteSession(): DeleteSessionResult {
       friendlyId: string
       isActive: boolean
     }) {
-      const query = new URLSearchParams()
-      if (payload.sessionKey) query.set('sessionKey', payload.sessionKey)
-      if (payload.friendlyId) query.set('friendlyId', payload.friendlyId)
-      const res = await fetch(`/api/sessions?${query.toString()}`, {
+      const res = await fetch('/api/sessions', {
         method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionKey: payload.sessionKey,
+          friendlyId: payload.friendlyId,
+        }),
       })
       if (!res.ok) throw new Error(await readError(res))
       return payload

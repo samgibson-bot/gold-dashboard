@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../server/gateway'
+import { sanitizeError } from '../../server/errors'
 
 type SessionsListGatewayResponse = {
   sessions?: Array<Record<string, unknown>>
@@ -75,9 +76,7 @@ export const Route = createFileRoute('/api/sessions')({
           return json(normalizeSessions(payload))
         } catch (err) {
           return json(
-            {
-              error: err instanceof Error ? err.message : String(err),
-            },
+            { error: sanitizeError(err) },
             { status: 500 },
           )
         }
@@ -112,7 +111,6 @@ export const Route = createFileRoute('/api/sessions')({
             throw new Error('gateway returned an invalid response')
           }
 
-          // Register the friendly id so subsequent lookups resolve quickly.
           await gatewayRpc<SessionsResolveResponse>('sessions.resolve', {
             key: friendlyId,
             includeUnknown: true,
@@ -127,10 +125,7 @@ export const Route = createFileRoute('/api/sessions')({
           })
         } catch (err) {
           return json(
-            {
-              ok: false,
-              error: err instanceof Error ? err.message : String(err),
-            },
+            { ok: false, error: sanitizeError(err) },
             { status: 500 },
           )
         }
@@ -188,21 +183,23 @@ export const Route = createFileRoute('/api/sessions')({
           })
         } catch (err) {
           return json(
-            {
-              ok: false,
-              error: err instanceof Error ? err.message : String(err),
-            },
+            { ok: false, error: sanitizeError(err) },
             { status: 500 },
           )
         }
       },
       DELETE: async ({ request }) => {
         try {
-          const url = new URL(request.url)
-          const rawSessionKey = url.searchParams.get('sessionKey') ?? ''
-          const rawFriendlyId = url.searchParams.get('friendlyId') ?? ''
-          let sessionKey = rawSessionKey.trim()
-          const friendlyId = rawFriendlyId.trim()
+          const body = (await request.json().catch(() => ({}))) as Record<
+            string,
+            unknown
+          >
+          const rawSessionKey =
+            typeof body.sessionKey === 'string' ? body.sessionKey.trim() : ''
+          const rawFriendlyId =
+            typeof body.friendlyId === 'string' ? body.friendlyId.trim() : ''
+          let sessionKey = rawSessionKey
+          const friendlyId = rawFriendlyId
 
           if (friendlyId) {
             const resolved = await gatewayRpc<SessionsResolveResponse>(
@@ -235,10 +232,7 @@ export const Route = createFileRoute('/api/sessions')({
           return json({ ok: true, sessionKey })
         } catch (err) {
           return json(
-            {
-              ok: false,
-              error: err instanceof Error ? err.message : String(err),
-            },
+            { ok: false, error: sanitizeError(err) },
             { status: 500 },
           )
         }
