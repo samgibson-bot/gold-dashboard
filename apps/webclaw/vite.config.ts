@@ -21,7 +21,11 @@ const config = defineConfig({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      nitro: {
+        preset: 'node-server',
+      },
+    }),
     viteReact(),
   ],
 })

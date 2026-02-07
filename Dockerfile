@@ -24,6 +24,7 @@ COPY --from=builder --chown=appuser:appgroup /app/pnpm-workspace.yaml ./pnpm-wor
 # Copy webclaw app structure
 COPY --from=builder --chown=appuser:appgroup /app/apps/webclaw/package.json ./apps/webclaw/package.json
 COPY --from=builder --chown=appuser:appgroup /app/apps/webclaw/dist ./apps/webclaw/dist
+COPY --from=builder --chown=appuser:appgroup /app/apps/webclaw/server-start.js ./apps/webclaw/server-start.js
 
 # Copy all node_modules (both root and app-level)
 COPY --from=deps --chown=appuser:appgroup /app/node_modules ./node_modules
@@ -34,4 +35,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 WORKDIR /app/apps/webclaw
 EXPOSE 3000
-CMD ["node", "dist/server/server.js"]
+CMD ["node", "server-start.js"]
