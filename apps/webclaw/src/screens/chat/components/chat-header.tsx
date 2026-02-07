@@ -3,6 +3,9 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon } from '@hugeicons/core-free-icons'
 import { Button } from '@/components/ui/button'
 import { ContextMeter } from './context-meter'
+import { ExportMenu } from '@/components/export-menu'
+
+type ExportFormat = 'markdown' | 'json' | 'text'
 
 type ChatHeaderProps = {
   activeTitle: string
@@ -11,6 +14,8 @@ type ChatHeaderProps = {
   onOpenSidebar?: () => void
   usedTokens?: number
   maxTokens?: number
+  onExport?: (format: ExportFormat) => void
+  hasMessages?: boolean
 }
 
 function ChatHeaderComponent({
@@ -20,6 +25,8 @@ function ChatHeaderComponent({
   onOpenSidebar,
   usedTokens,
   maxTokens,
+  onExport,
+  hasMessages = false,
 }: ChatHeaderProps) {
   return (
     <div
@@ -37,12 +44,15 @@ function ChatHeaderComponent({
           <HugeiconsIcon icon={Menu01Icon} size={18} strokeWidth={1.6} />
         </Button>
       ) : null}
-      <div className="text-sm font-medium truncate">{activeTitle}</div>
+      <div className="text-sm font-medium truncate flex-1">{activeTitle}</div>
       <ContextMeter
         usedTokens={usedTokens}
         maxTokens={maxTokens}
         className="ml-3 hidden sm:flex"
       />
+      {onExport && hasMessages ? (
+        <ExportMenu onExport={onExport} />
+      ) : null}
     </div>
   )
 }

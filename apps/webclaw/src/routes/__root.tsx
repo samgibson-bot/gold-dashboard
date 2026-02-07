@@ -48,11 +48,11 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'WebClaw',
+        title: 'Gold Dashboard',
       },
       {
         name: 'description',
-        content: 'a fast web client for OpenClaw',
+        content: 'Admin dashboard for OpenClaw',
       },
       {
         property: 'og:image',
