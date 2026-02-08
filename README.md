@@ -1,10 +1,15 @@
-# WebClaw
+# Gold Dashboard
 
 ![Cover](https://raw.githubusercontent.com/ibelick/webclaw/main/apps/webclaw/public/cover.jpg)
 
-Fast web client for OpenClaw.
+Admin dashboard for OpenClaw. Forked from [ibelick/webclaw](https://github.com/ibelick/webclaw) with added admin features, security hardening, and production deployment support.
 
-Currently in beta.
+**Features:**
+- Real-time WebSocket communication with OpenClaw Gateway
+- Admin pages: status, tokens, logs, cron, config, browser, missions
+- Chat interface with conversation export, search, and context window meter
+- Security: error sanitization, CSRF protection, message limits, XSS prevention
+- Automated deployment via GitHub Actions
 
 ## Setup
 
@@ -16,4 +21,20 @@ Default URL is `ws://127.0.0.1:18789`. Docs: https://docs.openclaw.ai/gateway
 ```bash
 pnpm install
 pnpm dev
+```
+
+## Deployment
+
+Pushing to `main` automatically deploys to the production VPS via GitHub Actions.
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for:
+- GitHub Actions setup instructions
+- Adding SSH keys to GitHub Secrets
+- Manual deployment options
+- Troubleshooting
+
+**Quick deploy:**
+```bash
+git push origin main
+# Wait ~2 minutes for automated deployment
 ```

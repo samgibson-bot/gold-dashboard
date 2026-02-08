@@ -1,0 +1,53 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 62.146.173.127
+          username: claw
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Starting deployment..."
+
+            # Navigate to repo and pull latest
+            cd ~/openclaw/openclaw-dashboard
+            echo "📥 Pulling latest code from GitHub..."
+            git pull origin main
+
+            # Build and restart the container
+            cd ~/openclaw
+            echo "🔨 Building Docker image..."
+            docker compose build openclaw-dashboard
+
+            echo "♻️  Restarting container..."
+            docker compose up -d openclaw-dashboard
+
+            # Wait a moment for container to start
+            sleep 3
+
+            # Verify deployment
+            echo "✅ Checking container status..."
+            docker compose ps openclaw-dashboard
+
+            echo "📋 Recent logs:"
+            docker logs --tail 10 openclaw-openclaw-dashboard-1 2>&1 | grep -v "variable is not set" || true
+
+            echo "🎉 Deployment complete!"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "❌ Deployment failed! Check the logs above."
