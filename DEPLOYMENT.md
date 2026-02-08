@@ -129,8 +129,9 @@ git push origin main
 ## Troubleshooting
 
 ### Deployment fails with "Permission denied"
-- Check that `VPS_SSH_KEY` secret is set correctly
+- Check that `VPS_SSH_KEY` secret is set correctly (use RSA key, not Ed25519)
 - Verify SSH key has access: `ssh claw@62.146.173.127 "echo success"`
+- If using Ed25519 key, convert to RSA format for compatibility
 
 ### Container fails to start
 - Check logs: `ssh claw@62.146.173.127 "docker logs openclaw-openclaw-dashboard-1"`
