@@ -16,7 +16,7 @@ export const Route = createFileRoute('/api/admin/logs')({
           if (level) params.level = level
 
           const logs = await gatewayRpc<Record<string, unknown>>(
-            'logs.list',
+            'logs.tail',
             params,
           )
           return json({ ok: true, logs })

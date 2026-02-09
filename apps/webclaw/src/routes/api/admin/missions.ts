@@ -8,10 +8,24 @@ export const Route = createFileRoute('/api/admin/missions')({
     handlers: {
       GET: async () => {
         try {
+          // Try 'workspace.ideas.list' first, fall back to unsupported notice
           const missions = await gatewayRpc<Record<string, unknown>>(
             'workspace.ideas.list',
-          )
-          return json({ ok: true, missions })
+          ).catch(() => null)
+
+          if (missions) {
+            return json({ ok: true, missions })
+          }
+
+          return json({
+            ok: true,
+            missions: {
+              files: [],
+              supported: false,
+              message:
+                'Workspace ideas listing is not available via gateway RPC in this version.',
+            },
+          })
         } catch (err) {
           return json(
             { ok: false, error: sanitizeError(err) },

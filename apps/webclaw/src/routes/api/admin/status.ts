@@ -9,7 +9,7 @@ export const Route = createFileRoute('/api/admin/status')({
       GET: async () => {
         try {
           const [nodeStatus, sessionsList] = await Promise.all([
-            gatewayRpc<Record<string, unknown>>('nodes.status').catch(
+            gatewayRpc<Record<string, unknown>>('status').catch(
               () => ({}),
             ),
             gatewayRpc<Record<string, unknown>>('sessions.list', {

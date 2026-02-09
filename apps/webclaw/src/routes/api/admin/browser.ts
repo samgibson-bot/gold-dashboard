@@ -8,10 +8,24 @@ export const Route = createFileRoute('/api/admin/browser')({
     handlers: {
       GET: async () => {
         try {
+          // Try 'browser.status' first, fall back to unsupported notice
           const status = await gatewayRpc<Record<string, unknown>>(
             'browser.status',
-          )
-          return json({ ok: true, status })
+          ).catch(() => null)
+
+          if (status) {
+            return json({ ok: true, status })
+          }
+
+          return json({
+            ok: true,
+            status: {
+              running: false,
+              supported: false,
+              message:
+                'Browser status is not available via gateway RPC in this version.',
+            },
+          })
         } catch (err) {
           return json(
             { ok: false, error: sanitizeError(err) },
