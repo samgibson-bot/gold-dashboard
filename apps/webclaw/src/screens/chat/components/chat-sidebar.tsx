@@ -5,6 +5,13 @@ import {
   Search01Icon,
   Settings01Icon,
   SidebarLeft01Icon,
+  CpuIcon,
+  CoinsIcon,
+  File01Icon,
+  Clock01Icon,
+  Settings01Icon as ConfigIcon,
+  BrowserIcon,
+  Idea01Icon,
 } from '@hugeicons/core-free-icons'
 import { AnimatePresence, motion } from 'motion/react'
 import { memo, useState } from 'react'
@@ -274,12 +281,22 @@ function ChatSidebarComponent({
         </AnimatePresence>
       </div>
 
-      <div className="px-2 py-3 border-t border-primary-200 bg-primary-100 space-y-1">
-        <motion.div
-          layout
-          transition={{ layout: transition }}
-          className="w-full"
-        >
+      <div className="px-2 py-3 border-t border-primary-200 bg-primary-100 space-y-0.5">
+        <AnimatePresence initial={false}>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={transition}
+              className="px-2 py-1.5 text-xs font-medium text-primary-500"
+            >
+              Admin
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
           <Link
             to="/admin/status"
             className={cn(
@@ -302,26 +319,23 @@ function ChatSidebarComponent({
                   transition={transition}
                   className="overflow-hidden whitespace-nowrap"
                 >
-                  Admin
+                  Status
                 </motion.span>
               )}
             </AnimatePresence>
           </Link>
         </motion.div>
-        <motion.div
-          layout
-          transition={{ layout: transition }}
-          className="w-full"
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleOpenSettings}
-            title={isCollapsed ? 'Settings' : undefined}
-            className="w-full justify-start pl-1.5"
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
+          <Link
+            to="/admin/system"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-start pl-1.5',
+            )}
           >
             <HugeiconsIcon
-              icon={Settings01Icon}
+              icon={CpuIcon}
               size={20}
               strokeWidth={1.5}
               className="min-w-5"
@@ -335,12 +349,228 @@ function ChatSidebarComponent({
                   transition={transition}
                   className="overflow-hidden whitespace-nowrap"
                 >
-                  Settings
+                  System
                 </motion.span>
               )}
             </AnimatePresence>
-          </Button>
+          </Link>
         </motion.div>
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
+          <Link
+            to="/admin/tokens"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-start pl-1.5',
+            )}
+          >
+            <HugeiconsIcon
+              icon={CoinsIcon}
+              size={20}
+              strokeWidth={1.5}
+              className="min-w-5"
+            />
+            <AnimatePresence initial={false} mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Tokens
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </motion.div>
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
+          <Link
+            to="/admin/logs"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-start pl-1.5',
+            )}
+          >
+            <HugeiconsIcon
+              icon={File01Icon}
+              size={20}
+              strokeWidth={1.5}
+              className="min-w-5"
+            />
+            <AnimatePresence initial={false} mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Logs
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </motion.div>
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
+          <Link
+            to="/admin/cron"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-start pl-1.5',
+            )}
+          >
+            <HugeiconsIcon
+              icon={Clock01Icon}
+              size={20}
+              strokeWidth={1.5}
+              className="min-w-5"
+            />
+            <AnimatePresence initial={false} mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Cron
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </motion.div>
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
+          <Link
+            to="/admin/config"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-start pl-1.5',
+            )}
+          >
+            <HugeiconsIcon
+              icon={ConfigIcon}
+              size={20}
+              strokeWidth={1.5}
+              className="min-w-5"
+            />
+            <AnimatePresence initial={false} mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Config
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </motion.div>
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
+          <Link
+            to="/admin/browser"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-start pl-1.5',
+            )}
+          >
+            <HugeiconsIcon
+              icon={BrowserIcon}
+              size={20}
+              strokeWidth={1.5}
+              className="min-w-5"
+            />
+            <AnimatePresence initial={false} mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Browser
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </motion.div>
+
+        <motion.div layout transition={{ layout: transition }} className="w-full">
+          <Link
+            to="/admin/missions"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-start pl-1.5',
+            )}
+          >
+            <HugeiconsIcon
+              icon={Idea01Icon}
+              size={20}
+              strokeWidth={1.5}
+              className="min-w-5"
+            />
+            <AnimatePresence initial={false} mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Missions
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </motion.div>
+
+        <div className="pt-1">
+          <motion.div
+            layout
+            transition={{ layout: transition }}
+            className="w-full"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleOpenSettings}
+              title={isCollapsed ? 'Settings' : undefined}
+              className="w-full justify-start pl-1.5"
+            >
+              <HugeiconsIcon
+                icon={Settings01Icon}
+                size={20}
+                strokeWidth={1.5}
+                className="min-w-5"
+              />
+              <AnimatePresence initial={false} mode="wait">
+                {!isCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={transition}
+                    className="overflow-hidden whitespace-nowrap"
+                  >
+                    Settings
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Button>
+          </motion.div>
+        </div>
       </div>
 
       <SettingsDialog
