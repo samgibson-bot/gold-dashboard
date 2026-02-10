@@ -10,3 +10,6 @@ services:
       CLAWDBOT_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
     depends_on:
       - openclaw-gateway
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro

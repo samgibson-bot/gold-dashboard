@@ -19,6 +19,7 @@ import { Route as ApiSendRouteImport } from './routes/api/send'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as ApiHistoryRouteImport } from './routes/api/history'
 import { Route as AdminTokensRouteImport } from './routes/admin/tokens'
+import { Route as AdminSystemRouteImport } from './routes/admin/system'
 import { Route as AdminStatusRouteImport } from './routes/admin/status'
 import { Route as AdminMissionsRouteImport } from './routes/admin/missions'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
@@ -26,6 +27,7 @@ import { Route as AdminCronRouteImport } from './routes/admin/cron'
 import { Route as AdminConfigRouteImport } from './routes/admin/config'
 import { Route as AdminBrowserRouteImport } from './routes/admin/browser'
 import { Route as ApiAdminTokensRouteImport } from './routes/api/admin/tokens'
+import { Route as ApiAdminSystemRouteImport } from './routes/api/admin/system'
 import { Route as ApiAdminStatusRouteImport } from './routes/api/admin/status'
 import { Route as ApiAdminMissionsRouteImport } from './routes/api/admin/missions'
 import { Route as ApiAdminLogsRouteImport } from './routes/api/admin/logs'
@@ -83,6 +85,11 @@ const AdminTokensRoute = AdminTokensRouteImport.update({
   path: '/tokens',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSystemRoute = AdminSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminStatusRoute = AdminStatusRouteImport.update({
   id: '/status',
   path: '/status',
@@ -116,6 +123,11 @@ const AdminBrowserRoute = AdminBrowserRouteImport.update({
 const ApiAdminTokensRoute = ApiAdminTokensRouteImport.update({
   id: '/api/admin/tokens',
   path: '/api/admin/tokens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminSystemRoute = ApiAdminSystemRouteImport.update({
+  id: '/api/admin/system',
+  path: '/api/admin/system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminStatusRoute = ApiAdminStatusRouteImport.update({
@@ -160,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/missions': typeof AdminMissionsRoute
   '/admin/status': typeof AdminStatusRoute
+  '/admin/system': typeof AdminSystemRoute
   '/admin/tokens': typeof AdminTokensRoute
   '/api/history': typeof ApiHistoryRoute
   '/api/ping': typeof ApiPingRoute
@@ -172,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/missions': typeof ApiAdminMissionsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
+  '/api/admin/system': typeof ApiAdminSystemRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
 }
 export interface FileRoutesByTo {
@@ -185,6 +199,7 @@ export interface FileRoutesByTo {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/missions': typeof AdminMissionsRoute
   '/admin/status': typeof AdminStatusRoute
+  '/admin/system': typeof AdminSystemRoute
   '/admin/tokens': typeof AdminTokensRoute
   '/api/history': typeof ApiHistoryRoute
   '/api/ping': typeof ApiPingRoute
@@ -197,6 +212,7 @@ export interface FileRoutesByTo {
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/missions': typeof ApiAdminMissionsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
+  '/api/admin/system': typeof ApiAdminSystemRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
 }
 export interface FileRoutesById {
@@ -211,6 +227,7 @@ export interface FileRoutesById {
   '/admin/logs': typeof AdminLogsRoute
   '/admin/missions': typeof AdminMissionsRoute
   '/admin/status': typeof AdminStatusRoute
+  '/admin/system': typeof AdminSystemRoute
   '/admin/tokens': typeof AdminTokensRoute
   '/api/history': typeof ApiHistoryRoute
   '/api/ping': typeof ApiPingRoute
@@ -223,6 +240,7 @@ export interface FileRoutesById {
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/missions': typeof ApiAdminMissionsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
+  '/api/admin/system': typeof ApiAdminSystemRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
 }
 export interface FileRouteTypes {
@@ -238,6 +256,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/missions'
     | '/admin/status'
+    | '/admin/system'
     | '/admin/tokens'
     | '/api/history'
     | '/api/ping'
@@ -250,6 +269,7 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/missions'
     | '/api/admin/status'
+    | '/api/admin/system'
     | '/api/admin/tokens'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -263,6 +283,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/missions'
     | '/admin/status'
+    | '/admin/system'
     | '/admin/tokens'
     | '/api/history'
     | '/api/ping'
@@ -275,6 +296,7 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/missions'
     | '/api/admin/status'
+    | '/api/admin/system'
     | '/api/admin/tokens'
   id:
     | '__root__'
@@ -288,6 +310,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/missions'
     | '/admin/status'
+    | '/admin/system'
     | '/admin/tokens'
     | '/api/history'
     | '/api/ping'
@@ -300,6 +323,7 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/missions'
     | '/api/admin/status'
+    | '/api/admin/system'
     | '/api/admin/tokens'
   fileRoutesById: FileRoutesById
 }
@@ -319,6 +343,7 @@ export interface RootRouteChildren {
   ApiAdminLogsRoute: typeof ApiAdminLogsRoute
   ApiAdminMissionsRoute: typeof ApiAdminMissionsRoute
   ApiAdminStatusRoute: typeof ApiAdminStatusRoute
+  ApiAdminSystemRoute: typeof ApiAdminSystemRoute
   ApiAdminTokensRoute: typeof ApiAdminTokensRoute
 }
 
@@ -394,6 +419,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTokensRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/system': {
+      id: '/admin/system'
+      path: '/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AdminSystemRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/status': {
       id: '/admin/status'
       path: '/status'
@@ -441,6 +473,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/tokens'
       fullPath: '/api/admin/tokens'
       preLoaderRoute: typeof ApiAdminTokensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/system': {
+      id: '/api/admin/system'
+      path: '/api/admin/system'
+      fullPath: '/api/admin/system'
+      preLoaderRoute: typeof ApiAdminSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/status': {
@@ -495,6 +534,7 @@ interface AdminRouteChildren {
   AdminLogsRoute: typeof AdminLogsRoute
   AdminMissionsRoute: typeof AdminMissionsRoute
   AdminStatusRoute: typeof AdminStatusRoute
+  AdminSystemRoute: typeof AdminSystemRoute
   AdminTokensRoute: typeof AdminTokensRoute
 }
 
@@ -505,6 +545,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLogsRoute: AdminLogsRoute,
   AdminMissionsRoute: AdminMissionsRoute,
   AdminStatusRoute: AdminStatusRoute,
+  AdminSystemRoute: AdminSystemRoute,
   AdminTokensRoute: AdminTokensRoute,
 }
 
@@ -526,6 +567,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminLogsRoute: ApiAdminLogsRoute,
   ApiAdminMissionsRoute: ApiAdminMissionsRoute,
   ApiAdminStatusRoute: ApiAdminStatusRoute,
+  ApiAdminSystemRoute: ApiAdminSystemRoute,
   ApiAdminTokensRoute: ApiAdminTokensRoute,
 }
 export const routeTree = rootRouteImport

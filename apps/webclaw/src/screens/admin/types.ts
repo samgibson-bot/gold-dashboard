@@ -125,3 +125,37 @@ export type IdeaFile = {
   prNumber?: number
   prUrl?: string
 }
+
+export type SystemMetrics = {
+  hostname: string
+  os: string
+  arch: string
+  openclawVersion?: string
+  cpu: {
+    cores: number
+    loadAverage: [number, number, number]
+    usage?: number
+  }
+  memory: {
+    total: number
+    free: number
+    used: number
+    usagePercent: number
+  }
+  disk: {
+    total: string
+    used: string
+    available: string
+    usagePercent: number
+  }
+  uptime: {
+    system: number
+    openclaw?: number
+  }
+  gateway?: {
+    status: string
+    model?: string
+    version?: string
+    sessions: number
+  }
+}
