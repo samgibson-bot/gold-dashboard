@@ -5,7 +5,6 @@ import {
   Search01Icon,
   Settings01Icon,
   SidebarLeft01Icon,
-  CpuIcon,
   CoinsIcon,
   File01Icon,
   Clock01Icon,
@@ -328,36 +327,6 @@ function ChatSidebarComponent({
 
         <motion.div layout transition={{ layout: transition }} className="w-full">
           <Link
-            to="/admin/system"
-            className={cn(
-              buttonVariants({ variant: 'ghost', size: 'sm' }),
-              'w-full justify-start pl-1.5',
-            )}
-          >
-            <HugeiconsIcon
-              icon={CpuIcon}
-              size={20}
-              strokeWidth={1.5}
-              className="min-w-5"
-            />
-            <AnimatePresence initial={false} mode="wait">
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={transition}
-                  className="overflow-hidden whitespace-nowrap"
-                >
-                  System
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Link>
-        </motion.div>
-
-        <motion.div layout transition={{ layout: transition }} className="w-full">
-          <Link
             to="/admin/tokens"
             className={cn(
               buttonVariants({ variant: 'ghost', size: 'sm' }),
@@ -508,7 +477,7 @@ function ChatSidebarComponent({
 
         <motion.div layout transition={{ layout: transition }} className="w-full">
           <Link
-            to="/admin/missions"
+            to="/admin/ideas"
             className={cn(
               buttonVariants({ variant: 'ghost', size: 'sm' }),
               'w-full justify-start pl-1.5',
@@ -529,7 +498,7 @@ function ChatSidebarComponent({
                   transition={transition}
                   className="overflow-hidden whitespace-nowrap"
                 >
-                  Missions
+                  Ideas
                 </motion.span>
               )}
             </AnimatePresence>

@@ -5,10 +5,10 @@ import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
 import type { IdeaFile } from '@/screens/admin/types'
 
-type MissionsResponse = {
+type IdeasResponse = {
   ok: boolean
   error?: string
-  missions?: {
+  ideas?: {
     files?: Array<IdeaFile>
   }
 }
@@ -22,24 +22,24 @@ const STATUS_COLORS: Record<string, string> = {
   unknown: 'bg-primary-100 text-primary-500',
 }
 
-export const Route = createFileRoute('/admin/missions')({
-  component: MissionsPage,
+export const Route = createFileRoute('/admin/ideas')({
+  component: IdeasPage,
 })
 
-function MissionsPage() {
+function IdeasPage() {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
 
   const { data, isLoading, error } = useQuery({
-    queryKey: adminQueryKeys.missions,
-    queryFn: async function fetchMissions() {
-      const res = await fetch('/api/admin/missions')
-      if (!res.ok) throw new Error('Failed to fetch missions')
-      return (await res.json()) as MissionsResponse
+    queryKey: adminQueryKeys.ideas,
+    queryFn: async function fetchIdeas() {
+      const res = await fetch('/api/admin/ideas')
+      if (!res.ok) throw new Error('Failed to fetch ideas')
+      return (await res.json()) as IdeasResponse
     },
     refetchInterval: 60_000,
   })
 
-  const files = data?.missions?.files ?? []
+  const files = data?.ideas?.files ?? []
   const selectedFile = files.find(function findSelected(f) {
     return f.path === selectedPath
   })
@@ -47,11 +47,11 @@ function MissionsPage() {
   return (
     <div className="p-6 h-full flex flex-col">
       <h1 className="text-lg font-medium text-primary-950 mb-4">
-        Missions / Ideas
+        Ideas
       </h1>
 
       {isLoading ? (
-        <div className="text-sm text-primary-500">Loading missions...</div>
+        <div className="text-sm text-primary-500">Loading ideas...</div>
       ) : error ? (
         <div className="text-sm text-red-600">
           {error instanceof Error ? error.message : 'Failed to load'}

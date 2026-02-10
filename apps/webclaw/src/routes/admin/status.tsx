@@ -2,13 +2,15 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { StatusCard } from '@/components/ui/status-card'
-import type { NodeStatus } from '@/screens/admin/types'
+import { ProgressBar } from '@/components/ui/progress-bar'
+import { formatBytes, formatUptime, formatPercent } from '@/lib/format'
+import type { SystemMetrics } from '@/screens/admin/types'
 
-type StatusResponse = {
+type CombinedStatusResponse = {
   ok: boolean
   error?: string
-  nodeStatus?: NodeStatus & Record<string, unknown>
-  sessionsList?: { sessions?: Array<Record<string, unknown>> }
+  system?: SystemMetrics
+  sessions?: Array<Record<string, unknown>>
 }
 
 export const Route = createFileRoute('/admin/status')({
@@ -21,9 +23,9 @@ function StatusPage() {
     queryFn: async function fetchStatus() {
       const res = await fetch('/api/admin/status')
       if (!res.ok) throw new Error('Failed to fetch status')
-      return (await res.json()) as StatusResponse
+      return (await res.json()) as CombinedStatusResponse
     },
-    refetchInterval: 30_000,
+    refetchInterval: 15_000,
   })
 
   if (isLoading) {
@@ -44,75 +46,129 @@ function StatusPage() {
     )
   }
 
-  const node = data?.nodeStatus ?? {}
-  const sessions = data?.sessionsList?.sessions ?? []
-  const uptime = typeof node.uptime === 'number' ? node.uptime : 0
-  const uptimeHours = Math.floor(uptime / 3600)
-  const uptimeMinutes = Math.floor((uptime % 3600) / 60)
+  const system = data?.system
+  const sessions = data?.sessions ?? []
+
+  if (!system) {
+    return (
+      <div className="p-6">
+        <div className="text-sm text-primary-500">No data available</div>
+      </div>
+    )
+  }
+
+  const gateway = system.gateway
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-lg font-medium text-primary-950">Status</h1>
+      <h1 className="text-lg font-medium text-primary-950">System Status</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatusCard
-          label="Agent Status"
-          value={String(node.status ?? 'unknown')}
-        />
-        <StatusCard
-          label="Model"
-          value={String(node.model ?? '—')}
-        />
-        <StatusCard
-          label="Version"
-          value={String(node.version ?? '—')}
-        />
-        <StatusCard
-          label="Uptime"
-          value={`${uptimeHours}h ${uptimeMinutes}m`}
-        />
-      </div>
+      {/* Gateway Status - Most Important */}
+      {gateway && (
+        <div>
+          <h2 className="text-sm font-medium text-primary-900 mb-3">
+            OpenClaw Gateway
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <StatusCard label="Status" value={gateway.status} />
+            <StatusCard label="Model" value={gateway.model ?? '—'} />
+            <StatusCard label="Version" value={gateway.version ?? '—'} />
+            <StatusCard
+              label="Uptime"
+              value={
+                system.uptime.openclaw !== undefined
+                  ? formatUptime(system.uptime.openclaw)
+                  : '—'
+              }
+            />
+            <StatusCard label="Active Sessions" value={gateway.sessions} />
+          </div>
+        </div>
+      )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatusCard
-          label="Input Tokens"
-          value={
-            typeof node.tokens?.input === 'number'
-              ? node.tokens.input.toLocaleString()
-              : '—'
-          }
-        />
-        <StatusCard
-          label="Output Tokens"
-          value={
-            typeof node.tokens?.output === 'number'
-              ? node.tokens.output.toLocaleString()
-              : '—'
-          }
-        />
-        <StatusCard
-          label="Total Tokens"
-          value={
-            typeof node.tokens?.total === 'number'
-              ? node.tokens.total.toLocaleString()
-              : '—'
-          }
-        />
-      </div>
-
+      {/* System Resources - Compact Layout */}
       <div>
         <h2 className="text-sm font-medium text-primary-900 mb-3">
-          Active Sessions ({sessions.length})
+          System Resources
         </h2>
-        {sessions.length === 0 ? (
-          <div className="text-sm text-primary-500">No active sessions</div>
-        ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* CPU */}
+          <div className="rounded-lg border border-primary-200 bg-surface p-4">
+            <div className="text-xs text-primary-500 mb-1">CPU</div>
+            <div className="text-lg font-medium text-primary-950 tabular-nums mb-2">
+              {system.cpu.usage !== undefined
+                ? formatPercent(system.cpu.usage)
+                : '—'}
+            </div>
+            {system.cpu.usage !== undefined && (
+              <ProgressBar value={system.cpu.usage} max={100} className="mb-2" />
+            )}
+            <div className="text-xs text-primary-600">
+              {system.cpu.cores} cores • Load: {system.cpu.loadAverage[0].toFixed(2)}
+            </div>
+          </div>
+
+          {/* Memory */}
+          <div className="rounded-lg border border-primary-200 bg-surface p-4">
+            <div className="text-xs text-primary-500 mb-1">Memory</div>
+            <div className="text-lg font-medium text-primary-950 tabular-nums mb-2">
+              {formatBytes(system.memory.used)} / {formatBytes(system.memory.total)}
+            </div>
+            <ProgressBar value={system.memory.usagePercent} max={100} className="mb-2" />
+            <div className="text-xs text-primary-600">
+              {formatPercent(system.memory.usagePercent)} used
+            </div>
+          </div>
+
+          {/* Disk */}
+          <div className="rounded-lg border border-primary-200 bg-surface p-4">
+            <div className="text-xs text-primary-500 mb-1">Disk Space</div>
+            <div className="text-lg font-medium text-primary-950 tabular-nums mb-2">
+              {system.disk.used} / {system.disk.total}
+            </div>
+            <ProgressBar value={system.disk.usagePercent} max={100} className="mb-2" />
+            <div className="text-xs text-primary-600">
+              {system.disk.available} available
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* System Info - Compact */}
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          System Information
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatusCard
+            label="Hostname"
+            value={system.hostname}
+            detail={system.arch}
+          />
+          <StatusCard label="OS" value={system.os} />
+          <StatusCard
+            label="System Uptime"
+            value={formatUptime(system.uptime.system)}
+          />
+          <StatusCard
+            label="OpenClaw Version"
+            value={system.openclawVersion ?? '—'}
+          />
+        </div>
+      </div>
+
+      {/* Active Sessions Table */}
+      {sessions.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-primary-900 mb-3">
+            Active Sessions ({sessions.length})
+          </h2>
           <div className="border border-primary-200 rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-primary-50 border-b border-primary-200">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium text-primary-700">
-                    Key
+                    Session
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-primary-700">
                     Status
@@ -141,8 +197,8 @@ function StatusPage() {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

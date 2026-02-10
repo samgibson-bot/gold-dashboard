@@ -9,7 +9,7 @@ import {
   branchUrl,
 } from '../../../server/github'
 
-export const Route = createFileRoute('/api/admin/missions')({
+export const Route = createFileRoute('/api/admin/ideas')({
   server: {
     handlers: {
       GET: async () => {
@@ -56,7 +56,7 @@ export const Route = createFileRoute('/api/admin/missions')({
 
           return json({
             ok: true,
-            missions: { files: ideas },
+            ideas: { files: ideas },
           })
         } catch (err) {
           return json(
