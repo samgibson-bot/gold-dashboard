@@ -119,4 +119,9 @@ export type IdeaFile = {
   tags?: Array<string>
   content?: string
   metadata?: Record<string, string>
+  slug?: string
+  branch?: string
+  githubUrl?: string
+  prNumber?: number
+  prUrl?: string
 }

@@ -1,30 +1,62 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
-import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
+import {
+  listIdeaBranches,
+  fetchBranchReadme,
+  listOpenPRs,
+  parseIdeaReadme,
+  branchUrl,
+} from '../../../server/github'
 
 export const Route = createFileRoute('/api/admin/missions')({
   server: {
     handlers: {
       GET: async () => {
         try {
-          // Try 'workspace.ideas.list' first, fall back to unsupported notice
-          const missions = await gatewayRpc<Record<string, unknown>>(
-            'workspace.ideas.list',
-          ).catch(() => null)
+          const [branches, prs] = await Promise.all([
+            listIdeaBranches(),
+            listOpenPRs(),
+          ])
 
-          if (missions) {
-            return json({ ok: true, missions })
-          }
+          const prByBranch = new Map(
+            prs.map(function mapPr(pr) {
+              return [
+                pr.head.ref,
+                { number: pr.number, url: pr.html_url, title: pr.title },
+              ]
+            }),
+          )
+
+          const ideas = await Promise.all(
+            branches.map(async function fetchIdea(branch) {
+              const slug = branch.replace('idea/', '')
+              const content = await fetchBranchReadme(branch)
+              const meta = content
+                ? parseIdeaReadme(content)
+                : { title: slug, status: 'unknown', created: '', tags: [], topic: '' }
+
+              const pr = prByBranch.get(branch)
+
+              return {
+                path: branch,
+                slug,
+                title: meta.title || slug,
+                status: pr ? 'reviewing' : meta.status,
+                created: meta.created,
+                tags: meta.tags,
+                content: content ?? '',
+                branch,
+                githubUrl: branchUrl(branch),
+                prNumber: pr?.number,
+                prUrl: pr?.url,
+              }
+            }),
+          )
 
           return json({
             ok: true,
-            missions: {
-              files: [],
-              supported: false,
-              message:
-                'Workspace ideas listing is not available via gateway RPC in this version.',
-            },
+            missions: { files: ideas },
           })
         } catch (err) {
           return json(
