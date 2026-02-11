@@ -449,13 +449,33 @@ type CreateIdeaDialogProps = {
   onCreated: () => void
 }
 
+type SubmitResponse = {
+  ok: boolean
+  error?: string
+  sessionKey?: string
+  runId?: string
+}
+
 function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<Array<string>>([])
 
-  const mutation = useMutation({
+  // Source state
+  const [showSource, setShowSource] = useState(false)
+  const [sourceType, setSourceType] = useState<'url' | 'screenshot'>('url')
+  const [sourceUrl, setSourceUrl] = useState('')
+  const [screenshotData, setScreenshotData] = useState('')
+  const [screenshotName, setScreenshotName] = useState('')
+
+  const hasSource =
+    showSource &&
+    ((sourceType === 'url' && sourceUrl.trim().length > 0) ||
+      (sourceType === 'screenshot' && screenshotData.length > 0))
+
+  // Static creation mutation (no source)
+  const staticMutation = useMutation({
     mutationFn: async function submitIdea() {
       const res = await fetch('/api/admin/ideas', {
         method: 'POST',
@@ -470,6 +490,46 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
       onCreated()
     },
   })
+
+  // Gateway submission mutation (with source)
+  const gatewayMutation = useMutation({
+    mutationFn: async function submitWithSource() {
+      const source =
+        sourceType === 'url' ? sourceUrl.trim() : screenshotData
+      const res = await fetch('/api/admin/ideas/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source,
+          sourceType,
+          context: description,
+          title,
+          tags,
+        }),
+      })
+      const data = (await res.json()) as SubmitResponse
+      if (!data.ok) throw new Error(data.error ?? 'Failed to submit idea')
+      return data
+    },
+  })
+
+  const mutation = hasSource ? gatewayMutation : staticMutation
+  const isPending = staticMutation.isPending || gatewayMutation.isPending
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Screenshot must be under 2MB')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = function onLoad() {
+      setScreenshotData(reader.result as string)
+      setScreenshotName(file.name)
+    }
+    reader.readAsDataURL(file)
+  }
 
   function addTag(tag: string) {
     const cleaned = tag.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
@@ -508,7 +568,10 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
       <div className="p-5">
         <DialogTitle>New Idea</DialogTitle>
         <DialogDescription className="mt-1">
-          Submit a new idea. It will create a GitHub Issue and an idea file in the repository.
+          Submit a new idea.{' '}
+          {hasSource
+            ? 'OpenClaw will research your source and create a detailed Issue.'
+            : 'It will create a GitHub Issue and an idea file in the repository.'}
         </DialogDescription>
 
         <div className="mt-4 space-y-4">
@@ -525,28 +588,164 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               }}
               placeholder="A concise name for the idea"
               className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
-              disabled={mutation.isPending}
+              disabled={isPending}
             />
+          </div>
+
+          {/* Source (collapsible) */}
+          <div>
+            {!showSource ? (
+              <button
+                type="button"
+                onClick={function toggleSource() {
+                  setShowSource(true)
+                }}
+                className="text-xs text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                disabled={isPending}
+              >
+                + Add a source (URL or screenshot)
+              </button>
+            ) : (
+              <div className="border border-primary-200 dark:border-primary-700 rounded-lg p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-primary-700 dark:text-primary-300">
+                    Source
+                  </label>
+                  <button
+                    type="button"
+                    onClick={function hideSource() {
+                      setShowSource(false)
+                      setSourceUrl('')
+                      setScreenshotData('')
+                      setScreenshotName('')
+                    }}
+                    className="text-[10px] text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors"
+                    disabled={isPending}
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                {/* URL / Screenshot toggle */}
+                <div className="flex gap-1 p-0.5 rounded-md bg-primary-100 dark:bg-primary-800 w-fit">
+                  <button
+                    type="button"
+                    onClick={function selectUrl() {
+                      setSourceType('url')
+                    }}
+                    className={cn(
+                      'text-[11px] px-2.5 py-1 rounded font-medium transition-colors',
+                      sourceType === 'url'
+                        ? 'bg-white dark:bg-primary-600 text-primary-900 dark:text-primary-100 shadow-sm'
+                        : 'text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
+                    )}
+                    disabled={isPending}
+                  >
+                    URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={function selectScreenshot() {
+                      setSourceType('screenshot')
+                    }}
+                    className={cn(
+                      'text-[11px] px-2.5 py-1 rounded font-medium transition-colors',
+                      sourceType === 'screenshot'
+                        ? 'bg-white dark:bg-primary-600 text-primary-900 dark:text-primary-100 shadow-sm'
+                        : 'text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
+                    )}
+                    disabled={isPending}
+                  >
+                    Screenshot
+                  </button>
+                </div>
+
+                {sourceType === 'url' ? (
+                  <input
+                    type="url"
+                    value={sourceUrl}
+                    onChange={function handleUrl(e) {
+                      setSourceUrl(e.target.value)
+                    }}
+                    placeholder="https://twitter.com/... or any URL"
+                    className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
+                    disabled={isPending}
+                  />
+                ) : (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="screenshot-upload"
+                      disabled={isPending}
+                    />
+                    <label
+                      htmlFor="screenshot-upload"
+                      className={cn(
+                        'inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-primary-200 dark:border-primary-600 transition-colors',
+                        isPending
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-800',
+                        'text-primary-700 dark:text-primary-300',
+                      )}
+                    >
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      {screenshotName || 'Upload screenshot'}
+                    </label>
+                    {screenshotData ? (
+                      <span className="ml-2 text-[10px] text-green-600 dark:text-green-400">
+                        Attached
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+
+                <p className="text-[10px] text-primary-400">
+                  Adding a source routes through OpenClaw for AI-powered research and analysis.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Description */}
           <div>
             <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
-              Description
+              {hasSource ? 'Context' : 'Description'}
             </label>
             <textarea
               value={description}
               onChange={function handleDesc(e) {
                 setDescription(e.target.value)
               }}
-              placeholder="Describe the idea in detail. What problem does it solve? What's the vision? Include as much context as you can — this will be used to generate an expansive roadmap."
-              rows={6}
+              placeholder={
+                hasSource
+                  ? 'What caught your eye? What should OpenClaw focus on when analyzing this source?'
+                  : 'Describe the idea in detail. What problem does it solve? What\'s the vision? Include as much context as you can \u2014 this will be used to generate an expansive roadmap.'
+              }
+              rows={hasSource ? 4 : 6}
               className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1 resize-none"
-              disabled={mutation.isPending}
+              disabled={isPending}
             />
-            <p className="text-[11px] text-primary-400 mt-1">
-              Be expansive — the more context, the better the generated roadmap (5-10 points).
-            </p>
+            {!hasSource ? (
+              <p className="text-[11px] text-primary-400 mt-1">
+                Be expansive — the more context, the better the generated roadmap (5-10 points).
+              </p>
+            ) : null}
           </div>
 
           {/* Tags */}
@@ -564,7 +763,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                       removeTag(tag)
                     }}
                     className="text-[11px] px-2 py-0.5 rounded-full bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-300 transition-colors"
-                    disabled={mutation.isPending}
+                    disabled={isPending}
                   >
                     {tag} ×
                   </button>
@@ -580,7 +779,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               onKeyDown={handleTagKeyDown}
               placeholder="Type a tag and press Enter"
               className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
-              disabled={mutation.isPending}
+              disabled={isPending}
             />
             <div className="flex flex-wrap gap-1 mt-2">
               {SUGGESTED_TAGS.filter(function notAdded(t) {
@@ -596,7 +795,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                         addTag(tag)
                       }}
                       className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400 hover:bg-primary-200 hover:text-primary-700 dark:hover:bg-primary-700 dark:hover:text-primary-200 transition-colors"
-                      disabled={mutation.isPending}
+                      disabled={isPending}
                     >
                       + {tag}
                     </button>
@@ -614,19 +813,26 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
             </div>
           ) : null}
 
-          {/* Success */}
-          {mutation.isSuccess && mutation.data ? (
+          {/* Success — static */}
+          {staticMutation.isSuccess && staticMutation.data ? (
             <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
               Created!{' '}
               <a
-                href={mutation.data.issueUrl}
+                href={staticMutation.data.issueUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline"
               >
-                Issue #{mutation.data.issueNumber}
+                Issue #{staticMutation.data.issueNumber}
               </a>{' '}
-              and file <code className="text-xs">{mutation.data.filePath}</code>
+              and file <code className="text-xs">{staticMutation.data.filePath}</code>
+            </div>
+          ) : null}
+
+          {/* Success — gateway */}
+          {gatewayMutation.isSuccess ? (
+            <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
+              Sent to ideas session — OpenClaw will research and create an Issue.
             </div>
           ) : null}
         </div>
@@ -635,12 +841,22 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
         <div className="flex justify-end gap-2 mt-5">
           <DialogClose onClick={onClose}>Cancel</DialogClose>
           <Button
-            disabled={!canSubmit || mutation.isPending}
+            disabled={!canSubmit || isPending}
             onClick={function handleSubmit() {
-              mutation.mutate()
+              if (hasSource) {
+                gatewayMutation.mutate()
+              } else {
+                staticMutation.mutate()
+              }
             }}
           >
-            {mutation.isPending ? 'Creating...' : 'Create Idea'}
+            {isPending
+              ? hasSource
+                ? 'Submitting...'
+                : 'Creating...'
+              : hasSource
+                ? 'Submit to OpenClaw'
+                : 'Create Idea'}
           </Button>
         </div>
       </div>
