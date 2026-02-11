@@ -266,7 +266,30 @@ export async function createIdea(input: CreateIdeaInput): Promise<CreateIdeaResu
   const today = new Date().toISOString().slice(0, 10)
 
   // 1. Create GitHub Issue
-  const issueBody = `## ${input.title}\n\n${input.description}\n\n---\n*Created via Gold Dashboard*`
+  const issueBody = [
+    `## ${input.title}`,
+    '',
+    input.description,
+    '',
+    '---',
+    '',
+    '### Expansion Request',
+    '',
+    'When this idea is picked up for elaboration, generate an **expansive 5-10 point roadmap** covering:',
+    '1. Problem definition and target users',
+    '2. Core technical architecture',
+    '3. Key dependencies and prerequisites',
+    '4. MVP scope and deliverables',
+    '5. Data model / API design',
+    '6. Integration points with existing systems',
+    '7. Testing and validation strategy',
+    '8. Deployment and infrastructure needs',
+    '9. Risks, unknowns, and mitigation',
+    '10. Future extensions and scaling considerations',
+    '',
+    '---',
+    '*Created via Gold Dashboard*',
+  ].join('\n')
   const labels = ['idea', 'seed', ...input.tags.slice(0, 5)]
 
   const issueRes = await fetch(
