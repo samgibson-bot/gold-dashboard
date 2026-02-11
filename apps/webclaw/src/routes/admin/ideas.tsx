@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Markdown } from '@/components/prompt-kit/markdown'
 import {
   DialogRoot,
   DialogTrigger,
@@ -33,15 +34,25 @@ type CreateIdeaResponse = {
   }
 }
 
+const IDEA_STATUSES = [
+  'seed',
+  'elaborating',
+  'reviewing',
+  'validated',
+  'building',
+  'completed',
+  'archived',
+] as const
+
 const STATUS_COLORS: Record<string, string> = {
-  seed: 'bg-primary-200 text-primary-700',
-  elaborating: 'bg-blue-100 text-blue-700',
-  reviewing: 'bg-amber-100 text-amber-700',
-  validated: 'bg-green-100 text-green-700',
-  building: 'bg-purple-100 text-purple-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  archived: 'bg-primary-100 text-primary-400',
-  unknown: 'bg-primary-100 text-primary-500',
+  seed: 'bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200',
+  elaborating: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
+  reviewing: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200',
+  validated: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
+  building: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200',
+  completed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200',
+  archived: 'bg-primary-100 text-primary-400 dark:bg-primary-800 dark:text-primary-400',
+  unknown: 'bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400',
 }
 
 const SUGGESTED_TAGS = [
@@ -85,7 +96,7 @@ function IdeasPage() {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-medium text-primary-950">
+        <h1 className="text-lg font-medium text-primary-950 dark:text-primary-50">
           Ideas
         </h1>
         <DialogRoot open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -125,7 +136,7 @@ function IdeasPage() {
       {isLoading ? (
         <div className="text-sm text-primary-500">Loading ideas...</div>
       ) : error ? (
-        <div className="text-sm text-red-600">
+        <div className="text-sm text-red-600 dark:text-red-400">
           {error instanceof Error ? error.message : 'Failed to load'}
         </div>
       ) : files.length === 0 ? (
@@ -133,7 +144,7 @@ function IdeasPage() {
       ) : (
         <div className="flex-1 min-h-0 grid grid-cols-[280px_1fr] gap-4">
           {/* Sidebar list */}
-          <div className="border border-primary-200 rounded-lg overflow-auto">
+          <div className="border border-primary-200 dark:border-primary-700 rounded-lg overflow-auto">
             <div className="p-2 space-y-0.5">
               {files.map(function renderFile(file) {
                 const isActive = file.path === selectedPath
@@ -146,8 +157,8 @@ function IdeasPage() {
                     className={cn(
                       'w-full text-left px-3 py-2 rounded-md text-sm transition-colors',
                       isActive
-                        ? 'bg-primary-200 text-primary-950'
-                        : 'text-primary-700 hover:bg-primary-100',
+                        ? 'bg-primary-200 text-primary-950 dark:bg-primary-700 dark:text-primary-50'
+                        : 'text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-800',
                     )}
                   >
                     <div className="font-medium truncate">{file.title}</div>
@@ -164,12 +175,12 @@ function IdeasPage() {
                         </span>
                       ) : null}
                       {file.issueNumber ? (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300 font-medium">
                           #{file.issueNumber}
                         </span>
                       ) : null}
                       {file.prNumber ? (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 font-medium">
                           PR #{file.prNumber}
                         </span>
                       ) : null}
@@ -180,7 +191,7 @@ function IdeasPage() {
                           return (
                             <span
                               key={tag}
-                              className="text-[10px] px-1 py-0.5 rounded bg-primary-100 text-primary-500"
+                              className="text-[10px] px-1 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400"
                             >
                               {tag}
                             </span>
@@ -200,68 +211,9 @@ function IdeasPage() {
           </div>
 
           {/* Detail panel */}
-          <div className="border border-primary-200 rounded-lg overflow-auto">
+          <div className="border border-primary-200 dark:border-primary-700 rounded-lg overflow-auto flex flex-col">
             {selectedFile ? (
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h2 className="text-sm font-medium text-primary-900">
-                    {selectedFile.title}
-                  </h2>
-                  <div className="flex gap-2 shrink-0 ml-3">
-                    {selectedFile.issueUrl ? (
-                      <a
-                        href={selectedFile.issueUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] px-2 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
-                      >
-                        Issue #{selectedFile.issueNumber}
-                      </a>
-                    ) : null}
-                    {selectedFile.githubUrl ? (
-                      <a
-                        href={selectedFile.githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] px-2 py-1 rounded border border-primary-200 text-primary-600 hover:bg-primary-50 transition-colors"
-                      >
-                        Branch
-                      </a>
-                    ) : null}
-                    {selectedFile.prUrl ? (
-                      <a
-                        href={selectedFile.prUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] px-2 py-1 rounded border border-amber-200 text-amber-700 hover:bg-amber-50 transition-colors"
-                      >
-                        PR #{selectedFile.prNumber}
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  {selectedFile.created ? (
-                    <span className="text-xs text-primary-400">
-                      {selectedFile.created}
-                    </span>
-                  ) : null}
-                  {selectedFile.status ? (
-                    <span
-                      className={cn(
-                        'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
-                        STATUS_COLORS[selectedFile.status] ??
-                          STATUS_COLORS.unknown,
-                      )}
-                    >
-                      {selectedFile.status}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="text-sm text-primary-800 whitespace-pre-wrap font-mono text-pretty">
-                  {selectedFile.content ?? 'No content available'}
-                </div>
-              </div>
+              <IdeaDetail file={selectedFile} />
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-primary-400">
                 Select an idea to view
@@ -270,6 +222,222 @@ function IdeasPage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ---------- Idea Detail Panel ----------
+
+function IdeaDetail({ file }: { file: IdeaFile }) {
+  const queryClient = useQueryClient()
+
+  const statusMutation = useMutation({
+    mutationFn: async function changeStatus(newStatus: string) {
+      const res = await fetch('/api/admin/ideas/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: file.path, status: newStatus }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Request failed' }))
+        throw new Error((data as { error?: string }).error ?? 'Failed to update status')
+      }
+    },
+    onSuccess: function onStatusSuccess() {
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.ideas })
+    },
+  })
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 flex-1 overflow-auto">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-2">
+          <h2 className="text-sm font-medium text-primary-900 dark:text-primary-100">
+            {file.title}
+          </h2>
+          <div className="flex gap-2 shrink-0 ml-3">
+            {file.issueUrl ? (
+              <a
+                href={file.issueUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] px-2 py-1 rounded border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors"
+              >
+                Issue #{file.issueNumber}
+              </a>
+            ) : null}
+            {file.githubUrl ? (
+              <a
+                href={file.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] px-2 py-1 rounded border border-primary-200 dark:border-primary-600 text-primary-600 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-800 transition-colors inline-flex items-center gap-1"
+              >
+                View on GitHub
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            ) : null}
+            {file.prUrl ? (
+              <a
+                href={file.prUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900 transition-colors"
+              >
+                PR #{file.prNumber}
+              </a>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Date */}
+        {file.created ? (
+          <div className="text-xs text-primary-400 mb-3">
+            {file.created}
+          </div>
+        ) : null}
+
+        {/* Status pills */}
+        <div className="flex items-center gap-1 mb-4 flex-wrap">
+          {IDEA_STATUSES.map(function renderStatusPill(s) {
+            const isCurrent = file.status === s
+            const isUpdating = statusMutation.isPending
+            return (
+              <button
+                key={s}
+                disabled={isCurrent || isUpdating}
+                onClick={function handleStatusChange() {
+                  statusMutation.mutate(s)
+                }}
+                className={cn(
+                  'text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors',
+                  isCurrent
+                    ? cn(STATUS_COLORS[s] ?? STATUS_COLORS.unknown, 'ring-1 ring-primary-400 dark:ring-primary-500')
+                    : 'bg-primary-50 text-primary-400 dark:bg-primary-800 dark:text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-700 cursor-pointer',
+                  isUpdating && !isCurrent && 'opacity-50 cursor-wait',
+                )}
+              >
+                {s}
+              </button>
+            )
+          })}
+        </div>
+
+        {statusMutation.isError ? (
+          <div className="text-xs text-red-600 dark:text-red-400 mb-3">
+            {statusMutation.error instanceof Error
+              ? statusMutation.error.message
+              : 'Failed to update status'}
+          </div>
+        ) : null}
+
+        {/* Markdown content */}
+        <div className="text-sm text-primary-800 dark:text-primary-200 prose prose-sm dark:prose-invert max-w-none">
+          {file.content ? (
+            <Markdown>{file.content}</Markdown>
+          ) : (
+            <span className="text-primary-400">No content available</span>
+          )}
+        </div>
+      </div>
+
+      {/* Chat input */}
+      <IdeaChatInput
+        ideaTitle={file.title}
+        ideaPath={file.path}
+        ideaStatus={file.status ?? ''}
+      />
+    </div>
+  )
+}
+
+// ---------- Idea Chat Input ----------
+
+function IdeaChatInput({
+  ideaTitle,
+  ideaPath,
+  ideaStatus,
+}: {
+  ideaTitle: string
+  ideaPath: string
+  ideaStatus: string
+}) {
+  const [message, setMessage] = useState('')
+  const [sent, setSent] = useState(false)
+
+  const chatMutation = useMutation({
+    mutationFn: async function sendChat(msg: string) {
+      const res = await fetch('/api/admin/ideas/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg,
+          ideaTitle,
+          ideaPath,
+          ideaStatus,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Request failed' }))
+        throw new Error((data as { error?: string }).error ?? 'Failed to send')
+      }
+    },
+    onSuccess: function onChatSuccess() {
+      setMessage('')
+      setSent(true)
+      setTimeout(function clearSent() {
+        setSent(false)
+      }, 3000)
+    },
+  })
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!message.trim() || chatMutation.isPending) return
+    chatMutation.mutate(message.trim())
+  }
+
+  return (
+    <div className="border-t border-primary-200 dark:border-primary-700 p-3">
+      {sent ? (
+        <div className="text-xs text-green-600 dark:text-green-400">
+          Sent to ideas session — check chat or Telegram for the response.
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={message}
+            onChange={function onMsgChange(e) {
+              setMessage(e.target.value)
+            }}
+            placeholder="Ask OpenClaw about this idea..."
+            className="flex-1 text-sm px-3 py-1.5 border border-primary-200 dark:border-primary-600 rounded-md bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          />
+          <button
+            type="submit"
+            disabled={!message.trim() || chatMutation.isPending}
+            className={cn(
+              'text-xs px-3 py-1.5 rounded-md font-medium transition-colors',
+              !message.trim() || chatMutation.isPending
+                ? 'bg-primary-200 text-primary-400 dark:bg-primary-700 dark:text-primary-500 cursor-not-allowed'
+                : 'bg-primary-800 text-primary-50 dark:bg-primary-200 dark:text-primary-900 hover:bg-primary-700 dark:hover:bg-primary-300',
+            )}
+          >
+            {chatMutation.isPending ? 'Sending...' : 'Send'}
+          </button>
+        </form>
+      )}
+      {chatMutation.isError ? (
+        <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+          {chatMutation.error instanceof Error
+            ? chatMutation.error.message
+            : 'Failed to send'}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -346,7 +514,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
         <div className="mt-4 space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-xs font-medium text-primary-700 mb-1">
+            <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
               Title
             </label>
             <input
@@ -356,14 +524,14 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                 setTitle(e.target.value)
               }}
               placeholder="A concise name for the idea"
-              className="w-full px-3 py-2 text-sm border border-primary-200 rounded-lg bg-white text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 focus:ring-offset-1"
+              className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
               disabled={mutation.isPending}
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium text-primary-700 mb-1">
+            <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
               Description
             </label>
             <textarea
@@ -373,7 +541,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               }}
               placeholder="Describe the idea in detail. What problem does it solve? What's the vision? Include as much context as you can — this will be used to generate an expansive roadmap."
               rows={6}
-              className="w-full px-3 py-2 text-sm border border-primary-200 rounded-lg bg-white text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 focus:ring-offset-1 resize-none"
+              className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1 resize-none"
               disabled={mutation.isPending}
             />
             <p className="text-[11px] text-primary-400 mt-1">
@@ -383,7 +551,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
 
           {/* Tags */}
           <div>
-            <label className="block text-xs font-medium text-primary-700 mb-1">
+            <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
               Tags
             </label>
             <div className="flex flex-wrap gap-1.5 mb-2">
@@ -395,7 +563,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                     onClick={function handleRemove() {
                       removeTag(tag)
                     }}
-                    className="text-[11px] px-2 py-0.5 rounded-full bg-primary-200 text-primary-700 hover:bg-red-100 hover:text-red-600 transition-colors"
+                    className="text-[11px] px-2 py-0.5 rounded-full bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-300 transition-colors"
                     disabled={mutation.isPending}
                   >
                     {tag} ×
@@ -411,7 +579,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               }}
               onKeyDown={handleTagKeyDown}
               placeholder="Type a tag and press Enter"
-              className="w-full px-3 py-1.5 text-sm border border-primary-200 rounded-lg bg-white text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 focus:ring-offset-1"
+              className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
               disabled={mutation.isPending}
             />
             <div className="flex flex-wrap gap-1 mt-2">
@@ -427,7 +595,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                       onClick={function handleAdd() {
                         addTag(tag)
                       }}
-                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 hover:bg-primary-200 hover:text-primary-700 transition-colors"
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400 hover:bg-primary-200 hover:text-primary-700 dark:hover:bg-primary-700 dark:hover:text-primary-200 transition-colors"
                       disabled={mutation.isPending}
                     >
                       + {tag}
@@ -439,7 +607,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
 
           {/* Error */}
           {mutation.isError ? (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
               {mutation.error instanceof Error
                 ? mutation.error.message
                 : 'Failed to create idea'}
@@ -448,7 +616,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
 
           {/* Success */}
           {mutation.isSuccess && mutation.data ? (
-            <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+            <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
               Created!{' '}
               <a
                 href={mutation.data.issueUrl}

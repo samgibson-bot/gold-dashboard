@@ -352,3 +352,63 @@ ${input.description}
     slug,
   }
 }
+
+// ---------- Update idea status in frontmatter ----------
+
+type GitHubFileWithSha = {
+  content?: string
+  encoding?: string
+  sha: string
+}
+
+export async function getFileSha(
+  path: string,
+): Promise<{ sha: string; content: string }> {
+  const res = await fetch(
+    `${API_BASE}/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(path)}?ref=main`,
+    { headers: headers() },
+  )
+  if (!res.ok) {
+    throw new Error(`GitHub API error fetching ${path}: ${res.status}`)
+  }
+  const data = (await res.json()) as GitHubFileWithSha
+  const decoded = data.content
+    ? Buffer.from(data.content, 'base64').toString('utf-8')
+    : ''
+  return { sha: data.sha, content: decoded }
+}
+
+export async function updateIdeaStatus(
+  path: string,
+  newStatus: string,
+): Promise<void> {
+  const { sha, content } = await getFileSha(path)
+
+  const updated = content.replace(
+    /^(---\n[\s\S]*?)(\nstatus:\s*.+)/m,
+    `$1\nstatus: ${newStatus}`,
+  )
+
+  if (updated === content) {
+    throw new Error('Could not find status field in frontmatter')
+  }
+
+  const res = await fetch(
+    `${API_BASE}/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(path)}`,
+    {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify({
+        message: `status: ${newStatus} — ${path.replace('ideas/', '').replace('.md', '')}`,
+        content: Buffer.from(updated).toString('base64'),
+        sha,
+        branch: 'main',
+      }),
+    },
+  )
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '')
+    throw new Error(`GitHub API error updating ${path}: ${res.status} ${errBody}`)
+  }
+}
