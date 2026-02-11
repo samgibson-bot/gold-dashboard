@@ -511,6 +511,9 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
       if (!data.ok) throw new Error(data.error ?? 'Failed to submit idea')
       return data
     },
+    onSuccess: function handleGatewaySuccess() {
+      onCreated()
+    },
   })
 
   const mutation = hasSource ? gatewayMutation : staticMutation
