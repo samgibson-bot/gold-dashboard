@@ -52,7 +52,7 @@ function buildSeedPrompt(params: {
     `   - **Insights**: non-obvious connections, second-order effects, or creative applications the submitter might not have considered`,
     `   - Rank each pathway by feasibility (1-5) and potential impact (1-5)`,
     '',
-    `4. **Create GitHub Issue** in `samgibson-bot/gold-ideas` with the full research summary. Use a descriptive title${title ? ` (suggested: "${title}")` : ' — generate a concise, descriptive title based on the source and context'}. Include source link, integration pathways, and synergy analysis.`,
+    `4. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` (suggested: "${title}")` : ' — generate a concise, descriptive title based on the source and context'}. Include source link, integration pathways, and synergy analysis.`,
     '',
     `5. **Create idea file** on main branch (\`ideas/<slug>.md\`) with YAML frontmatter including \`status: seed\`, title, created date, tags, and issue number. Body should contain the source and a summary.`,
     '',
