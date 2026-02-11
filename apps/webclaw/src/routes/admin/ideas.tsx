@@ -561,7 +561,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     }
   }
 
-  const canSubmit = title.trim().length > 0 && description.trim().length > 0
+  const canSubmit = (hasSource || title.trim().length > 0) && description.trim().length > 0
 
   return (
     <DialogContent className="w-[min(520px,92vw)]">
@@ -586,7 +586,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               onChange={function handleTitle(e) {
                 setTitle(e.target.value)
               }}
-              placeholder="A concise name for the idea"
+              placeholder={hasSource ? "Optional — OpenClaw will generate one" : "A concise name for the idea"}
               className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
               disabled={isPending}
             />
