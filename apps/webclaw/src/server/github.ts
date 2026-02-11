@@ -1,5 +1,5 @@
 const OWNER = 'samgibson-bot'
-const REPO = 'gold-ideas-factory'
+const REPO = 'gold-ideas'
 const API_BASE = 'https://api.github.com'
 
 function getGitHubToken(): string {
@@ -155,4 +155,177 @@ export function parseIdeaReadme(content: string): IdeaMeta {
 
 export function branchUrl(branch: string): string {
   return `https://github.com/${OWNER}/${REPO}/tree/${encodeURIComponent(branch)}`
+}
+
+// ---------- Idea file listing from main branch ----------
+
+type GitHubTreeItem = {
+  path: string
+  type: string
+  sha: string
+}
+
+type GitHubTree = {
+  tree: Array<GitHubTreeItem>
+}
+
+export async function listIdeaFilesOnMain(): Promise<
+  Array<{ path: string; slug: string; content: string }>
+> {
+  // Get the tree for ideas/ directory on main
+  const res = await fetch(
+    `${API_BASE}/repos/${OWNER}/${REPO}/git/trees/main?recursive=1`,
+    { headers: headers() },
+  )
+  if (!res.ok) throw new Error(`GitHub tree API error: ${res.status}`)
+  const tree = (await res.json()) as GitHubTree
+
+  // Filter to top-level markdown files under ideas/ (e.g. "ideas/foo.md")
+  const mdFiles = tree.tree.filter(function isIdeaMd(item) {
+    return (
+      item.type === 'blob' &&
+      item.path.startsWith('ideas/') &&
+      item.path.endsWith('.md') &&
+      item.path.split('/').length === 2 // exactly ideas/<name>.md
+    )
+  })
+
+  const results = await Promise.all(
+    mdFiles.map(async function fetchFile(item) {
+      const slug = item.path.replace('ideas/', '').replace('.md', '')
+      const contentRes = await fetch(
+        `${API_BASE}/repos/${OWNER}/${REPO}/contents/${item.path}?ref=main`,
+        { headers: headers() },
+      )
+      if (!contentRes.ok) return { path: item.path, slug, content: '' }
+      const data = (await contentRes.json()) as GitHubContent
+      const content = data.content
+        ? Buffer.from(data.content, 'base64').toString('utf-8')
+        : ''
+      return { path: item.path, slug, content }
+    }),
+  )
+
+  return results
+}
+
+// ---------- Parse YAML frontmatter ----------
+
+export function parseFrontmatter(content: string): Record<string, unknown> {
+  const match = content.match(/^---\n([\s\S]*?)\n---/)
+  if (!match) return {}
+  const yaml = match[1]
+  const result: Record<string, unknown> = {}
+  for (const line of yaml.split('\n')) {
+    const colonIdx = line.indexOf(':')
+    if (colonIdx === -1) continue
+    const key = line.slice(0, colonIdx).trim()
+    let value: unknown = line.slice(colonIdx + 1).trim()
+    // Handle arrays like [tag1, tag2]
+    if (typeof value === 'string' && value.startsWith('[') && value.endsWith(']')) {
+      value = value
+        .slice(1, -1)
+        .split(',')
+        .map(function trimVal(v) { return v.trim() })
+        .filter(Boolean)
+    }
+    // Strip quotes
+    if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+      value = value.slice(1, -1)
+    }
+    result[key] = value
+  }
+  return result
+}
+
+// ---------- Create idea: GitHub Issue + file on main ----------
+
+export type CreateIdeaInput = {
+  title: string
+  description: string
+  tags: Array<string>
+}
+
+export type CreateIdeaResult = {
+  issueNumber: number
+  issueUrl: string
+  filePath: string
+  slug: string
+}
+
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60)
+}
+
+export async function createIdea(input: CreateIdeaInput): Promise<CreateIdeaResult> {
+  const slug = slugify(input.title)
+  const today = new Date().toISOString().slice(0, 10)
+
+  // 1. Create GitHub Issue
+  const issueBody = `## ${input.title}\n\n${input.description}\n\n---\n*Created via Gold Dashboard*`
+  const labels = ['idea', 'seed', ...input.tags.slice(0, 5)]
+
+  const issueRes = await fetch(
+    `${API_BASE}/repos/${OWNER}/${REPO}/issues`,
+    {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        title: input.title,
+        body: issueBody,
+        labels,
+      }),
+    },
+  )
+  if (!issueRes.ok) {
+    const errText = await issueRes.text()
+    throw new Error(`Failed to create issue: ${issueRes.status} ${errText}`)
+  }
+  const issue = (await issueRes.json()) as { number: number; html_url: string }
+
+  // 2. Create markdown file on main branch
+  const filePath = `ideas/${slug}.md`
+  const fileContent = `---
+title: "${input.title}"
+slug: ${slug}
+status: seed
+created: ${today}
+tags: [${input.tags.join(', ')}]
+issue: ${issue.number}
+branch: 
+---
+
+# ${input.title}
+
+${input.description}
+`
+  const encodedContent = Buffer.from(fileContent).toString('base64')
+
+  const fileRes = await fetch(
+    `${API_BASE}/repos/${OWNER}/${REPO}/contents/${filePath}`,
+    {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify({
+        message: `Add idea: ${input.title}`,
+        content: encodedContent,
+        branch: 'main',
+      }),
+    },
+  )
+  if (!fileRes.ok) {
+    const errText = await fileRes.text()
+    throw new Error(`Failed to create file: ${fileRes.status} ${errText}`)
+  }
+
+  return {
+    issueNumber: issue.number,
+    issueUrl: issue.html_url,
+    filePath,
+    slug,
+  }
 }

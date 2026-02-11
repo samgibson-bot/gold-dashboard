@@ -124,6 +124,8 @@ export type IdeaFile = {
   githubUrl?: string
   prNumber?: number
   prUrl?: string
+  issueNumber?: number
+  issueUrl?: string
 }
 
 export type SystemMetrics = {
