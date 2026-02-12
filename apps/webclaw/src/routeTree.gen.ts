@@ -32,6 +32,9 @@ import { Route as ApiAdminIdeasRouteImport } from './routes/api/admin/ideas'
 import { Route as ApiAdminCronRouteImport } from './routes/api/admin/cron'
 import { Route as ApiAdminConfigRouteImport } from './routes/api/admin/config'
 import { Route as ApiAdminBrowserRouteImport } from './routes/api/admin/browser'
+import { Route as ApiAdminIdeasSubmitRouteImport } from './routes/api/admin/ideas.submit'
+import { Route as ApiAdminIdeasStatusRouteImport } from './routes/api/admin/ideas.status'
+import { Route as ApiAdminIdeasChatRouteImport } from './routes/api/admin/ideas.chat'
 
 const NewRoute = NewRouteImport.update({
   id: '/new',
@@ -148,6 +151,21 @@ const ApiAdminBrowserRoute = ApiAdminBrowserRouteImport.update({
   path: '/api/admin/browser',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminIdeasSubmitRoute = ApiAdminIdeasSubmitRouteImport.update({
+  id: '/submit',
+  path: '/submit',
+  getParentRoute: () => ApiAdminIdeasRoute,
+} as any)
+const ApiAdminIdeasStatusRoute = ApiAdminIdeasStatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => ApiAdminIdeasRoute,
+} as any)
+const ApiAdminIdeasChatRoute = ApiAdminIdeasChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => ApiAdminIdeasRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -169,10 +187,13 @@ export interface FileRoutesByFullPath {
   '/api/admin/browser': typeof ApiAdminBrowserRoute
   '/api/admin/config': typeof ApiAdminConfigRoute
   '/api/admin/cron': typeof ApiAdminCronRoute
-  '/api/admin/ideas': typeof ApiAdminIdeasRoute
+  '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
+  '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
+  '/api/admin/ideas/status': typeof ApiAdminIdeasStatusRoute
+  '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -194,10 +215,13 @@ export interface FileRoutesByTo {
   '/api/admin/browser': typeof ApiAdminBrowserRoute
   '/api/admin/config': typeof ApiAdminConfigRoute
   '/api/admin/cron': typeof ApiAdminCronRoute
-  '/api/admin/ideas': typeof ApiAdminIdeasRoute
+  '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
+  '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
+  '/api/admin/ideas/status': typeof ApiAdminIdeasStatusRoute
+  '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -220,10 +244,13 @@ export interface FileRoutesById {
   '/api/admin/browser': typeof ApiAdminBrowserRoute
   '/api/admin/config': typeof ApiAdminConfigRoute
   '/api/admin/cron': typeof ApiAdminCronRoute
-  '/api/admin/ideas': typeof ApiAdminIdeasRoute
+  '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
+  '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
+  '/api/admin/ideas/status': typeof ApiAdminIdeasStatusRoute
+  '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -251,6 +278,9 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/status'
     | '/api/admin/tokens'
+    | '/api/admin/ideas/chat'
+    | '/api/admin/ideas/status'
+    | '/api/admin/ideas/submit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -276,6 +306,9 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/status'
     | '/api/admin/tokens'
+    | '/api/admin/ideas/chat'
+    | '/api/admin/ideas/status'
+    | '/api/admin/ideas/submit'
   id:
     | '__root__'
     | '/'
@@ -301,6 +334,9 @@ export interface FileRouteTypes {
     | '/api/admin/logs'
     | '/api/admin/status'
     | '/api/admin/tokens'
+    | '/api/admin/ideas/chat'
+    | '/api/admin/ideas/status'
+    | '/api/admin/ideas/submit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,7 +352,7 @@ export interface RootRouteChildren {
   ApiAdminBrowserRoute: typeof ApiAdminBrowserRoute
   ApiAdminConfigRoute: typeof ApiAdminConfigRoute
   ApiAdminCronRoute: typeof ApiAdminCronRoute
-  ApiAdminIdeasRoute: typeof ApiAdminIdeasRoute
+  ApiAdminIdeasRoute: typeof ApiAdminIdeasRouteWithChildren
   ApiAdminLogsRoute: typeof ApiAdminLogsRoute
   ApiAdminStatusRoute: typeof ApiAdminStatusRoute
   ApiAdminTokensRoute: typeof ApiAdminTokensRoute
@@ -485,6 +521,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminBrowserRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/ideas/submit': {
+      id: '/api/admin/ideas/submit'
+      path: '/submit'
+      fullPath: '/api/admin/ideas/submit'
+      preLoaderRoute: typeof ApiAdminIdeasSubmitRouteImport
+      parentRoute: typeof ApiAdminIdeasRoute
+    }
+    '/api/admin/ideas/status': {
+      id: '/api/admin/ideas/status'
+      path: '/status'
+      fullPath: '/api/admin/ideas/status'
+      preLoaderRoute: typeof ApiAdminIdeasStatusRouteImport
+      parentRoute: typeof ApiAdminIdeasRoute
+    }
+    '/api/admin/ideas/chat': {
+      id: '/api/admin/ideas/chat'
+      path: '/chat'
+      fullPath: '/api/admin/ideas/chat'
+      preLoaderRoute: typeof ApiAdminIdeasChatRouteImport
+      parentRoute: typeof ApiAdminIdeasRoute
+    }
   }
 }
 
@@ -510,6 +567,22 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface ApiAdminIdeasRouteChildren {
+  ApiAdminIdeasChatRoute: typeof ApiAdminIdeasChatRoute
+  ApiAdminIdeasStatusRoute: typeof ApiAdminIdeasStatusRoute
+  ApiAdminIdeasSubmitRoute: typeof ApiAdminIdeasSubmitRoute
+}
+
+const ApiAdminIdeasRouteChildren: ApiAdminIdeasRouteChildren = {
+  ApiAdminIdeasChatRoute: ApiAdminIdeasChatRoute,
+  ApiAdminIdeasStatusRoute: ApiAdminIdeasStatusRoute,
+  ApiAdminIdeasSubmitRoute: ApiAdminIdeasSubmitRoute,
+}
+
+const ApiAdminIdeasRouteWithChildren = ApiAdminIdeasRoute._addFileChildren(
+  ApiAdminIdeasRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -523,7 +596,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminBrowserRoute: ApiAdminBrowserRoute,
   ApiAdminConfigRoute: ApiAdminConfigRoute,
   ApiAdminCronRoute: ApiAdminCronRoute,
-  ApiAdminIdeasRoute: ApiAdminIdeasRoute,
+  ApiAdminIdeasRoute: ApiAdminIdeasRouteWithChildren,
   ApiAdminLogsRoute: ApiAdminLogsRoute,
   ApiAdminStatusRoute: ApiAdminStatusRoute,
   ApiAdminTokensRoute: ApiAdminTokensRoute,
