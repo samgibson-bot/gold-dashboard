@@ -491,17 +491,20 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     },
   })
 
-  // Gateway submission mutation (with source)
+  // Gateway submission mutation (always used now)
   const gatewayMutation = useMutation({
-    mutationFn: async function submitWithSource() {
-      const source =
-        sourceType === 'url' ? sourceUrl.trim() : screenshotData
+    mutationFn: async function submitToGateway() {
+      const source = hasSource
+        ? sourceType === 'url' 
+          ? sourceUrl.trim() 
+          : screenshotData
+        : undefined
       const res = await fetch('/api/admin/ideas/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           source,
-          sourceType,
+          sourceType: hasSource ? sourceType : undefined,
           context: description,
           title,
           tags,
@@ -516,7 +519,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     },
   })
 
-  const mutation = hasSource ? gatewayMutation : staticMutation
+  const mutation = gatewayMutation  // Always use AI processing
   const isPending = staticMutation.isPending || gatewayMutation.isPending
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -564,17 +567,15 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     }
   }
 
-  const canSubmit = (hasSource || title.trim().length > 0) && description.trim().length > 0
+  const canSubmit = description.trim().length > 0  // Only description required, AI handles title
 
   return (
     <DialogContent className="w-[min(520px,92vw)]">
       <div className="p-5">
         <DialogTitle>New Idea</DialogTitle>
         <DialogDescription className="mt-1">
-          Submit a new idea.{' '}
-          {hasSource
-            ? 'OpenClaw will research your source and create a detailed Issue.'
-            : 'It will create a GitHub Issue and an idea file in the repository.'}
+          Submit a new idea. OpenClaw will analyze your submission, research any sources,
+          generate integration pathways, and create a detailed GitHub Issue.
         </DialogDescription>
 
         <div className="mt-4 space-y-4">
@@ -589,7 +590,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               onChange={function handleTitle(e) {
                 setTitle(e.target.value)
               }}
-              placeholder={hasSource ? "Optional — OpenClaw will generate one" : "A concise name for the idea"}
+              placeholder="Optional — OpenClaw will generate or refine"
               className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
               disabled={isPending}
             />
@@ -728,7 +729,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           {/* Description */}
           <div>
             <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
-              {hasSource ? 'Context' : 'Description'}
+              Description
             </label>
             <textarea
               value={description}
@@ -740,15 +741,13 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                   ? 'What caught your eye? What should OpenClaw focus on when analyzing this source?'
                   : 'Describe the idea in detail. What problem does it solve? What\'s the vision? Include as much context as you can \u2014 this will be used to generate an expansive roadmap.'
               }
-              rows={hasSource ? 4 : 6}
+              rows={6}
               className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1 resize-none"
               disabled={isPending}
             />
-            {!hasSource ? (
-              <p className="text-[11px] text-primary-400 mt-1">
-                Be expansive — the more context, the better the generated roadmap (5-10 points).
-              </p>
-            ) : null}
+            <p className="text-[11px] text-primary-400 mt-1">
+              Be expansive — the more context, the better the AI-generated analysis and roadmap.
+            </p>
           </div>
 
           {/* Tags */}
@@ -817,25 +816,10 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           ) : null}
 
           {/* Success — static */}
-          {staticMutation.isSuccess && staticMutation.data ? (
-            <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
-              Created!{' '}
-              <a
-                href={staticMutation.data.issueUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Issue #{staticMutation.data.issueNumber}
-              </a>{' '}
-              and file <code className="text-xs">{staticMutation.data.filePath}</code>
-            </div>
-          ) : null}
-
-          {/* Success — gateway */}
+          {/* Success */}
           {gatewayMutation.isSuccess ? (
             <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
-              Sent to ideas session — OpenClaw will research and create an Issue.
+              Submitted! OpenClaw will analyze, research, and create a detailed GitHub Issue with integration pathways.
             </div>
           ) : null}
         </div>
@@ -846,20 +830,10 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           <Button
             disabled={!canSubmit || isPending}
             onClick={function handleSubmit() {
-              if (hasSource) {
-                gatewayMutation.mutate()
-              } else {
-                staticMutation.mutate()
-              }
+              gatewayMutation.mutate()
             }}
           >
-            {isPending
-              ? hasSource
-                ? 'Submitting...'
-                : 'Creating...'
-              : hasSource
-                ? 'Submit to OpenClaw'
-                : 'Create Idea'}
+            {isPending ? 'Submitting...' : 'Submit to OpenClaw'}
           </Button>
         </div>
       </div>

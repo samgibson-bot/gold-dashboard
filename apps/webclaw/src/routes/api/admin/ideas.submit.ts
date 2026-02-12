@@ -17,18 +17,19 @@ function isValidUrl(s: string): boolean {
 }
 
 function buildSeedPrompt(params: {
-  source: string
-  sourceType: 'url' | 'screenshot'
+  source?: string
+  sourceType?: 'url' | 'screenshot'
   context: string
   title?: string
   tags?: Array<string>
 }): string {
   const { source, sourceType, context, title, tags } = params
 
-  const sourceDesc =
-    sourceType === 'url'
+  const sourceDesc = source
+    ? sourceType === 'url'
       ? `Source URL: ${source}`
       : 'Source: screenshot attached (analyze with vision)'
+    : 'No source provided — analyze the description below'
 
   const parts = [
     `## New Idea Submission`,
@@ -41,7 +42,7 @@ function buildSeedPrompt(params: {
     '',
     `You have a new idea submission to process. Follow these steps:`,
     '',
-    `1. **Analyze the source** — ${sourceType === 'url' ? 'Use \`web_fetch\` to crawl and understand the source URL.' : 'Analyze the attached screenshot using vision.'} Extract key concepts, technologies, and potential applications.`,
+    `1. **Analyze the source** — ${source ? (sourceType === 'url' ? 'Use \`web_fetch\` to crawl and understand the source URL.' : 'Analyze the attached screenshot using vision.') : 'Deeply analyze the description and context provided by the user.'} Extract key concepts, technologies, and potential applications.`,
     '',
     `2. **Cross-reference** — Check existing \`samgibson-bot/gold-ideas\` Issues for overlaps or synergies. Scan OpenClaw docs for integration points with existing infrastructure.`,
     '',
@@ -52,7 +53,7 @@ function buildSeedPrompt(params: {
     `   - **Insights**: non-obvious connections, second-order effects, or creative applications the submitter might not have considered`,
     `   - Rank each pathway by feasibility (1-5) and potential impact (1-5)`,
     '',
-    `4. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` (suggested: "${title}")` : ' — generate a concise, descriptive title based on the source and context'}. Include source link, integration pathways, and synergy analysis.`,
+    `4. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? `Review the suggested title \"${title}\" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like \"Integration: X\" or \"Feature: Y\" or \"Enhancement: Z\".` : 'Generate a concise, descriptive, standardized title based on the analysis.'}. Include source link (if provided), integration pathways, and synergy analysis.`,
     '',
     `5. **Create idea file** on main branch (\`ideas/<slug>.md\`) with YAML frontmatter including \`status: seed\`, title, created date, tags, and issue number. Body should contain the source and a summary.`,
     '',
@@ -88,12 +89,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
               )
             : []
 
-          if (!source) {
-            return json(
-              { ok: false, error: 'source is required' },
-              { status: 400 },
-            )
-          }
+          // Source is now optional - AI can work with just description
 
           if (!context) {
             return json(
@@ -109,14 +105,14 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
             )
           }
 
-          if (sourceType === 'url' && !isValidUrl(source)) {
+          if (source && sourceType === 'url' && !isValidUrl(source)) {
             return json(
               { ok: false, error: 'invalid URL' },
               { status: 400 },
             )
           }
 
-          if (sourceType === 'screenshot' && source.length > MAX_SOURCE_LENGTH) {
+          if (source && sourceType === 'screenshot' && source.length > MAX_SOURCE_LENGTH) {
             return json(
               { ok: false, error: 'screenshot too large (max 2MB)' },
               { status: 400 },
@@ -132,7 +128,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
           })
 
           const message =
-            sourceType === 'screenshot'
+            source && sourceType === 'screenshot'
               ? `${seedPrompt}\n\n[Screenshot data attached as base64]\n${source}`
               : seedPrompt
 
