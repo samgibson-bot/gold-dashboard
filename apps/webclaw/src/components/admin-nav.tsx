@@ -11,7 +11,6 @@ import {
   Settings01Icon,
   BrowserIcon,
   Idea01Icon,
-  CpuIcon,
   KanbanIcon,
   UserGroupIcon,
   Activity01Icon,
@@ -67,13 +66,12 @@ const navSections: Array<NavSection> = [
     title: 'Ideas',
     items: [
       { to: '/admin/kanban', label: 'Kanban', icon: KanbanIcon },
-      { to: '/admin/missions', label: 'Missions', icon: Idea01Icon },
+      { to: '/admin/ideas', label: 'Ideas', icon: Idea01Icon },
     ],
   },
   {
     title: 'System',
     items: [
-      { to: '/admin/system', label: 'System', icon: CpuIcon },
       { to: '/admin/tokens', label: 'Tokens', icon: CoinsIcon },
       { to: '/admin/logs', label: 'Logs', icon: File01Icon },
       { to: '/admin/cron', label: 'Cron', icon: Clock01Icon },
