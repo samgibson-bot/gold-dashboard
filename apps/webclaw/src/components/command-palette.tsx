@@ -12,9 +12,9 @@ import {
   Settings01Icon,
   BrowserIcon,
   Calendar03Icon,
-  TargetIcon,
-  LightbulbIcon,
-} from '@hugeicons/react'
+  Target01Icon,
+  Idea01Icon,
+} from '@hugeicons/core-free-icons'
 
 type QuickAction = {
   id: string
@@ -37,7 +37,7 @@ export function CommandPalette() {
         id: 'new-idea',
         label: 'New Idea',
         description: 'Submit a new idea for OpenClaw',
-        icon: LightbulbIcon,
+        icon: Idea01Icon,
         keywords: ['create', 'add', 'new', 'idea', 'submit'],
         action: () => {
           navigate({ to: '/admin/ideas' })
@@ -48,7 +48,7 @@ export function CommandPalette() {
         id: 'ideas',
         label: 'Ideas',
         description: 'View and manage ideas',
-        icon: LightbulbIcon,
+        icon: Idea01Icon,
         keywords: ['ideas', 'view', 'list', 'manage'],
         action: () => {
           navigate({ to: '/admin/ideas' })
@@ -114,7 +114,7 @@ export function CommandPalette() {
         id: 'missions',
         label: 'Missions',
         description: 'View and manage missions',
-        icon: TargetIcon,
+        icon: Target01Icon,
         keywords: ['missions', 'tasks', 'goals'],
         action: () => {
           navigate({ to: '/admin/missions' })

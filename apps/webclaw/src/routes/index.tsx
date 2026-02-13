@@ -6,10 +6,10 @@ import {
   Settings01Icon,
   BrowserIcon,
   Calendar03Icon,
-  TargetIcon,
-  LightbulbIcon,
+  Target01Icon,
+  Idea01Icon,
   MessageMultiple01Icon,
-} from '@hugeicons/react'
+} from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/')({
@@ -38,7 +38,7 @@ const quickActions: QuickActionCard[] = [
     id: 'ideas',
     label: 'Ideas',
     description: 'View and submit ideas',
-    icon: LightbulbIcon,
+    icon: Idea01Icon,
     to: '/admin/ideas',
     color: 'yellow',
   },
@@ -86,7 +86,7 @@ const quickActions: QuickActionCard[] = [
     id: 'missions',
     label: 'Missions',
     description: 'View active missions',
-    icon: TargetIcon,
+    icon: Target01Icon,
     to: '/admin/missions',
     color: 'pink',
   },
