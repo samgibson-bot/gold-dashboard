@@ -11,6 +11,13 @@ import {
   ArrowLeft01Icon,
   CpuIcon,
   KanbanIcon,
+  UserGroupIcon,
+  Activity01Icon,
+  CheckmarkBadge01Icon,
+  Analytics01Icon,
+  WebhookIcon,
+  WorkflowSquare01Icon,
+  FolderDetailsIcon,
 } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
@@ -28,6 +35,13 @@ const navItems: Array<NavItem> = [
   { to: '/admin/logs', label: 'Logs', icon: File01Icon },
   { to: '/admin/cron', label: 'Cron', icon: Clock01Icon },
   { to: '/admin/config', label: 'Config', icon: Settings01Icon },
+  { to: '/admin/fleet', label: 'Fleet', icon: UserGroupIcon },
+  { to: '/admin/memory', label: 'Memory', icon: FolderDetailsIcon },
+  { to: '/admin/activity', label: 'Activity', icon: Activity01Icon },
+  { to: '/admin/approvals', label: 'Approvals', icon: CheckmarkBadge01Icon },
+  { to: '/admin/metrics', label: 'Metrics', icon: Analytics01Icon },
+  { to: '/admin/workflows', label: 'Workflows', icon: WorkflowSquare01Icon },
+  { to: '/admin/webhooks', label: 'Webhooks', icon: WebhookIcon },
   { to: '/admin/browser', label: 'Browser', icon: BrowserIcon },
   { to: '/admin/missions', label: 'Missions', icon: Idea01Icon },
 ]

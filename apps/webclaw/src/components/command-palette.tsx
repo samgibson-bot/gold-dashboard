@@ -16,6 +16,13 @@ import {
   Target01Icon,
   Idea01Icon,
   KanbanIcon,
+  UserGroupIcon,
+  Activity01Icon,
+  CheckmarkBadge01Icon,
+  Analytics01Icon,
+  WebhookIcon,
+  WorkflowSquare01Icon,
+  FolderDetailsIcon,
 } from '@hugeicons/core-free-icons'
 import type { IconSvgObject } from '@hugeicons/core-free-icons'
 
@@ -132,6 +139,83 @@ export function CommandPalette() {
         keywords: ['missions', 'tasks', 'goals'],
         action: () => {
           navigate({ to: '/admin/missions' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'fleet',
+        label: 'Fleet Management',
+        description: 'Manage soul fleet agents',
+        icon: UserGroupIcon,
+        keywords: ['fleet', 'agents', 'souls', 'spawn', 'models'],
+        action: () => {
+          navigate({ to: '/admin/fleet' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'memory',
+        label: 'Memory & Context',
+        description: 'View workspace and shared-context',
+        icon: FolderDetailsIcon,
+        keywords: ['memory', 'workspace', 'context', 'shared', 'soul'],
+        action: () => {
+          navigate({ to: '/admin/memory' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'activity',
+        label: 'Activity Feed',
+        description: 'View unified activity feed',
+        icon: Activity01Icon,
+        keywords: ['activity', 'feed', 'events', 'log'],
+        action: () => {
+          navigate({ to: '/admin/activity' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'approvals',
+        label: 'Approvals',
+        description: 'Review and approve decisions',
+        icon: CheckmarkBadge01Icon,
+        keywords: ['approvals', 'approve', 'reject', 'review', 'decisions'],
+        action: () => {
+          navigate({ to: '/admin/approvals' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'metrics',
+        label: 'Metrics',
+        description: 'Performance and cost analytics',
+        icon: Analytics01Icon,
+        keywords: ['metrics', 'analytics', 'performance', 'cost', 'kpi'],
+        action: () => {
+          navigate({ to: '/admin/metrics' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'workflows',
+        label: 'Workflows',
+        description: 'View pipelines and review chains',
+        icon: WorkflowSquare01Icon,
+        keywords: ['workflows', 'pipeline', 'review', 'chain', 'cron'],
+        action: () => {
+          navigate({ to: '/admin/workflows' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'webhooks',
+        label: 'Webhooks',
+        description: 'Manage webhook integrations',
+        icon: WebhookIcon,
+        keywords: ['webhooks', 'integration', 'external', 'events'],
+        action: () => {
+          navigate({ to: '/admin/webhooks' })
           setOpen(false)
         },
       },

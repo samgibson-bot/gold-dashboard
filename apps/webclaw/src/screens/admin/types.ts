@@ -128,6 +128,115 @@ export type IdeaFile = {
   issueUrl?: string
 }
 
+export type FleetAgent = {
+  id: string
+  soul: string
+  model: string
+  capabilities: Array<string>
+  cost_tier: 'low' | 'standard' | 'high'
+  cron_schedule: string | null
+  reads: Array<string>
+  writes: Array<string>
+  status?: 'idle' | 'active' | 'spawned'
+  soul_content?: string
+}
+
+export type FleetRegistry = {
+  agents: Array<FleetAgent>
+  model_routing: Record<string, string>
+  shared_context_path: string
+}
+
+export type FleetStatus = {
+  ok: boolean
+  error?: string
+  registry?: FleetRegistry
+  active_sessions?: Array<string>
+}
+
+export type SharedContextFile = {
+  name: string
+  path: string
+  type: 'file' | 'directory'
+  modified?: string
+  size?: number
+  content?: string
+}
+
+export type WorkspaceInfo = {
+  soul?: string
+  memory?: string
+  agents?: string
+  shared_context_files?: Array<SharedContextFile>
+}
+
+export type ActivityEvent = {
+  id: string
+  type: 'gateway' | 'github' | 'cron' | 'agent' | 'feedback' | 'system'
+  agent?: string
+  action: string
+  summary: string
+  timestamp: string
+  metadata?: Record<string, unknown>
+}
+
+export type ApprovalItem = {
+  id: string
+  type: 'pr_merge' | 'deployment' | 'agent_action' | 'decision'
+  title: string
+  description: string
+  agent?: string
+  task?: string
+  status: 'pending' | 'approved' | 'rejected'
+  created: string
+  decided?: string
+  reviewer?: string
+  comment?: string
+}
+
+export type MetricPoint = {
+  date: string
+  value: number
+}
+
+export type MetricsSummary = {
+  throughput: Array<MetricPoint>
+  cycle_time: Array<MetricPoint>
+  token_costs: Array<MetricPoint>
+  fleet_utilization: Array<{ agent: string; hours: number }>
+}
+
+export type WebhookConfig = {
+  id: string
+  name: string
+  url: string
+  source: string
+  created: string
+  last_received?: string
+  event_count: number
+  active: boolean
+}
+
+export type WorkflowRun = {
+  id: string
+  name: string
+  type: 'cron_pipeline' | 'review_chain'
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  steps: Array<WorkflowStep>
+  started?: string
+  completed?: string
+}
+
+export type WorkflowStep = {
+  agent: string
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+  started?: string
+  completed?: string
+  duration_ms?: number
+  token_cost?: number
+  output_preview?: string
+}
+
 export type SystemMetrics = {
   hostname: string
   os: string

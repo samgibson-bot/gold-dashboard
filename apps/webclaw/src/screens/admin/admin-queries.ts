@@ -8,4 +8,13 @@ export const adminQueryKeys = {
   config: ['admin', 'config'] as const,
   browser: ['admin', 'browser'] as const,
   ideas: ['admin', 'ideas'] as const,
+  fleet: ['admin', 'fleet'] as const,
+  memory: ['admin', 'memory'] as const,
+  activity: ['admin', 'activity'] as const,
+  approvals: ['admin', 'approvals'] as const,
+  metrics: function metrics(range?: string) {
+    return ['admin', 'metrics', range ?? '7d'] as const
+  },
+  webhooks: ['admin', 'webhooks'] as const,
+  workflows: ['admin', 'workflows'] as const,
 } as const
