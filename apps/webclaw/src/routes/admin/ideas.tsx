@@ -18,9 +18,7 @@ import type { IdeaFile } from '@/screens/admin/types'
 type IdeasResponse = {
   ok: boolean
   error?: string
-  ideas?: {
-    files?: Array<IdeaFile>
-  }
+  ideas?: Array<IdeaFile>
 }
 
 type CreateIdeaResponse = {
@@ -29,8 +27,6 @@ type CreateIdeaResponse = {
   result?: {
     issueNumber: number
     issueUrl: string
-    filePath: string
-    slug: string
   }
 }
 
@@ -86,7 +82,7 @@ export const Route = createFileRoute('/admin/ideas')({
 })
 
 function IdeasPage() {
-  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const queryClient = useQueryClient()
@@ -101,17 +97,17 @@ function IdeasPage() {
     refetchInterval: 60_000,
   })
 
-  const files = data?.ideas?.files ?? []
-  const selectedFile = files.find(function findSelected(f) {
-    return f.path === selectedPath
+  const ideas = data?.ideas ?? []
+  const selectedFile = ideas.find(function findSelected(f) {
+    return f.issueNumber === selectedId
   })
 
   // Group ideas by status for kanban columns
   const columns = COLUMN_CONFIG.map(function createColumn(config) {
     return {
       ...config,
-      ideas: files.filter(function filterByStatus(file) {
-        return file.status === config.status
+      ideas: ideas.filter(function filterByStatus(idea) {
+        return idea.status === config.status
       }),
     }
   })
@@ -126,7 +122,7 @@ function IdeasPage() {
           </h1>
           {!isLoading && !error && (
             <p className="text-sm text-primary-600 dark:text-primary-400 mt-1">
-              {files.length} total ideas across {columns.length} stages
+              {ideas.length} total ideas across {columns.length} stages
             </p>
           )}
         </div>
@@ -171,8 +167,8 @@ function IdeasPage() {
         <div className="text-sm text-red-600 dark:text-red-400">
           {error instanceof Error ? error.message : 'Failed to load'}
         </div>
-      ) : files.length === 0 ? (
-        <div className="text-sm text-primary-500">No idea files found</div>
+      ) : ideas.length === 0 ? (
+        <div className="text-sm text-primary-500">No ideas found</div>
       ) : (
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
           <div className="flex gap-4 h-full pb-4" style={{ minWidth: 'max-content' }}>
@@ -214,10 +210,10 @@ function IdeasPage() {
                       column.ideas.map(function renderCard(idea) {
                         return (
                           <button
-                            key={idea.path}
+                            key={idea.issueNumber}
                             type="button"
                             onClick={function handleCardClick() {
-                              setSelectedPath(idea.path)
+                              setSelectedId(idea.issueNumber)
                             }}
                             className="w-full text-left bg-white dark:bg-primary-900 border border-primary-200 dark:border-primary-700 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer group"
                           >
@@ -227,11 +223,9 @@ function IdeasPage() {
 
                             {/* Metadata */}
                             <div className="flex flex-wrap gap-1.5 mb-2">
-                              {idea.issueNumber ? (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300 font-medium">
-                                  #{idea.issueNumber}
-                                </span>
-                              ) : null}
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300 font-medium">
+                                #{idea.issueNumber}
+                              </span>
                               {idea.prNumber ? (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 font-medium">
                                   PR #{idea.prNumber}
@@ -240,7 +234,7 @@ function IdeasPage() {
                             </div>
 
                             {/* Tags */}
-                            {idea.tags && idea.tags.length > 0 ? (
+                            {idea.tags.length > 0 ? (
                               <div className="flex gap-1 flex-wrap">
                                 {idea.tags.slice(0, 3).map(function renderTag(tag) {
                                   return (
@@ -282,9 +276,9 @@ function IdeasPage() {
 
       {/* Detail Modal */}
       <DialogRoot
-        open={selectedPath !== null}
+        open={selectedId !== null}
         onOpenChange={function handleDetailClose(open) {
-          if (!open) setSelectedPath(null)
+          if (!open) setSelectedId(null)
         }}
       >
         <DialogContent className="w-[min(800px,92vw)] max-h-[85vh] overflow-hidden flex flex-col">
@@ -307,7 +301,7 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
       const res = await fetch('/api/admin/ideas/status', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: file.path, status: newStatus }),
+        body: JSON.stringify({ issueNumber: file.issueNumber, status: newStatus }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: 'Request failed' }))
@@ -328,29 +322,14 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
             {file.title}
           </DialogTitle>
           <div className="flex gap-2 shrink-0 ml-3">
-            {file.issueUrl ? (
-              <a
-                href={file.issueUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] px-2 py-1 rounded border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors"
-              >
-                Issue #{file.issueNumber}
-              </a>
-            ) : null}
-            {file.githubUrl ? (
-              <a
-                href={file.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] px-2 py-1 rounded border border-primary-200 dark:border-primary-600 text-primary-600 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-800 transition-colors inline-flex items-center gap-1"
-              >
-                View on GitHub
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-            ) : null}
+            <a
+              href={file.issueUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] px-2 py-1 rounded border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors"
+            >
+              Issue #{file.issueNumber}
+            </a>
             {file.prUrl ? (
               <a
                 href={file.prUrl}
@@ -367,7 +346,7 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
         {/* Date */}
         {file.created ? (
           <div className="text-xs text-primary-400 mb-3">
-            {file.created}
+            {new Date(file.created).toLocaleDateString()}
           </div>
         ) : null}
 
@@ -406,7 +385,7 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
         ) : null}
 
         {/* Tags */}
-        {file.tags && file.tags.length > 0 ? (
+        {file.tags.length > 0 ? (
           <div className="flex gap-1.5 mb-4 flex-wrap">
             {file.tags.map(function renderTag(tag) {
               return (
@@ -435,8 +414,8 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
       {/* Chat input */}
       <IdeaChatInput
         ideaTitle={file.title}
-        ideaPath={file.path}
-        ideaStatus={file.status ?? ''}
+        ideaNumber={file.issueNumber}
+        ideaStatus={file.status}
       />
     </div>
   )
@@ -446,11 +425,11 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
 
 function IdeaChatInput({
   ideaTitle,
-  ideaPath,
+  ideaNumber,
   ideaStatus,
 }: {
   ideaTitle: string
-  ideaPath: string
+  ideaNumber: number
   ideaStatus: string
 }) {
   const [message, setMessage] = useState('')
@@ -464,7 +443,7 @@ function IdeaChatInput({
         body: JSON.stringify({
           message: msg,
           ideaTitle,
-          ideaPath,
+          ideaNumber,
           ideaStatus,
         }),
       })
@@ -562,25 +541,8 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     ((sourceType === 'url' && sourceUrl.trim().length > 0) ||
       (sourceType === 'screenshot' && screenshotData.length > 0))
 
-  // Static creation mutation (no source)
-  const staticMutation = useMutation({
-    mutationFn: async function submitIdea() {
-      const res = await fetch('/api/admin/ideas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, tags }),
-      })
-      const data = (await res.json()) as CreateIdeaResponse
-      if (!data.ok) throw new Error(data.error ?? 'Failed to create idea')
-      return data.result!
-    },
-    onSuccess: function handleSuccess() {
-      onCreated()
-    },
-  })
-
-  // Gateway submission mutation (always used now)
-  const gatewayMutation = useMutation({
+  // Gateway submission mutation (always used)
+  const mutation = useMutation({
     mutationFn: async function submitToGateway() {
       const source = hasSource
         ? sourceType === 'url'
@@ -607,8 +569,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     },
   })
 
-  const mutation = gatewayMutation  // Always use AI processing
-  const isPending = staticMutation.isPending || gatewayMutation.isPending
+  const isPending = mutation.isPending
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -904,7 +865,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           ) : null}
 
           {/* Success */}
-          {gatewayMutation.isSuccess ? (
+          {mutation.isSuccess ? (
             <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
               Submitted! OpenClaw will analyze, research, and create a detailed GitHub Issue with integration pathways.
             </div>
@@ -917,7 +878,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           <Button
             disabled={!canSubmit || isPending}
             onClick={function handleSubmit() {
-              gatewayMutation.mutate()
+              mutation.mutate()
             }}
           >
             {isPending ? 'Submitting...' : 'Submit to OpenClaw'}

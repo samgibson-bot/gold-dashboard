@@ -53,11 +53,9 @@ function buildSeedPrompt(params: {
     `   - **Insights**: non-obvious connections, second-order effects, or creative applications the submitter might not have considered`,
     `   - Rank each pathway by feasibility (1-5) and potential impact (1-5)`,
     '',
-    `4. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? `Review the suggested title \"${title}\" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like \"Integration: X\" or \"Feature: Y\" or \"Enhancement: Z\".` : 'Generate a concise, descriptive, standardized title based on the analysis.'}. Include source link (if provided), integration pathways, and synergy analysis.`,
+    `4. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` — review the suggested title \"${title}\" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like \"Integration: X\" or \"Feature: Y\" or \"Enhancement: Z\".` : ' — generate a concise, descriptive, standardized title based on the analysis.'}. Include source link (if provided), integration pathways, and synergy analysis. **Apply these labels:** \`idea\`, \`seed\`, and any relevant tag labels (e.g. \`automation\`, \`agents\`, \`infrastructure\`). The issue IS the idea — do NOT create any .md files.`,
     '',
-    `5. **Create idea file** on main branch (\`ideas/<slug>.md\`) with YAML frontmatter including \`status: seed\`, title, created date, tags, and issue number. Body should contain the source and a summary.`,
-    '',
-    `6. **Thinking Cycle** — After creating the issue, add an expansive 10-point roadmap as the first comment covering: problem definition, architecture sketch, dependencies, MVP scope, data model, integration points, testing strategy, deployment plan, risks/mitigations, and future extensions.`,
+    `5. **Thinking Cycle** — After creating the issue, add an expansive 10-point roadmap as the first comment covering: problem definition, architecture sketch, dependencies, MVP scope, data model, integration points, testing strategy, deployment plan, risks/mitigations, and future extensions.`,
   ]
 
   return parts.filter(Boolean).join('\n')

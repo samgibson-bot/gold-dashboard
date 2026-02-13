@@ -112,20 +112,15 @@ export type UsageStats = {
 }
 
 export type IdeaFile = {
-  path: string
+  issueNumber: number
   title: string
-  created?: string
-  status?: string
-  tags?: Array<string>
-  content?: string
-  metadata?: Record<string, string>
-  slug?: string
-  branch?: string
-  githubUrl?: string
+  status: string
+  tags: Array<string>
+  content: string
+  created: string
+  issueUrl: string
   prNumber?: number
   prUrl?: string
-  issueNumber?: number
-  issueUrl?: string
 }
 
 export type FleetAgent = {

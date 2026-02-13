@@ -23,14 +23,14 @@ export const Route = createFileRoute('/api/admin/ideas/status')({
             unknown
           >
 
-          const path =
-            typeof body.path === 'string' ? body.path.trim() : ''
+          const issueNumber =
+            typeof body.issueNumber === 'number' ? body.issueNumber : 0
           const status =
             typeof body.status === 'string' ? body.status.trim() : ''
 
-          if (!path) {
+          if (!issueNumber) {
             return json(
-              { ok: false, error: 'path is required' },
+              { ok: false, error: 'issueNumber is required' },
               { status: 400 },
             )
           }
@@ -45,7 +45,7 @@ export const Route = createFileRoute('/api/admin/ideas/status')({
             )
           }
 
-          await updateIdeaStatus(path, status)
+          await updateIdeaStatus(issueNumber, status)
 
           return json({ ok: true })
         } catch (err) {
