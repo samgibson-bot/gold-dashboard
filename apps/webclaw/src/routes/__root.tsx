@@ -5,6 +5,7 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { CommandPalette } from '@/components/command-palette'
 
 import appCss from '../styles.css?url'
 
@@ -94,6 +95,7 @@ function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <CommandPalette />
     </QueryClientProvider>
   )
 }
