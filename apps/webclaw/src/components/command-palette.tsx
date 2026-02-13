@@ -1,0 +1,309 @@
+'use client'
+
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { Dialog } from '@base-ui/react/dialog'
+import { cn } from '@/lib/utils'
+import Fuse from 'fuse.js'
+import {
+  DashboardSquare01Icon,
+  Coins01Icon,
+  FileScriptIcon,
+  Settings01Icon,
+  BrowserIcon,
+  Calendar03Icon,
+  TargetIcon,
+  Add01Icon,
+  LightbulbIcon,
+} from '@hugeicons/react'
+
+type QuickAction = {
+  id: string
+  label: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
+  keywords: string[]
+  action: () => void
+}
+
+export function CommandPalette() {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const navigate = useNavigate()
+
+  const actions: QuickAction[] = useMemo(
+    () => [
+      {
+        id: 'new-idea',
+        label: 'New Idea',
+        description: 'Submit a new idea for OpenClaw',
+        icon: Add01Icon,
+        keywords: ['create', 'add', 'new', 'idea', 'submit'],
+        action: () => {
+          navigate({ to: '/admin/ideas' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'ideas',
+        label: 'Ideas',
+        description: 'View and manage ideas',
+        icon: LightbulbIcon,
+        keywords: ['ideas', 'view', 'list', 'manage'],
+        action: () => {
+          navigate({ to: '/admin/ideas' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'status',
+        label: 'System Status',
+        description: 'View OpenClaw system status',
+        icon: DashboardSquare01Icon,
+        keywords: ['status', 'dashboard', 'overview', 'system'],
+        action: () => {
+          navigate({ to: '/admin/status' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'tokens',
+        label: 'Token Usage & Costs',
+        description: 'View token usage and cost analytics',
+        icon: Coins01Icon,
+        keywords: ['tokens', 'usage', 'cost', 'analytics', 'spending'],
+        action: () => {
+          navigate({ to: '/admin/tokens' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'logs',
+        label: 'Logs',
+        description: 'View system logs',
+        icon: FileScriptIcon,
+        keywords: ['logs', 'history', 'debug'],
+        action: () => {
+          navigate({ to: '/admin/logs' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'cron',
+        label: 'Cron Jobs',
+        description: 'Manage scheduled tasks',
+        icon: Calendar03Icon,
+        keywords: ['cron', 'schedule', 'jobs', 'tasks'],
+        action: () => {
+          navigate({ to: '/admin/cron' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'browser',
+        label: 'Browser Agent',
+        description: 'Manage browser automation',
+        icon: BrowserIcon,
+        keywords: ['browser', 'automation', 'agent'],
+        action: () => {
+          navigate({ to: '/admin/browser' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'missions',
+        label: 'Missions',
+        description: 'View and manage missions',
+        icon: TargetIcon,
+        keywords: ['missions', 'tasks', 'goals'],
+        action: () => {
+          navigate({ to: '/admin/missions' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'config',
+        label: 'Configuration',
+        description: 'View system configuration',
+        icon: Settings01Icon,
+        keywords: ['config', 'settings', 'configuration'],
+        action: () => {
+          navigate({ to: '/admin/config' })
+          setOpen(false)
+        },
+      },
+    ],
+    [navigate],
+  )
+
+  const fuse = useMemo(
+    () =>
+      new Fuse(actions, {
+        keys: ['label', 'description', 'keywords'],
+        threshold: 0.3,
+        includeScore: true,
+      }),
+    [actions],
+  )
+
+  const filteredActions = useMemo(() => {
+    if (!search.trim()) return actions
+    return fuse.search(search).map((result) => result.item)
+  }, [search, fuse, actions])
+
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [search])
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setOpen((prev) => !prev)
+      }
+
+      if (!open) return
+
+      if (e.key === 'Escape') {
+        setOpen(false)
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex((prev) =>
+          prev < filteredActions.length - 1 ? prev + 1 : 0,
+        )
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex((prev) =>
+          prev > 0 ? prev - 1 : filteredActions.length - 1,
+        )
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        const action = filteredActions[selectedIndex]
+        if (action) {
+          action.action()
+          setSearch('')
+        }
+      }
+    },
+    [open, filteredActions, selectedIndex],
+  )
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
+
+  useEffect(() => {
+    if (!open) {
+      setSearch('')
+      setSelectedIndex(0)
+    }
+  }, [open])
+
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="fixed inset-0 bg-ink/40 transition-all duration-150 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 dark:bg-surface/40 z-50" />
+        <Dialog.Popup
+          className={cn(
+            'fixed left-1/2 top-[20vh] -translate-x-1/2',
+            'w-[min(640px,92vw)] rounded-[20px] border border-primary-200 bg-primary-50 p-0 shadow-2xl',
+            'transition-all duration-150',
+            'data-[state=open]:opacity-100 data-[state=closed]:opacity-0',
+            'data-[state=open]:scale-100 data-[state=closed]:scale-95',
+            'z-50',
+          )}
+        >
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3 border-b border-primary-200 px-4 py-3">
+              <svg
+                className="h-5 w-5 text-primary-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search for actions..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 bg-transparent text-sm text-primary-900 placeholder:text-primary-400 outline-none"
+                autoFocus
+              />
+              <kbd className="px-2 py-1 text-xs font-medium text-primary-500 bg-primary-100 border border-primary-200 rounded">
+                ESC
+              </kbd>
+            </div>
+
+            <div className="max-h-[400px] overflow-y-auto py-2">
+              {filteredActions.length > 0 ? (
+                filteredActions.map((action, index) => {
+                  const Icon = action.icon
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => {
+                        action.action()
+                        setSearch('')
+                      }}
+                      onMouseEnter={() => setSelectedIndex(index)}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
+                        index === selectedIndex
+                          ? 'bg-primary-100'
+                          : 'hover:bg-primary-100',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'flex items-center justify-center w-10 h-10 rounded-lg',
+                          index === selectedIndex
+                            ? 'bg-primary-200'
+                            : 'bg-primary-100',
+                        )}
+                      >
+                        <Icon className="h-5 w-5 text-primary-700" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-primary-900">
+                          {action.label}
+                        </div>
+                        <div className="text-xs text-primary-600 truncate">
+                          {action.description}
+                        </div>
+                      </div>
+                      {index === selectedIndex && (
+                        <kbd className="px-2 py-1 text-xs font-medium text-primary-500 bg-primary-50 border border-primary-200 rounded">
+                          ⏎
+                        </kbd>
+                      )}
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="px-4 py-8 text-center text-sm text-primary-500">
+                  No actions found
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between border-t border-primary-200 px-4 py-2 text-xs text-primary-500">
+              <span>Navigate with ↑↓ • Select with ⏎</span>
+              <kbd className="px-2 py-1 font-medium bg-primary-100 border border-primary-200 rounded">
+                ⌘K
+              </kbd>
+            </div>
+          </div>
+        </Dialog.Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
