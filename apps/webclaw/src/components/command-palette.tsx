@@ -15,6 +15,7 @@ import {
   Calendar03Icon,
   Target01Icon,
   Idea01Icon,
+  KanbanIcon,
 } from '@hugeicons/core-free-icons'
 import type { IconSvgObject } from '@hugeicons/core-free-icons'
 
@@ -54,6 +55,17 @@ export function CommandPalette() {
         keywords: ['ideas', 'view', 'list', 'manage'],
         action: () => {
           navigate({ to: '/admin/ideas' })
+          setOpen(false)
+        },
+      },
+      {
+        id: 'kanban',
+        label: 'Kanban Board',
+        description: 'Visual board for idea workflow',
+        icon: KanbanIcon,
+        keywords: ['kanban', 'board', 'workflow', 'ideas', 'tasks'],
+        action: () => {
+          navigate({ to: '/admin/kanban' })
           setOpen(false)
         },
       },

@@ -10,6 +10,7 @@ import {
   Idea01Icon,
   ArrowLeft01Icon,
   CpuIcon,
+  KanbanIcon,
 } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,7 @@ type NavItem = {
 const navItems: Array<NavItem> = [
   { to: '/admin/status', label: 'Status', icon: DashboardSquare01Icon },
   { to: '/admin/system', label: 'System', icon: CpuIcon },
+  { to: '/admin/kanban', label: 'Kanban', icon: KanbanIcon },
   { to: '/admin/tokens', label: 'Tokens', icon: CoinsIcon },
   { to: '/admin/logs', label: 'Logs', icon: File01Icon },
   { to: '/admin/cron', label: 'Cron', icon: Clock01Icon },
