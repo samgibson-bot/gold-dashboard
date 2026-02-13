@@ -13,7 +13,6 @@ import {
   BrowserIcon,
   Calendar03Icon,
   TargetIcon,
-  Add01Icon,
   LightbulbIcon,
 } from '@hugeicons/react'
 
@@ -38,7 +37,7 @@ export function CommandPalette() {
         id: 'new-idea',
         label: 'New Idea',
         description: 'Submit a new idea for OpenClaw',
-        icon: Add01Icon,
+        icon: LightbulbIcon,
         keywords: ['create', 'add', 'new', 'idea', 'submit'],
         action: () => {
           navigate({ to: '/admin/ideas' })
