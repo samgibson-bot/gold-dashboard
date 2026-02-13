@@ -13,6 +13,7 @@ import { Route as NewRouteImport } from './routes/new'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ChatSessionKeyRouteImport } from './routes/chat/$sessionKey'
 import { Route as ApiSessionsRouteImport } from './routes/api/sessions'
 import { Route as ApiSendRouteImport } from './routes/api/send'
@@ -70,6 +71,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ChatSessionKeyRoute = ChatSessionKeyRouteImport.update({
   id: '/chat/$sessionKey',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/admin/activity': typeof ApiAdminActivityRoute
   '/api/admin/approvals': typeof ApiAdminApprovalsRoute
   '/api/admin/browser': typeof ApiAdminBrowserRoute
@@ -302,7 +309,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/connect': typeof ConnectRoute
   '/new': typeof NewRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -325,6 +331,7 @@ export interface FileRoutesByTo {
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
+  '/admin': typeof AdminIndexRoute
   '/api/admin/activity': typeof ApiAdminActivityRoute
   '/api/admin/approvals': typeof ApiAdminApprovalsRoute
   '/api/admin/browser': typeof ApiAdminBrowserRoute
@@ -369,6 +376,7 @@ export interface FileRoutesById {
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/admin/activity': typeof ApiAdminActivityRoute
   '/api/admin/approvals': typeof ApiAdminApprovalsRoute
   '/api/admin/browser': typeof ApiAdminBrowserRoute
@@ -414,6 +422,7 @@ export interface FileRouteTypes {
     | '/api/send'
     | '/api/sessions'
     | '/chat/$sessionKey'
+    | '/admin/'
     | '/api/admin/activity'
     | '/api/admin/approvals'
     | '/api/admin/browser'
@@ -434,7 +443,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/connect'
     | '/new'
     | '/admin/activity'
@@ -457,6 +465,7 @@ export interface FileRouteTypes {
     | '/api/send'
     | '/api/sessions'
     | '/chat/$sessionKey'
+    | '/admin'
     | '/api/admin/activity'
     | '/api/admin/approvals'
     | '/api/admin/browser'
@@ -500,6 +509,7 @@ export interface FileRouteTypes {
     | '/api/send'
     | '/api/sessions'
     | '/chat/$sessionKey'
+    | '/admin/'
     | '/api/admin/activity'
     | '/api/admin/approvals'
     | '/api/admin/browser'
@@ -574,6 +584,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/chat/$sessionKey': {
       id: '/chat/$sessionKey'
@@ -853,6 +870,7 @@ interface AdminRouteChildren {
   AdminTokensRoute: typeof AdminTokensRoute
   AdminWebhooksRoute: typeof AdminWebhooksRoute
   AdminWorkflowsRoute: typeof AdminWorkflowsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -871,6 +889,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminTokensRoute: AdminTokensRoute,
   AdminWebhooksRoute: AdminWebhooksRoute,
   AdminWorkflowsRoute: AdminWorkflowsRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

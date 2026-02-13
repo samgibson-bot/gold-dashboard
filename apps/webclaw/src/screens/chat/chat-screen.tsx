@@ -25,8 +25,6 @@ import {
   updateHistoryMessageByClientId,
   updateSessionLastMessage,
 } from './chat-queries'
-import { chatUiQueryKey, getChatUiState, setChatUiState } from './chat-ui'
-import { ChatSidebar } from './components/chat-sidebar'
 import { ChatHeader } from './components/chat-header'
 import { useExport } from '@/hooks/use-export'
 import { ChatMessageList } from './components/chat-message-list'
@@ -45,12 +43,10 @@ import {
 } from './pending-send'
 import { useChatMeasurements } from './hooks/use-chat-measurements'
 import { useChatHistory } from './hooks/use-chat-history'
-import { useChatMobile } from './hooks/use-chat-mobile'
 import { useChatSessions } from './hooks/use-chat-sessions'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import type { ChatComposerHelpers } from './components/chat-composer'
 import type { HistoryResponse } from './types'
-import { cn } from '@/lib/utils'
 
 type ChatScreenProps = {
   activeFriendlyId: string
@@ -89,7 +85,6 @@ export function ChatScreen({
   const lastAssistantSignature = useRef('')
   const refreshHistoryRef = useRef<() => void>(() => {})
   const pendingStartRef = useRef(false)
-  const { isMobile } = useChatMobile(queryClient)
   const {
     sessionsQuery,
     sessions,
@@ -124,16 +119,6 @@ export function ChatScreen({
     sessionTitle: activeTitle,
   })
 
-  const uiQuery = useQuery({
-    queryKey: chatUiQueryKey,
-    queryFn: function readUiState() {
-      return getChatUiState(queryClient)
-    },
-    initialData: function initialUiState() {
-      return getChatUiState(queryClient)
-    },
-    staleTime: Infinity,
-  })
   const gatewayStatusQuery = useQuery({
     queryKey: ['gateway', 'status'],
     queryFn: fetchGatewayStatus,
@@ -153,7 +138,6 @@ export function ChatScreen({
   const handleGatewayRefetch = useCallback(() => {
     void gatewayStatusQuery.refetch()
   }, [gatewayStatusQuery])
-  const isSidebarCollapsed = uiQuery.data?.isSidebarCollapsed ?? false
   const handleActiveSessionDelete = useCallback(() => {
     setError(null)
     setIsRedirecting(true)
@@ -534,12 +518,7 @@ export function ChatScreen({
     setPinToTop(false)
     clearHistoryMessages(queryClient, 'new', 'new')
     navigate({ to: '/new' })
-    if (isMobile) {
-      setChatUiState(queryClient, function collapse(state) {
-        return { ...state, isSidebarCollapsed: true }
-      })
-    }
-  }, [isMobile, navigate, queryClient])
+  }, [navigate, queryClient])
 
   const handleSearchCurrent = useCallback(() => {
     setSearchMode('current')
@@ -556,25 +535,6 @@ export function ChatScreen({
     onSearchGlobal: handleSearchGlobal,
     onNewChat: startNewChat,
   })
-
-  const handleToggleSidebarCollapse = useCallback(() => {
-    setChatUiState(queryClient, function toggle(state) {
-      return { ...state, isSidebarCollapsed: !state.isSidebarCollapsed }
-    })
-  }, [queryClient])
-
-  const handleSelectSession = useCallback(() => {
-    if (!isMobile) return
-    setChatUiState(queryClient, function collapse(state) {
-      return { ...state, isSidebarCollapsed: true }
-    })
-  }, [isMobile, queryClient])
-
-  const handleOpenSidebar = useCallback(() => {
-    setChatUiState(queryClient, function open(state) {
-      return { ...state, isSidebarCollapsed: false }
-    })
-  }, [queryClient])
 
   const historyLoading =
     (historyQuery.isLoading && !historyQuery.data) || isRedirecting
@@ -595,80 +555,43 @@ export function ChatScreen({
     )
   }, [gatewayError, handleGatewayRefetch, showGatewayNotice])
 
-  const sidebar = (
-    <ChatSidebar
-      sessions={sessions}
-      activeFriendlyId={activeFriendlyId}
-      creatingSession={creatingSession}
-      onCreateSession={startNewChat}
-      onOpenSearch={handleSearchGlobal}
-      isCollapsed={isMobile ? false : isSidebarCollapsed}
-      onToggleCollapse={handleToggleSidebarCollapse}
-      onSelectSession={handleSelectSession}
-      onActiveSessionDelete={handleActiveSessionDelete}
-    />
-  )
-
   return (
-    <div className="h-screen bg-surface text-primary-900">
-      <div
-        className={cn(
-          'h-full overflow-hidden',
-          isMobile ? 'relative' : 'grid grid-cols-[auto_1fr]',
-        )}
-      >
-        {hideUi ? null : isMobile ? (
-          <>
-            <div
-              className={cn(
-                'fixed inset-y-0 left-0 z-50 w-[300px] transition-transform duration-200',
-                isSidebarCollapsed ? '-translate-x-full' : 'translate-x-0',
-              )}
-            >
-              {sidebar}
-            </div>
-          </>
-        ) : (
-          sidebar
-        )}
+    <div className="h-full flex flex-col min-h-0">
+      <ChatHeader
+        activeTitle={activeTitle}
+        wrapperRef={headerRef}
+        showSidebarButton={false}
+        onOpenSidebar={() => {}}
+        usedTokens={activeSession?.totalTokens}
+        maxTokens={activeSession?.contextTokens}
+        onExport={exportConversation}
+        hasMessages={displayMessages.length > 0}
+      />
 
-        <main className="flex flex-col h-full min-h-0" ref={mainRef}>
-          <ChatHeader
-            activeTitle={activeTitle}
-            wrapperRef={headerRef}
-            showSidebarButton={isMobile}
-            onOpenSidebar={handleOpenSidebar}
-            usedTokens={activeSession?.totalTokens}
-            maxTokens={activeSession?.contextTokens}
-            onExport={exportConversation}
-            hasMessages={displayMessages.length > 0}
+      {hideUi ? null : (
+        <>
+          <ChatMessageList
+            messages={displayMessages}
+            loading={historyLoading}
+            empty={historyEmpty}
+            notice={gatewayNotice}
+            noticePosition="end"
+            waitingForResponse={waitingForResponse}
+            sessionKey={activeCanonicalKey}
+            pinToTop={pinToTop}
+            pinGroupMinHeight={pinGroupMinHeight}
+            headerHeight={headerHeight}
+            contentStyle={stableContentStyle}
           />
+          <ChatComposer
+            onSubmit={send}
+            isLoading={sending}
+            disabled={sending}
+            wrapperRef={composerRef}
+          />
+        </>
+      )}
 
-          {hideUi ? null : (
-            <>
-              <ChatMessageList
-                messages={displayMessages}
-                loading={historyLoading}
-                empty={historyEmpty}
-                notice={gatewayNotice}
-                noticePosition="end"
-                waitingForResponse={waitingForResponse}
-                sessionKey={activeCanonicalKey}
-                pinToTop={pinToTop}
-                pinGroupMinHeight={pinGroupMinHeight}
-                headerHeight={headerHeight}
-                contentStyle={stableContentStyle}
-              />
-              <ChatComposer
-                onSubmit={send}
-                isLoading={sending}
-                disabled={sending}
-                wrapperRef={composerRef}
-              />
-            </>
-          )}
-        </main>
-      </div>
       <SearchDialog
         open={showSearchDialog}
         mode={searchMode}

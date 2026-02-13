@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CommandPalette } from '@/components/command-palette'
+import { AdminNav } from '@/components/admin-nav'
 
 import appCss from '../styles.css?url'
 
@@ -94,7 +95,12 @@ const queryClient = new QueryClient()
 function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <div className="h-screen bg-surface text-primary-900 grid grid-cols-[auto_1fr]">
+        <AdminNav />
+        <main className="flex flex-col h-full min-h-0 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
       <CommandPalette />
     </QueryClientProvider>
   )

@@ -11,7 +11,6 @@ import {
   Settings01Icon,
   BrowserIcon,
   Idea01Icon,
-  ArrowLeft01Icon,
   CpuIcon,
   KanbanIcon,
   UserGroupIcon,
@@ -24,7 +23,9 @@ import {
   ArrowDown01Icon,
   ArrowRight01Icon,
   Search01Icon,
+  PencilEdit02Icon,
 } from '@hugeicons/core-free-icons'
+import { WebClawIconBig } from '@/components/icons/webclaw-big'
 import { cn } from '@/lib/utils'
 
 type NavItem = {
@@ -39,6 +40,12 @@ type NavSection = {
 }
 
 const navSections: Array<NavSection> = [
+  {
+    title: 'Chat',
+    items: [
+      { to: '/new', label: 'New Chat', icon: PencilEdit02Icon },
+    ],
+  },
   {
     title: 'Overview',
     items: [
@@ -109,10 +116,10 @@ export function AdminNav() {
       <div className="px-3 h-12 flex items-center justify-between border-b border-primary-200">
         <Link
           to="/new"
-          className="text-sm text-primary-600 hover:text-primary-900 flex items-center gap-1.5 transition-colors"
+          className="text-sm text-primary-900 hover:text-primary-700 flex items-center gap-2 transition-colors"
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} strokeWidth={1.5} />
-          <span className="font-medium">Chat</span>
+          <WebClawIconBig className="size-5 rounded-sm" />
+          <span className="font-semibold">WebClaw</span>
         </Link>
       </div>
 
