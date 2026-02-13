@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Dialog } from '@base-ui/react/dialog'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { cn } from '@/lib/utils'
 import Fuse from 'fuse.js'
 import {
@@ -15,12 +16,13 @@ import {
   Target01Icon,
   Idea01Icon,
 } from '@hugeicons/core-free-icons'
+import type { IconSvgObject } from '@hugeicons/core-free-icons'
 
 type QuickAction = {
   id: string
   label: string
   description: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: IconSvgObject
   keywords: string[]
   action: () => void
 }
@@ -245,7 +247,6 @@ export function CommandPalette() {
             <div className="max-h-[400px] overflow-y-auto py-2">
               {filteredActions.length > 0 ? (
                 filteredActions.map((action, index) => {
-                  const Icon = action.icon
                   return (
                     <button
                       key={action.id}
@@ -269,7 +270,12 @@ export function CommandPalette() {
                             : 'bg-primary-100',
                         )}
                       >
-                        <Icon className="h-5 w-5 text-primary-700" />
+                        <HugeiconsIcon
+                          icon={action.icon}
+                          size={20}
+                          strokeWidth={1.6}
+                          className="text-primary-700"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-primary-900">

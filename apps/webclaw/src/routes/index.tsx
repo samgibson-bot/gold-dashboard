@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { HugeiconsIcon } from '@hugeicons/react'
 import {
   DashboardSquare01Icon,
   Coins01Icon,
@@ -10,6 +11,7 @@ import {
   Idea01Icon,
   MessageMultiple01Icon,
 } from '@hugeicons/core-free-icons'
+import type { IconSvgObject } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/')({
@@ -20,7 +22,7 @@ type QuickActionCard = {
   id: string
   label: string
   description: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: IconSvgObject
   to: string
   color: string
 }
@@ -170,7 +172,6 @@ function IndexRoute() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickActions.map(function renderAction(action) {
-            const Icon = action.icon
             const colors = colorClasses[action.color]
             return (
               <Link
@@ -187,7 +188,12 @@ function IndexRoute() {
                     'flex items-center justify-center w-12 h-12 rounded-xl bg-white dark:bg-primary-900 shadow-sm transition-transform group-hover:scale-110',
                   )}
                 >
-                  <Icon className={cn('h-6 w-6', colors.icon)} />
+                  <HugeiconsIcon
+                    icon={action.icon}
+                    size={24}
+                    strokeWidth={1.6}
+                    className={colors.icon}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-semibold text-primary-900 mb-1">
