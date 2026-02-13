@@ -55,6 +55,19 @@ const STATUS_COLORS: Record<string, string> = {
   unknown: 'bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400',
 }
 
+const COLUMN_CONFIG: Array<{
+  status: string
+  title: string
+  color: string
+}> = [
+  { status: 'seed', title: 'Seed', color: 'bg-primary-100 border-primary-300' },
+  { status: 'elaborating', title: 'Elaborating', color: 'bg-blue-50 border-blue-300' },
+  { status: 'reviewing', title: 'Reviewing', color: 'bg-amber-50 border-amber-300' },
+  { status: 'validated', title: 'Validated', color: 'bg-green-50 border-green-300' },
+  { status: 'building', title: 'Building', color: 'bg-purple-50 border-purple-300' },
+  { status: 'completed', title: 'Completed', color: 'bg-emerald-50 border-emerald-300' },
+]
+
 const SUGGESTED_TAGS = [
   'automation',
   'agents',
@@ -93,12 +106,30 @@ function IdeasPage() {
     return f.path === selectedPath
   })
 
+  // Group ideas by status for kanban columns
+  const columns = COLUMN_CONFIG.map(function createColumn(config) {
+    return {
+      ...config,
+      ideas: files.filter(function filterByStatus(file) {
+        return file.status === config.status
+      }),
+    }
+  })
+
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-medium text-primary-950 dark:text-primary-50">
-          Ideas
-        </h1>
+    <div className="flex flex-col h-full p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-lg font-medium text-primary-950 dark:text-primary-50">
+            Ideas
+          </h1>
+          {!isLoading && !error && (
+            <p className="text-sm text-primary-600 dark:text-primary-400 mt-1">
+              {files.length} total ideas across {columns.length} stages
+            </p>
+          )}
+        </div>
         <DialogRoot open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger
             render={
@@ -133,6 +164,7 @@ function IdeasPage() {
         </DialogRoot>
       </div>
 
+      {/* Content */}
       {isLoading ? (
         <div className="text-sm text-primary-500">Loading ideas...</div>
       ) : error ? (
@@ -142,91 +174,130 @@ function IdeasPage() {
       ) : files.length === 0 ? (
         <div className="text-sm text-primary-500">No idea files found</div>
       ) : (
-        <div className="flex-1 min-h-0 grid grid-cols-[280px_1fr] gap-4">
-          {/* Sidebar list */}
-          <div className="border border-primary-200 dark:border-primary-700 rounded-lg overflow-auto">
-            <div className="p-2 space-y-0.5">
-              {files.map(function renderFile(file) {
-                const isActive = file.path === selectedPath
-                return (
-                  <button
-                    key={file.path}
-                    onClick={function handleSelect() {
-                      setSelectedPath(isActive ? null : file.path)
-                    }}
+        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
+          <div className="flex gap-4 h-full pb-4" style={{ minWidth: 'max-content' }}>
+            {columns.map(function renderColumn(column) {
+              return (
+                <div
+                  key={column.status}
+                  className="flex flex-col w-[320px] flex-shrink-0"
+                >
+                  {/* Column Header */}
+                  <div
                     className={cn(
-                      'w-full text-left px-3 py-2 rounded-md text-sm transition-colors',
-                      isActive
-                        ? 'bg-primary-200 text-primary-950 dark:bg-primary-700 dark:text-primary-50'
-                        : 'text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-800',
+                      'rounded-t-lg border-t border-x p-3',
+                      column.color,
                     )}
                   >
-                    <div className="font-medium truncate">{file.title}</div>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      {file.status ? (
-                        <span
-                          className={cn(
-                            'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
-                            STATUS_COLORS[file.status] ??
-                              STATUS_COLORS.unknown,
-                          )}
-                        >
-                          {file.status}
-                        </span>
-                      ) : null}
-                      {file.issueNumber ? (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300 font-medium">
-                          #{file.issueNumber}
-                        </span>
-                      ) : null}
-                      {file.prNumber ? (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 font-medium">
-                          PR #{file.prNumber}
-                        </span>
-                      ) : null}
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-sm text-primary-900 dark:text-primary-100">
+                        {column.title}
+                      </h3>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white dark:bg-primary-800 text-primary-600 dark:text-primary-300">
+                        {column.ideas.length}
+                      </span>
                     </div>
-                    {file.tags && file.tags.length > 0 ? (
-                      <div className="flex gap-1 mt-1 flex-wrap">
-                        {file.tags.slice(0, 4).map(function renderTag(tag) {
-                          return (
-                            <span
-                              key={tag}
-                              className="text-[10px] px-1 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400"
-                            >
-                              {tag}
-                            </span>
-                          )
-                        })}
-                        {file.tags.length > 4 ? (
-                          <span className="text-[10px] px-1 py-0.5 text-primary-400">
-                            +{file.tags.length - 4}
-                          </span>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+                  </div>
 
-          {/* Detail panel */}
-          <div className="border border-primary-200 dark:border-primary-700 rounded-lg overflow-auto flex flex-col">
-            {selectedFile ? (
-              <IdeaDetail file={selectedFile} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-primary-400">
-                Select an idea to view
-              </div>
-            )}
+                  {/* Column Content */}
+                  <div
+                    className={cn(
+                      'flex-1 overflow-y-auto border-x border-b rounded-b-lg p-2 space-y-2 bg-primary-50 dark:bg-primary-900/50',
+                      column.color,
+                    )}
+                  >
+                    {column.ideas.length === 0 ? (
+                      <div className="text-center py-8 text-sm text-primary-400">
+                        No ideas
+                      </div>
+                    ) : (
+                      column.ideas.map(function renderCard(idea) {
+                        return (
+                          <button
+                            key={idea.path}
+                            type="button"
+                            onClick={function handleCardClick() {
+                              setSelectedPath(idea.path)
+                            }}
+                            className="w-full text-left bg-white dark:bg-primary-900 border border-primary-200 dark:border-primary-700 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer group"
+                          >
+                            <h4 className="font-medium text-sm text-primary-900 dark:text-primary-100 mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                              {idea.title}
+                            </h4>
+
+                            {/* Metadata */}
+                            <div className="flex flex-wrap gap-1.5 mb-2">
+                              {idea.issueNumber ? (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300 font-medium">
+                                  #{idea.issueNumber}
+                                </span>
+                              ) : null}
+                              {idea.prNumber ? (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 font-medium">
+                                  PR #{idea.prNumber}
+                                </span>
+                              ) : null}
+                            </div>
+
+                            {/* Tags */}
+                            {idea.tags && idea.tags.length > 0 ? (
+                              <div className="flex gap-1 flex-wrap">
+                                {idea.tags.slice(0, 3).map(function renderTag(tag) {
+                                  return (
+                                    <span
+                                      key={tag}
+                                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
+                                    >
+                                      {tag}
+                                    </span>
+                                  )
+                                })}
+                                {idea.tags.length > 3 ? (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400">
+                                    +{idea.tags.length - 3}
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : null}
+
+                            {/* Created date */}
+                            {idea.created ? (
+                              <div className="mt-2 pt-2 border-t border-primary-100 dark:border-primary-800">
+                                <span className="text-[10px] text-primary-500 dark:text-primary-400">
+                                  {new Date(idea.created).toLocaleDateString()}
+                                </span>
+                              </div>
+                            ) : null}
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
+
+      {/* Detail Modal */}
+      <DialogRoot
+        open={selectedPath !== null}
+        onOpenChange={function handleDetailClose(open) {
+          if (!open) setSelectedPath(null)
+        }}
+      >
+        <DialogContent className="w-[min(800px,92vw)] max-h-[85vh] overflow-hidden flex flex-col">
+          {selectedFile ? (
+            <IdeaDetail file={selectedFile} />
+          ) : null}
+        </DialogContent>
+      </DialogRoot>
     </div>
   )
 }
 
-// ---------- Idea Detail Panel ----------
+// ---------- Idea Detail (Modal Content) ----------
 
 function IdeaDetail({ file }: { file: IdeaFile }) {
   const queryClient = useQueryClient()
@@ -249,13 +320,13 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
   })
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 flex-1 overflow-auto">
+    <div className="flex flex-col h-full max-h-[85vh]">
+      <div className="p-5 flex-1 overflow-auto">
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
-          <h2 className="text-sm font-medium text-primary-900 dark:text-primary-100">
+          <DialogTitle className="text-sm font-medium text-primary-900 dark:text-primary-100 pr-3">
             {file.title}
-          </h2>
+          </DialogTitle>
           <div className="flex gap-2 shrink-0 ml-3">
             {file.issueUrl ? (
               <a
@@ -334,7 +405,24 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
           </div>
         ) : null}
 
+        {/* Tags */}
+        {file.tags && file.tags.length > 0 ? (
+          <div className="flex gap-1.5 mb-4 flex-wrap">
+            {file.tags.map(function renderTag(tag) {
+              return (
+                <span
+                  key={tag}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
+                >
+                  {tag}
+                </span>
+              )
+            })}
+          </div>
+        ) : null}
+
         {/* Markdown content */}
+        <DialogDescription className="sr-only">Idea details and content</DialogDescription>
         <div className="text-sm text-primary-800 dark:text-primary-200 prose prose-sm dark:prose-invert max-w-none">
           {file.content ? (
             <Markdown>{file.content}</Markdown>
@@ -495,8 +583,8 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
   const gatewayMutation = useMutation({
     mutationFn: async function submitToGateway() {
       const source = hasSource
-        ? sourceType === 'url' 
-          ? sourceUrl.trim() 
+        ? sourceType === 'url'
+          ? sourceUrl.trim()
           : screenshotData
         : undefined
       const res = await fetch('/api/admin/ideas/submit', {
@@ -815,7 +903,6 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
             </div>
           ) : null}
 
-          {/* Success — static */}
           {/* Success */}
           {gatewayMutation.isSuccess ? (
             <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">

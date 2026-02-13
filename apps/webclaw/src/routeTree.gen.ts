@@ -26,7 +26,6 @@ import { Route as AdminStatusRouteImport } from './routes/admin/status'
 import { Route as AdminMetricsRouteImport } from './routes/admin/metrics'
 import { Route as AdminMemoryRouteImport } from './routes/admin/memory'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
-import { Route as AdminKanbanRouteImport } from './routes/admin/kanban'
 import { Route as AdminIdeasRouteImport } from './routes/admin/ideas'
 import { Route as AdminFleetRouteImport } from './routes/admin/fleet'
 import { Route as AdminCronRouteImport } from './routes/admin/cron'
@@ -135,11 +134,6 @@ const AdminMemoryRoute = AdminMemoryRouteImport.update({
 const AdminLogsRoute = AdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminKanbanRoute = AdminKanbanRouteImport.update({
-  id: '/kanban',
-  path: '/kanban',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminIdeasRoute = AdminIdeasRouteImport.update({
@@ -275,7 +269,6 @@ export interface FileRoutesByFullPath {
   '/admin/cron': typeof AdminCronRoute
   '/admin/fleet': typeof AdminFleetRoute
   '/admin/ideas': typeof AdminIdeasRoute
-  '/admin/kanban': typeof AdminKanbanRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
   '/admin/metrics': typeof AdminMetricsRoute
@@ -318,7 +311,6 @@ export interface FileRoutesByTo {
   '/admin/cron': typeof AdminCronRoute
   '/admin/fleet': typeof AdminFleetRoute
   '/admin/ideas': typeof AdminIdeasRoute
-  '/admin/kanban': typeof AdminKanbanRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
   '/admin/metrics': typeof AdminMetricsRoute
@@ -363,7 +355,6 @@ export interface FileRoutesById {
   '/admin/cron': typeof AdminCronRoute
   '/admin/fleet': typeof AdminFleetRoute
   '/admin/ideas': typeof AdminIdeasRoute
-  '/admin/kanban': typeof AdminKanbanRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
   '/admin/metrics': typeof AdminMetricsRoute
@@ -409,7 +400,6 @@ export interface FileRouteTypes {
     | '/admin/cron'
     | '/admin/fleet'
     | '/admin/ideas'
-    | '/admin/kanban'
     | '/admin/logs'
     | '/admin/memory'
     | '/admin/metrics'
@@ -452,7 +442,6 @@ export interface FileRouteTypes {
     | '/admin/cron'
     | '/admin/fleet'
     | '/admin/ideas'
-    | '/admin/kanban'
     | '/admin/logs'
     | '/admin/memory'
     | '/admin/metrics'
@@ -496,7 +485,6 @@ export interface FileRouteTypes {
     | '/admin/cron'
     | '/admin/fleet'
     | '/admin/ideas'
-    | '/admin/kanban'
     | '/admin/logs'
     | '/admin/memory'
     | '/admin/metrics'
@@ -674,13 +662,6 @@ declare module '@tanstack/react-router' {
       path: '/logs'
       fullPath: '/admin/logs'
       preLoaderRoute: typeof AdminLogsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/kanban': {
-      id: '/admin/kanban'
-      path: '/kanban'
-      fullPath: '/admin/kanban'
-      preLoaderRoute: typeof AdminKanbanRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ideas': {
@@ -862,7 +843,6 @@ interface AdminRouteChildren {
   AdminCronRoute: typeof AdminCronRoute
   AdminFleetRoute: typeof AdminFleetRoute
   AdminIdeasRoute: typeof AdminIdeasRoute
-  AdminKanbanRoute: typeof AdminKanbanRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminMemoryRoute: typeof AdminMemoryRoute
   AdminMetricsRoute: typeof AdminMetricsRoute
@@ -881,7 +861,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCronRoute: AdminCronRoute,
   AdminFleetRoute: AdminFleetRoute,
   AdminIdeasRoute: AdminIdeasRoute,
-  AdminKanbanRoute: AdminKanbanRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminMemoryRoute: AdminMemoryRoute,
   AdminMetricsRoute: AdminMetricsRoute,

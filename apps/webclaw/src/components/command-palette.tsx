@@ -15,7 +15,6 @@ import {
   Calendar03Icon,
   Target01Icon,
   Idea01Icon,
-  KanbanIcon,
   UserGroupIcon,
   Activity01Icon,
   CheckmarkBadge01Icon,
@@ -59,20 +58,9 @@ export function CommandPalette() {
         label: 'Ideas',
         description: 'View and manage ideas',
         icon: Idea01Icon,
-        keywords: ['ideas', 'view', 'list', 'manage'],
+        keywords: ['ideas', 'view', 'list', 'manage', 'kanban', 'board', 'workflow'],
         action: () => {
           navigate({ to: '/admin/ideas' })
-          setOpen(false)
-        },
-      },
-      {
-        id: 'kanban',
-        label: 'Kanban Board',
-        description: 'Visual board for idea workflow',
-        icon: KanbanIcon,
-        keywords: ['kanban', 'board', 'workflow', 'ideas', 'tasks'],
-        action: () => {
-          navigate({ to: '/admin/kanban' })
           setOpen(false)
         },
       },

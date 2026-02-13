@@ -10,7 +10,6 @@ import {
   Settings01Icon,
   BrowserIcon,
   Idea01Icon,
-  KanbanIcon,
   UserGroupIcon,
   Activity01Icon,
   CheckmarkBadge01Icon,
@@ -64,7 +63,6 @@ const navSections: Array<NavSection> = [
   {
     title: 'Ideas',
     items: [
-      { to: '/admin/kanban', label: 'Kanban', icon: KanbanIcon },
       { to: '/admin/ideas', label: 'Ideas', icon: Idea01Icon },
     ],
   },
