@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import type { MetricPoint } from '@/screens/admin/types'
 
 type MetricsResponse = {
@@ -18,12 +19,68 @@ type MetricsResponse = {
   tokens?: Record<string, unknown>
 }
 
+type TokenStats = {
+  totalInput: number
+  totalOutput: number
+  totalTokens: number
+  totalCost: number
+  sessionCount: number
+  byModel: Record<
+    string,
+    {
+      input: number
+      output: number
+      total: number
+      cost: number
+      inputCost: number
+      outputCost: number
+    }
+  >
+  bySession: {
+    key: string
+    model: string
+    input: number
+    output: number
+    total: number
+    cost: number
+  }[]
+}
+
+type TokensResponse = {
+  ok: boolean
+  error?: string
+  stats?: TokenStats
+}
+
 const TIME_RANGES = [
   { value: '24h', label: '24h' },
   { value: '7d', label: '7d' },
   { value: '30d', label: '30d' },
   { value: '90d', label: '90d' },
 ] as const
+
+const CHART_COLORS = [
+  '#2563eb',
+  '#7c3aed',
+  '#db2777',
+  '#ea580c',
+  '#16a34a',
+  '#0891b2',
+  '#4f46e5',
+  '#9333ea',
+]
+
+function formatCost(cost: number): string {
+  if (cost === 0) return '$0.00'
+  if (cost < 0.01) return `$${cost.toFixed(6)}`
+  return `$${cost.toFixed(4)}`
+}
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+  return String(n)
+}
 
 export const Route = createFileRoute('/admin/metrics')({
   component: MetricsPage,
@@ -32,7 +89,7 @@ export const Route = createFileRoute('/admin/metrics')({
 function MetricsPage() {
   const [range, setRange] = useState('7d')
 
-  const { data, isLoading, error } = useQuery({
+  const metricsQuery = useQuery({
     queryKey: adminQueryKeys.metrics(range),
     queryFn: async function fetchMetrics() {
       const res = await fetch(`/api/admin/metrics?range=${range}`)
@@ -42,6 +99,19 @@ function MetricsPage() {
     refetchInterval: 15_000,
   })
 
+  const tokensQuery = useQuery({
+    queryKey: adminQueryKeys.tokens,
+    queryFn: async function fetchTokens() {
+      const res = await fetch('/api/admin/tokens')
+      if (!res.ok) throw new Error('Failed to fetch token usage')
+      return (await res.json()) as TokensResponse
+    },
+    refetchInterval: 60_000,
+  })
+
+  const isLoading = metricsQuery.isLoading && tokensQuery.isLoading
+  const error = metricsQuery.error || tokensQuery.error
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -50,7 +120,7 @@ function MetricsPage() {
     )
   }
 
-  if (error) {
+  if (error && !metricsQuery.data && !tokensQuery.data) {
     return (
       <div className="p-6">
         <div className="text-sm text-red-600">
@@ -60,9 +130,23 @@ function MetricsPage() {
     )
   }
 
-  const metrics = data?.metrics
-  const kpis = data?.kpis as Record<string, Record<string, unknown>> | null
-  const tokens = data?.tokens as Record<string, unknown> | null
+  const metrics = metricsQuery.data?.metrics
+  const kpis = metricsQuery.data?.kpis as Record<
+    string,
+    Record<string, unknown>
+  > | null
+  const stats = tokensQuery.data?.stats
+
+  const modelEntries = stats
+    ? Object.entries(stats.byModel).sort((a, b) => b[1].cost - a[1].cost)
+    : []
+
+  const pieData = modelEntries
+    .filter(([, usage]) => usage.cost > 0)
+    .map(([model, usage]) => ({
+      name: model,
+      value: usage.cost,
+    }))
 
   return (
     <div className="p-6 space-y-6">
@@ -70,11 +154,10 @@ function MetricsPage() {
         <div>
           <h1 className="text-lg font-medium text-primary-950">Metrics</h1>
           <p className="text-sm text-primary-600 mt-1">
-            Performance and cost analytics
+            Performance, tokens, and cost analytics
           </p>
         </div>
 
-        {/* Range Selector */}
         <div className="flex gap-1">
           {TIME_RANGES.map(function renderRange(r) {
             return (
@@ -98,74 +181,261 @@ function MetricsPage() {
       </div>
 
       {/* KPI Cards */}
-      {kpis ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard
-            label="Fleet Agents"
-            value={String(kpis.fleet?.total_agents ?? 0)}
-            detail={`${kpis.fleet?.active_agents ?? 0} active`}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <PlaceholderCard
+          label="Fleet Agents"
+          value={
+            kpis?.fleet
+              ? String(kpis.fleet.total_agents ?? 0)
+              : null
+          }
+          detail={
+            kpis?.fleet
+              ? `${kpis.fleet.active_agents ?? 0} active`
+              : undefined
+          }
+        />
+        <PlaceholderCard
+          label="Outputs Today"
+          value={
+            kpis?.fleet
+              ? String(kpis.fleet.total_outputs_today ?? 0)
+              : null
+          }
+        />
+        <PlaceholderCard
+          label="Ideas"
+          value={
+            kpis?.ideas ? String(kpis.ideas.total ?? 0) : null
+          }
+          detail={
+            kpis?.ideas
+              ? `${kpis.ideas.in_progress ?? 0} in progress`
+              : undefined
+          }
+        />
+        <PlaceholderCard
+          label="Pending Feedback"
+          value={
+            kpis?.fleet
+              ? String(kpis.fleet.pending_feedback ?? 0)
+              : null
+          }
+        />
+      </div>
+
+      {/* Token Usage Summary */}
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          Token Usage
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <PlaceholderCard
+            label="Total Cost"
+            value={stats ? formatCost(stats.totalCost) : null}
           />
-          <KPICard
-            label="Outputs Today"
-            value={String(kpis.fleet?.total_outputs_today ?? 0)}
+          <PlaceholderCard
+            label="Total Tokens"
+            value={stats ? stats.totalTokens.toLocaleString() : null}
           />
-          <KPICard
-            label="Ideas"
-            value={String(kpis.ideas?.total ?? 0)}
-            detail={`${kpis.ideas?.in_progress ?? 0} in progress`}
+          <PlaceholderCard
+            label="Input Tokens"
+            value={stats ? stats.totalInput.toLocaleString() : null}
           />
-          <KPICard
-            label="Pending Feedback"
-            value={String(kpis.fleet?.pending_feedback ?? 0)}
+          <PlaceholderCard
+            label="Output Tokens"
+            value={stats ? stats.totalOutput.toLocaleString() : null}
+          />
+          <PlaceholderCard
+            label="Sessions"
+            value={stats ? String(stats.sessionCount) : null}
           />
         </div>
-      ) : null}
+      </div>
 
-      {/* Token Cost Summary */}
-      {tokens ? (
-        <div>
-          <h2 className="text-sm font-medium text-primary-900 mb-3">
-            Token Usage
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPICard
-              label="Total Tokens"
-              value={formatNumber(Number(tokens.totalTokens ?? 0))}
-            />
-            <KPICard
-              label="Total Cost"
-              value={`$${Number(tokens.totalCost ?? 0).toFixed(4)}`}
-            />
-            <KPICard
-              label="Input Tokens"
-              value={formatNumber(Number(tokens.inputTokens ?? 0))}
-            />
-            <KPICard
-              label="Output Tokens"
-              value={formatNumber(Number(tokens.outputTokens ?? 0))}
-            />
+      {/* Cost Breakdown Pie Chart */}
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          Cost Breakdown by Model
+        </h2>
+        {pieData.length > 0 ? (
+          <div className="border border-primary-200 rounded-lg p-4">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={function renderLabel(entry) {
+                      return `${entry.name}: ${formatCost(entry.value)}`
+                    }}
+                    labelLine={true}
+                  >
+                    {pieData.map(function renderCell(_, index) {
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={CHART_COLORS[index % CHART_COLORS.length]}
+                        />
+                      )
+                    })}
+                  </Pie>
+                  <Tooltip
+                    formatter={function formatTooltip(value: number) {
+                      return formatCost(value)
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <EmptySection message="No cost data available yet" />
+        )}
+      </div>
 
-      {/* Token Cost Chart */}
-      {metrics?.token_costs && metrics.token_costs.length > 0 ? (
-        <div>
-          <h2 className="text-sm font-medium text-primary-900 mb-3">
-            Cost Trend
-          </h2>
+      {/* Cost Trend */}
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          Cost Trend
+        </h2>
+        {metrics?.token_costs && metrics.token_costs.length > 0 ? (
           <div className="rounded-lg border border-primary-200 bg-surface p-4">
             <SimpleBarChart data={metrics.token_costs} />
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <EmptySection message="No cost trend data available yet" />
+        )}
+      </div>
+
+      {/* By Model Table */}
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          Usage by Model
+        </h2>
+        {modelEntries.length > 0 ? (
+          <div className="border border-primary-200 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-primary-50 border-b border-primary-200">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium text-primary-700">
+                    Model
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Input
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Output
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Total
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Cost
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-primary-100">
+                {modelEntries.map(function renderModel([model, usage]) {
+                  return (
+                    <tr key={model}>
+                      <td className="px-3 py-2 text-primary-900">{model}</td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {usage.input.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {usage.output.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {usage.total.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums font-medium">
+                        {formatCost(usage.cost)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptySection message="No model usage data available yet" />
+        )}
+      </div>
+
+      {/* By Session Table */}
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          Usage by Session
+        </h2>
+        {stats && stats.bySession.length > 0 ? (
+          <div className="border border-primary-200 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-primary-50 border-b border-primary-200">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium text-primary-700">
+                    Session
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-primary-700">
+                    Model
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Input
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Output
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Total
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Cost
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-primary-100">
+                {stats.bySession.map(function renderSession(entry) {
+                  return (
+                    <tr key={entry.key}>
+                      <td className="px-3 py-2 text-primary-900 truncate max-w-[200px]">
+                        {entry.key}
+                      </td>
+                      <td className="px-3 py-2 text-primary-700 truncate max-w-[150px]">
+                        {entry.model}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {entry.input.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {entry.output.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {entry.total.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums font-medium">
+                        {formatCost(entry.cost)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptySection message="No session usage data available yet" />
+        )}
+      </div>
 
       {/* Fleet Utilization */}
-      {metrics?.fleet_utilization && metrics.fleet_utilization.length > 0 ? (
-        <div>
-          <h2 className="text-sm font-medium text-primary-900 mb-3">
-            Fleet Utilization
-          </h2>
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          Fleet Utilization
+        </h2>
+        {metrics?.fleet_utilization && metrics.fleet_utilization.length > 0 ? (
           <div className="space-y-2">
             {metrics.fleet_utilization.map(function renderUtil(u) {
               return (
@@ -189,28 +459,55 @@ function MetricsPage() {
               )
             })}
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <EmptySection message="No fleet utilization data available yet" />
+        )}
+      </div>
     </div>
   )
 }
 
-function KPICard(props: { label: string; value: string; detail?: string }) {
+function PlaceholderCard(props: {
+  label: string
+  value: string | null
+  detail?: string
+}) {
   return (
     <div className="rounded-lg border border-primary-200 bg-surface p-4">
       <div className="text-xs text-primary-500">{props.label}</div>
-      <div className="text-lg font-medium text-primary-950 tabular-nums mt-1">
-        {props.value}
-      </div>
-      {props.detail ? (
-        <div className="text-xs text-primary-500 mt-0.5">{props.detail}</div>
-      ) : null}
+      {props.value !== null ? (
+        <>
+          <div className="text-lg font-medium text-primary-950 tabular-nums mt-1">
+            {props.value}
+          </div>
+          {props.detail ? (
+            <div className="text-xs text-primary-500 mt-0.5">
+              {props.detail}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div className="text-sm text-primary-300 mt-1">&mdash;</div>
+      )}
+    </div>
+  )
+}
+
+function EmptySection(props: { message: string }) {
+  return (
+    <div className="rounded-lg border border-dashed border-primary-200 bg-primary-50/50 p-6 text-center">
+      <p className="text-sm text-primary-400">{props.message}</p>
     </div>
   )
 }
 
 function SimpleBarChart(props: { data: Array<MetricPoint> }) {
-  const max = Math.max(...props.data.map(function getVal(d) { return d.value }), 1)
+  const max = Math.max(
+    ...props.data.map(function getVal(d) {
+      return d.value
+    }),
+    1,
+  )
 
   return (
     <div className="flex items-end gap-1 h-32">
@@ -234,10 +531,4 @@ function SimpleBarChart(props: { data: Array<MetricPoint> }) {
       })}
     </div>
   )
-}
-
-function formatNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
-  return String(n)
 }

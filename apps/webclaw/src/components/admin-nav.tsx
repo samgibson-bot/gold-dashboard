@@ -5,7 +5,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useState, useMemo } from 'react'
 import {
   DashboardSquare01Icon,
-  CoinsIcon,
   File01Icon,
   Clock01Icon,
   Settings01Icon,
@@ -72,7 +71,6 @@ const navSections: Array<NavSection> = [
   {
     title: 'System',
     items: [
-      { to: '/admin/tokens', label: 'Tokens', icon: CoinsIcon },
       { to: '/admin/logs', label: 'Logs', icon: File01Icon },
       { to: '/admin/cron', label: 'Cron', icon: Clock01Icon },
       { to: '/admin/browser', label: 'Browser', icon: BrowserIcon },
