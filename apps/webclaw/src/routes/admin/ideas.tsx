@@ -1,33 +1,24 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { IdeaFile } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Markdown } from '@/components/prompt-kit/markdown'
 import {
-  DialogRoot,
-  DialogTrigger,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
   DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog'
-import type { IdeaFile } from '@/screens/admin/types'
 
 type IdeasResponse = {
   ok: boolean
   error?: string
   ideas?: Array<IdeaFile>
-}
-
-type CreateIdeaResponse = {
-  ok: boolean
-  error?: string
-  result?: {
-    issueNumber: number
-    issueUrl: string
-  }
 }
 
 const IDEA_STATUSES = [
@@ -43,12 +34,18 @@ const IDEA_STATUSES = [
 const STATUS_COLORS: Record<string, string> = {
   seed: 'bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200',
   elaborating: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
-  reviewing: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200',
-  validated: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
-  building: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200',
-  completed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200',
-  archived: 'bg-primary-100 text-primary-400 dark:bg-primary-800 dark:text-primary-400',
-  unknown: 'bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400',
+  reviewing:
+    'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200',
+  validated:
+    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
+  building:
+    'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200',
+  completed:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200',
+  archived:
+    'bg-primary-100 text-primary-400 dark:bg-primary-800 dark:text-primary-400',
+  unknown:
+    'bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400',
 }
 
 const COLUMN_CONFIG: Array<{
@@ -57,11 +54,31 @@ const COLUMN_CONFIG: Array<{
   color: string
 }> = [
   { status: 'seed', title: 'Seed', color: 'bg-primary-100 border-primary-300' },
-  { status: 'elaborating', title: 'Elaborating', color: 'bg-blue-50 border-blue-300' },
-  { status: 'reviewing', title: 'Reviewing', color: 'bg-amber-50 border-amber-300' },
-  { status: 'validated', title: 'Validated', color: 'bg-green-50 border-green-300' },
-  { status: 'building', title: 'Building', color: 'bg-purple-50 border-purple-300' },
-  { status: 'completed', title: 'Completed', color: 'bg-emerald-50 border-emerald-300' },
+  {
+    status: 'elaborating',
+    title: 'Elaborating',
+    color: 'bg-blue-50 border-blue-300',
+  },
+  {
+    status: 'reviewing',
+    title: 'Reviewing',
+    color: 'bg-amber-50 border-amber-300',
+  },
+  {
+    status: 'validated',
+    title: 'Validated',
+    color: 'bg-green-50 border-green-300',
+  },
+  {
+    status: 'building',
+    title: 'Building',
+    color: 'bg-purple-50 border-purple-300',
+  },
+  {
+    status: 'completed',
+    title: 'Completed',
+    color: 'bg-emerald-50 border-emerald-300',
+  },
 ]
 
 const SUGGESTED_TAGS = [
@@ -171,7 +188,10 @@ function IdeasPage() {
         <div className="text-sm text-primary-500">No ideas found</div>
       ) : (
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
-          <div className="flex gap-4 h-full pb-4" style={{ minWidth: 'max-content' }}>
+          <div
+            className="flex gap-4 h-full pb-4"
+            style={{ minWidth: 'max-content' }}
+          >
             {columns.map(function renderColumn(column) {
               return (
                 <div
@@ -236,16 +256,18 @@ function IdeasPage() {
                             {/* Tags */}
                             {idea.tags.length > 0 ? (
                               <div className="flex gap-1 flex-wrap">
-                                {idea.tags.slice(0, 3).map(function renderTag(tag) {
-                                  return (
-                                    <span
-                                      key={tag}
-                                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
-                                    >
-                                      {tag}
-                                    </span>
-                                  )
-                                })}
+                                {idea.tags
+                                  .slice(0, 3)
+                                  .map(function renderTag(tag) {
+                                    return (
+                                      <span
+                                        key={tag}
+                                        className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
+                                      >
+                                        {tag}
+                                      </span>
+                                    )
+                                  })}
                                 {idea.tags.length > 3 ? (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400">
                                     +{idea.tags.length - 3}
@@ -282,9 +304,7 @@ function IdeasPage() {
         }}
       >
         <DialogContent className="w-[min(800px,92vw)] max-h-[85vh] overflow-hidden flex flex-col">
-          {selectedFile ? (
-            <IdeaDetail file={selectedFile} />
-          ) : null}
+          {selectedFile ? <IdeaDetail file={selectedFile} /> : null}
         </DialogContent>
       </DialogRoot>
     </div>
@@ -301,11 +321,16 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
       const res = await fetch('/api/admin/ideas/status', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ issueNumber: file.issueNumber, status: newStatus }),
+        body: JSON.stringify({
+          issueNumber: file.issueNumber,
+          status: newStatus,
+        }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: 'Request failed' }))
-        throw new Error((data as { error?: string }).error ?? 'Failed to update status')
+        throw new Error(
+          (data as { error?: string }).error ?? 'Failed to update status',
+        )
       }
     },
     onSuccess: function onStatusSuccess() {
@@ -365,7 +390,10 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
                 className={cn(
                   'text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors',
                   isCurrent
-                    ? cn(STATUS_COLORS[s] ?? STATUS_COLORS.unknown, 'ring-1 ring-primary-400 dark:ring-primary-500')
+                    ? cn(
+                        STATUS_COLORS[s] ?? STATUS_COLORS.unknown,
+                        'ring-1 ring-primary-400 dark:ring-primary-500',
+                      )
                     : 'bg-primary-50 text-primary-400 dark:bg-primary-800 dark:text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-700 cursor-pointer',
                   isUpdating && !isCurrent && 'opacity-50 cursor-wait',
                 )}
@@ -400,8 +428,13 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
           </div>
         ) : null}
 
+        {/* Related Issues */}
+        <RelatedIssueLinks content={file.content ?? ''} />
+
         {/* Markdown content */}
-        <DialogDescription className="sr-only">Idea details and content</DialogDescription>
+        <DialogDescription className="sr-only">
+          Idea details and content
+        </DialogDescription>
         <div className="text-sm text-primary-800 dark:text-primary-200 prose prose-sm dark:prose-invert max-w-none">
           {file.content ? (
             <Markdown>{file.content}</Markdown>
@@ -509,6 +542,62 @@ function IdeaChatInput({
   )
 }
 
+// ---------- Related Issue Links ----------
+
+function RelatedIssueLinks({ content }: { content: string }) {
+  // Parse issue references like #N or full GitHub issue URLs from the body
+  const issueRefs = new Set<number>()
+
+  // Match #N patterns (but not inside URLs)
+  const hashMatches = content.match(/(?<!\w)#(\d+)/g)
+  if (hashMatches) {
+    for (const m of hashMatches) {
+      const n = parseInt(m.slice(1), 10)
+      if (n > 0 && n < 100000) issueRefs.add(n)
+    }
+  }
+
+  // Match gold-ideas issue URLs
+  const urlMatches = content.match(
+    /https:\/\/github\.com\/samgibson-bot\/gold-ideas\/issues\/(\d+)/g,
+  )
+  if (urlMatches) {
+    for (const m of urlMatches) {
+      const n = parseInt(m.split('/').pop() ?? '0', 10)
+      if (n > 0) issueRefs.add(n)
+    }
+  }
+
+  if (issueRefs.size === 0) return null
+
+  const refs = Array.from(issueRefs).sort(function asc(a, b) {
+    return a - b
+  })
+
+  return (
+    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
+      <h4 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
+        Related Issues
+      </h4>
+      <div className="flex flex-wrap gap-1.5">
+        {refs.map(function renderRef(n) {
+          return (
+            <a
+              key={n}
+              href={`https://github.com/samgibson-bot/gold-ideas/issues/${n}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+            >
+              #{n}
+            </a>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ---------- Create Idea Dialog ----------
 
 type CreateIdeaDialogProps = {
@@ -524,30 +613,39 @@ type SubmitResponse = {
 }
 
 function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
+  const [activeTab, setActiveTab] = useState<'idea' | 'project'>('idea')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<Array<string>>([])
 
-  // Source state
+  // Source state (idea tab only)
   const [sourceUrls, setSourceUrls] = useState<Array<string>>([])
   const [screenshotData, setScreenshotData] = useState('')
   const [screenshotName, setScreenshotName] = useState('')
 
   const hasSource =
-    sourceUrls.some(function hasValue(u) { return u.trim().length > 0 }) ||
-    screenshotData.length > 0
+    sourceUrls.some(function hasValue(u) {
+      return u.trim().length > 0
+    }) || screenshotData.length > 0
 
   // Gateway submission mutation (always used)
   const mutation = useMutation({
     mutationFn: async function submitToGateway() {
-      const validUrls = sourceUrls.filter(function hasValue(u) { return u.trim().length > 0 })
+      const validUrls = sourceUrls.filter(function hasValue(u) {
+        return u.trim().length > 0
+      })
       const res = await fetch('/api/admin/ideas/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sources: validUrls.length > 0 ? validUrls : undefined,
-          screenshot: screenshotData || undefined,
+          type: activeTab,
+          sources:
+            activeTab === 'idea' && validUrls.length > 0
+              ? validUrls
+              : undefined,
+          screenshot:
+            activeTab === 'idea' ? screenshotData || undefined : undefined,
           context: description,
           title,
           tags,
@@ -580,23 +678,32 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
   }
 
   function addSourceUrl() {
-    setSourceUrls(function append(prev) { return [...prev, ''] })
+    setSourceUrls(function append(prev) {
+      return [...prev, '']
+    })
   }
 
   function updateSourceUrl(index: number, value: string) {
     setSourceUrls(function update(prev) {
-      return prev.map(function maybeUpdate(u, i) { return i === index ? value : u })
+      return prev.map(function maybeUpdate(u, i) {
+        return i === index ? value : u
+      })
     })
   }
 
   function removeSourceUrl(index: number) {
     setSourceUrls(function remove(prev) {
-      return prev.filter(function notIndex(_u, i) { return i !== index })
+      return prev.filter(function notIndex(_u, i) {
+        return i !== index
+      })
     })
   }
 
   function addTag(tag: string) {
-    const cleaned = tag.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    const cleaned = tag
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '')
     if (cleaned && !tags.includes(cleaned)) {
       setTags(function appendTag(prev) {
         return [...prev, cleaned]
@@ -625,15 +732,49 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     }
   }
 
-  const canSubmit = description.trim().length > 0  // Only description required, AI handles title
+  const canSubmit = description.trim().length > 0
 
   return (
     <DialogContent className="w-[min(520px,92vw)]">
       <div className="p-5">
         <DialogTitle>New Idea</DialogTitle>
-        <DialogDescription className="mt-1">
-          Submit a new idea. OpenClaw will analyze your submission, research any sources,
-          generate integration pathways, and create a detailed GitHub Issue.
+
+        {/* Tabs */}
+        <div className="flex gap-1 mt-3 p-0.5 bg-primary-100 dark:bg-primary-800 rounded-lg w-fit">
+          <button
+            type="button"
+            onClick={function selectIdea() {
+              setActiveTab('idea')
+            }}
+            className={cn(
+              'px-3 py-1 text-xs font-medium rounded-md transition-colors',
+              activeTab === 'idea'
+                ? 'bg-white dark:bg-primary-950 text-primary-900 dark:text-primary-100 shadow-sm'
+                : 'text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
+            )}
+          >
+            Idea
+          </button>
+          <button
+            type="button"
+            onClick={function selectProject() {
+              setActiveTab('project')
+            }}
+            className={cn(
+              'px-3 py-1 text-xs font-medium rounded-md transition-colors',
+              activeTab === 'project'
+                ? 'bg-white dark:bg-primary-950 text-primary-900 dark:text-primary-100 shadow-sm'
+                : 'text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
+            )}
+          >
+            Project Build
+          </button>
+        </div>
+
+        <DialogDescription className="mt-2">
+          {activeTab === 'idea'
+            ? 'OpenClaw will analyze your submission, research sources, generate integration pathways, and create a detailed GitHub Issue.'
+            : 'Record a personal build project. OpenClaw will write a product brief and create a GitHub Issue — no synergy analysis, no lifecycle automation.'}
         </DialogDescription>
 
         <div className="mt-4 space-y-4">
@@ -654,90 +795,96 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
             />
           </div>
 
-          {/* Sources */}
-          <div className="space-y-2">
-            {sourceUrls.map(function renderUrlInput(url, index) {
-              return (
-                <div key={index} className="flex gap-2 items-center">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={function handleUrl(e) {
-                      updateSourceUrl(index, e.target.value)
-                    }}
-                    placeholder="https://..."
-                    className="flex-1 px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
-                    disabled={isPending}
-                  />
+          {/* Sources — idea tab only */}
+          {activeTab === 'idea' ? (
+            <div className="space-y-2">
+              {sourceUrls.map(function renderUrlInput(url, index) {
+                return (
+                  <div key={index} className="flex gap-2 items-center">
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={function handleUrl(e) {
+                        updateSourceUrl(index, e.target.value)
+                      }}
+                      placeholder="https://..."
+                      className="flex-1 px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
+                      disabled={isPending}
+                    />
+                    <button
+                      type="button"
+                      onClick={function removeUrl() {
+                        removeSourceUrl(index)
+                      }}
+                      className="text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors shrink-0 px-1"
+                      disabled={isPending}
+                      aria-label="Remove URL"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )
+              })}
+
+              {screenshotData ? (
+                <div className="flex items-center gap-2 px-1">
+                  <span className="text-xs text-primary-600 dark:text-primary-400 truncate">
+                    {screenshotName}
+                  </span>
                   <button
                     type="button"
-                    onClick={function removeUrl() { removeSourceUrl(index) }}
-                    className="text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors shrink-0 px-1"
+                    onClick={function removeScreenshot() {
+                      setScreenshotData('')
+                      setScreenshotName('')
+                    }}
+                    className="text-[10px] text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors shrink-0"
                     disabled={isPending}
-                    aria-label="Remove URL"
                   >
                     ×
                   </button>
                 </div>
-              )
-            })}
+              ) : null}
 
-            {screenshotData ? (
-              <div className="flex items-center gap-2 px-1">
-                <span className="text-xs text-primary-600 dark:text-primary-400 truncate">{screenshotName}</span>
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={function removeScreenshot() {
-                    setScreenshotData('')
-                    setScreenshotName('')
-                  }}
-                  className="text-[10px] text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors shrink-0"
+                  onClick={addSourceUrl}
+                  className="text-xs text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
                   disabled={isPending}
                 >
-                  ×
+                  + Add link
                 </button>
+                {!screenshotData ? (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="screenshot-upload"
+                      disabled={isPending}
+                    />
+                    <label
+                      htmlFor="screenshot-upload"
+                      className={cn(
+                        'text-xs transition-colors',
+                        isPending
+                          ? 'opacity-50 cursor-not-allowed text-primary-400'
+                          : 'cursor-pointer text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
+                      )}
+                    >
+                      + Attach screenshot
+                    </label>
+                  </>
+                ) : null}
               </div>
-            ) : null}
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={addSourceUrl}
-                className="text-xs text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
-                disabled={isPending}
-              >
-                + Add link
-              </button>
-              {!screenshotData ? (
-                <>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="screenshot-upload"
-                    disabled={isPending}
-                  />
-                  <label
-                    htmlFor="screenshot-upload"
-                    className={cn(
-                      'text-xs transition-colors',
-                      isPending
-                        ? 'opacity-50 cursor-not-allowed text-primary-400'
-                        : 'cursor-pointer text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
-                    )}
-                  >
-                    + Attach screenshot
-                  </label>
-                </>
-              ) : null}
             </div>
-          </div>
+          ) : null}
 
           {/* Description */}
           <div>
             <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
-              Description
+              Description<span className="text-red-500 ml-0.5">*</span>
             </label>
             <textarea
               value={description}
@@ -745,16 +892,20 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                 setDescription(e.target.value)
               }}
               placeholder={
-                hasSource
-                  ? 'What caught your eye? What should OpenClaw focus on when analyzing this source?'
-                  : 'Describe the idea in detail. What problem does it solve? What\'s the vision? Include as much context as you can \u2014 this will be used to generate an expansive roadmap.'
+                activeTab === 'project'
+                  ? 'What is it, who is it for, and what problem does it solve? Include any tech preferences or constraints.'
+                  : hasSource
+                    ? 'What caught your eye? What should OpenClaw focus on when analyzing this source?'
+                    : "Describe the idea in detail. What problem does it solve? What's the vision? Include as much context as you can \u2014 this will be used to generate an expansive roadmap."
               }
               rows={6}
               className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1 resize-none"
               disabled={isPending}
             />
             <p className="text-[11px] text-primary-400 mt-1">
-              Be expansive — the more context, the better the AI-generated analysis and roadmap.
+              {activeTab === 'project'
+                ? 'OpenClaw will write a product brief with goals, features, technical approach, and first steps.'
+                : 'Be expansive — the more context, the better the AI-generated analysis and roadmap.'}
             </p>
           </div>
 
@@ -826,7 +977,9 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           {/* Success */}
           {mutation.isSuccess ? (
             <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
-              Submitted! OpenClaw will analyze, research, and create a detailed GitHub Issue with integration pathways.
+              {activeTab === 'project'
+                ? 'Submitted! OpenClaw will write a product brief and create a GitHub Issue.'
+                : 'Submitted! OpenClaw will analyze, research, and create a detailed GitHub Issue with integration pathways.'}
             </div>
           ) : null}
         </div>
@@ -840,7 +993,11 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               mutation.mutate()
             }}
           >
-            {isPending ? 'Submitting...' : 'Submit to OpenClaw'}
+            {isPending
+              ? 'Submitting...'
+              : activeTab === 'project'
+                ? 'Save Project'
+                : 'Submit to OpenClaw'}
           </Button>
         </div>
       </div>
