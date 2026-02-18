@@ -27,10 +27,12 @@ jobs:
             # Navigate to repo and pull latest
             cd ~/openclaw/openclaw-dashboard
             echo "📥 Pulling latest code from GitHub..."
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             # Install dependencies and build
             cd ~/openclaw/openclaw-dashboard
+            export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             echo "📦 Installing dependencies..."
             pnpm install
 
