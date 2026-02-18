@@ -14,6 +14,22 @@ WebClaw app lives in `apps/webclaw` and is built with React + TanStack Router + 
 - `pnpm -C apps/webclaw format` — Run Prettier
 - `pnpm -C apps/webclaw check` — Format and lint fix
 
+## Deployment
+
+Push to `main` → GitHub Actions deploys automatically (~15s).
+
+**VPS details (keep private):**
+- SSH: `claw@62.146.173.127` (public IP) / `claw@100.77.85.46` (Tailscale)
+- Dashboard dir: `~/openclaw/openclaw-dashboard/`
+- Docker service: `openclaw-dashboard` · Container: `openclaw-openclaw-dashboard-1`
+
+**Emergency manual deploy:**
+```bash
+ssh claw@62.146.173.127 "cd ~/openclaw/openclaw-dashboard && git pull && cd ~/openclaw && docker compose build openclaw-dashboard && docker compose up -d openclaw-dashboard"
+```
+
+**Check logs:** `ssh claw@62.146.173.127 "docker logs -f openclaw-openclaw-dashboard-1"`
+
 ## Conventions
 
 ### Code Style
