@@ -318,7 +318,7 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
       <div className="p-5 flex-1 overflow-auto">
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
-          <DialogTitle className="text-sm font-medium text-primary-900 dark:text-primary-100 pr-3">
+          <DialogTitle className="text-sm font-medium pr-3">
             {file.title}
           </DialogTitle>
           <div className="flex gap-2 shrink-0 ml-3">
@@ -482,7 +482,7 @@ function IdeaChatInput({
               setMessage(e.target.value)
             }}
             placeholder="Ask OpenClaw about this idea..."
-            className="flex-1 text-sm px-3 py-1.5 border border-primary-200 dark:border-primary-600 rounded-md bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            className="flex-1 text-sm px-3 py-1.5 border border-primary-200 dark:border-primary-600 rounded-md bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
           />
           <button
             type="submit"
@@ -530,31 +530,24 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
   const [tags, setTags] = useState<Array<string>>([])
 
   // Source state
-  const [showSource, setShowSource] = useState(false)
-  const [sourceType, setSourceType] = useState<'url' | 'screenshot'>('url')
-  const [sourceUrl, setSourceUrl] = useState('')
+  const [sourceUrls, setSourceUrls] = useState<Array<string>>([])
   const [screenshotData, setScreenshotData] = useState('')
   const [screenshotName, setScreenshotName] = useState('')
 
   const hasSource =
-    showSource &&
-    ((sourceType === 'url' && sourceUrl.trim().length > 0) ||
-      (sourceType === 'screenshot' && screenshotData.length > 0))
+    sourceUrls.some(function hasValue(u) { return u.trim().length > 0 }) ||
+    screenshotData.length > 0
 
   // Gateway submission mutation (always used)
   const mutation = useMutation({
     mutationFn: async function submitToGateway() {
-      const source = hasSource
-        ? sourceType === 'url'
-          ? sourceUrl.trim()
-          : screenshotData
-        : undefined
+      const validUrls = sourceUrls.filter(function hasValue(u) { return u.trim().length > 0 })
       const res = await fetch('/api/admin/ideas/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          source,
-          sourceType: hasSource ? sourceType : undefined,
+          sources: validUrls.length > 0 ? validUrls : undefined,
+          screenshot: screenshotData || undefined,
           context: description,
           title,
           tags,
@@ -584,6 +577,22 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
       setScreenshotName(file.name)
     }
     reader.readAsDataURL(file)
+  }
+
+  function addSourceUrl() {
+    setSourceUrls(function append(prev) { return [...prev, ''] })
+  }
+
+  function updateSourceUrl(index: number, value: string) {
+    setSourceUrls(function update(prev) {
+      return prev.map(function maybeUpdate(u, i) { return i === index ? value : u })
+    })
+  }
+
+  function removeSourceUrl(index: number) {
+    setSourceUrls(function remove(prev) {
+      return prev.filter(function notIndex(_u, i) { return i !== index })
+    })
   }
 
   function addTag(tag: string) {
@@ -640,139 +649,89 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                 setTitle(e.target.value)
               }}
               placeholder="Optional — OpenClaw will generate or refine"
-              className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
+              className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
               disabled={isPending}
             />
           </div>
 
-          {/* Source (collapsible) */}
-          <div>
-            {!showSource ? (
+          {/* Sources */}
+          <div className="space-y-2">
+            {sourceUrls.map(function renderUrlInput(url, index) {
+              return (
+                <div key={index} className="flex gap-2 items-center">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={function handleUrl(e) {
+                      updateSourceUrl(index, e.target.value)
+                    }}
+                    placeholder="https://..."
+                    className="flex-1 px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
+                    disabled={isPending}
+                  />
+                  <button
+                    type="button"
+                    onClick={function removeUrl() { removeSourceUrl(index) }}
+                    className="text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors shrink-0 px-1"
+                    disabled={isPending}
+                    aria-label="Remove URL"
+                  >
+                    ×
+                  </button>
+                </div>
+              )
+            })}
+
+            {screenshotData ? (
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-xs text-primary-600 dark:text-primary-400 truncate">{screenshotName}</span>
+                <button
+                  type="button"
+                  onClick={function removeScreenshot() {
+                    setScreenshotData('')
+                    setScreenshotName('')
+                  }}
+                  className="text-[10px] text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors shrink-0"
+                  disabled={isPending}
+                >
+                  ×
+                </button>
+              </div>
+            ) : null}
+
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={function toggleSource() {
-                  setShowSource(true)
-                }}
+                onClick={addSourceUrl}
                 className="text-xs text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
                 disabled={isPending}
               >
-                + Add a source (URL or screenshot)
+                + Add link
               </button>
-            ) : (
-              <div className="border border-primary-200 dark:border-primary-700 rounded-lg p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                    Source
-                  </label>
-                  <button
-                    type="button"
-                    onClick={function hideSource() {
-                      setShowSource(false)
-                      setSourceUrl('')
-                      setScreenshotData('')
-                      setScreenshotName('')
-                    }}
-                    className="text-[10px] text-primary-400 hover:text-primary-600 dark:hover:text-primary-200 transition-colors"
-                    disabled={isPending}
-                  >
-                    Remove
-                  </button>
-                </div>
-
-                {/* URL / Screenshot toggle */}
-                <div className="flex gap-1 p-0.5 rounded-md bg-primary-100 dark:bg-primary-800 w-fit">
-                  <button
-                    type="button"
-                    onClick={function selectUrl() {
-                      setSourceType('url')
-                    }}
-                    className={cn(
-                      'text-[11px] px-2.5 py-1 rounded font-medium transition-colors',
-                      sourceType === 'url'
-                        ? 'bg-white dark:bg-primary-600 text-primary-900 dark:text-primary-100 shadow-sm'
-                        : 'text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
-                    )}
-                    disabled={isPending}
-                  >
-                    URL
-                  </button>
-                  <button
-                    type="button"
-                    onClick={function selectScreenshot() {
-                      setSourceType('screenshot')
-                    }}
-                    className={cn(
-                      'text-[11px] px-2.5 py-1 rounded font-medium transition-colors',
-                      sourceType === 'screenshot'
-                        ? 'bg-white dark:bg-primary-600 text-primary-900 dark:text-primary-100 shadow-sm'
-                        : 'text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
-                    )}
-                    disabled={isPending}
-                  >
-                    Screenshot
-                  </button>
-                </div>
-
-                {sourceType === 'url' ? (
+              {!screenshotData ? (
+                <>
                   <input
-                    type="url"
-                    value={sourceUrl}
-                    onChange={function handleUrl(e) {
-                      setSourceUrl(e.target.value)
-                    }}
-                    placeholder="https://twitter.com/... or any URL"
-                    className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="screenshot-upload"
                     disabled={isPending}
                   />
-                ) : (
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="screenshot-upload"
-                      disabled={isPending}
-                    />
-                    <label
-                      htmlFor="screenshot-upload"
-                      className={cn(
-                        'inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-primary-200 dark:border-primary-600 transition-colors',
-                        isPending
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-800',
-                        'text-primary-700 dark:text-primary-300',
-                      )}
-                    >
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      {screenshotName || 'Upload screenshot'}
-                    </label>
-                    {screenshotData ? (
-                      <span className="ml-2 text-[10px] text-green-600 dark:text-green-400">
-                        Attached
-                      </span>
-                    ) : null}
-                  </div>
-                )}
-
-                <p className="text-[10px] text-primary-400">
-                  Adding a source routes through OpenClaw for AI-powered research and analysis.
-                </p>
-              </div>
-            )}
+                  <label
+                    htmlFor="screenshot-upload"
+                    className={cn(
+                      'text-xs transition-colors',
+                      isPending
+                        ? 'opacity-50 cursor-not-allowed text-primary-400'
+                        : 'cursor-pointer text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200',
+                    )}
+                  >
+                    + Attach screenshot
+                  </label>
+                </>
+              ) : null}
+            </div>
           </div>
 
           {/* Description */}
@@ -791,7 +750,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
                   : 'Describe the idea in detail. What problem does it solve? What\'s the vision? Include as much context as you can \u2014 this will be used to generate an expansive roadmap.'
               }
               rows={6}
-              className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1 resize-none"
+              className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1 resize-none"
               disabled={isPending}
             />
             <p className="text-[11px] text-primary-400 mt-1">
@@ -829,7 +788,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               }}
               onKeyDown={handleTagKeyDown}
               placeholder="Type a tag and press Enter"
-              className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 dark:text-primary-100 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
+              className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
               disabled={isPending}
             />
             <div className="flex flex-wrap gap-1 mt-2">

@@ -17,24 +17,44 @@ function isValidUrl(s: string): boolean {
 }
 
 function buildSeedPrompt(params: {
-  source?: string
-  sourceType?: 'url' | 'screenshot'
+  sources?: Array<string>
+  screenshot?: string
   context: string
   title?: string
   tags?: Array<string>
 }): string {
-  const { source, sourceType, context, title, tags } = params
+  const { sources, screenshot, context, title, tags } = params
 
-  const sourceDesc = source
-    ? sourceType === 'url'
-      ? `Source URL: ${source}`
-      : 'Source: screenshot attached (analyze with vision)'
-    : 'No source provided — analyze the description below'
+  const urlListText =
+    sources && sources.length > 0
+      ? sources.map(function urlLine(u) { return `- ${u}` }).join('\n')
+      : null
+
+  const sourceSection = [
+    urlListText ? `**Source URLs:**\n${urlListText}` : null,
+    screenshot ? `Source: screenshot attached (analyze with vision)` : null,
+    !urlListText && !screenshot ? `No source provided — analyze the description below` : null,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const analyzeInstruction = [
+    urlListText
+      ? `Use \`web_fetch\` to crawl and understand each URL listed above.`
+      : null,
+    screenshot ? `Analyze the attached screenshot using vision.` : null,
+    `Also scan the context/description for any embedded URLs and fetch those too.`,
+    !urlListText && !screenshot
+      ? `Deeply analyze the description and context provided by the user.`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   const parts = [
     `## New Idea Submission`,
     title ? `**Title:** ${title}` : '',
-    sourceDesc,
+    sourceSection,
     `**Context from submitter:**\n${context}`,
     tags && tags.length > 0 ? `**Tags:** ${tags.join(', ')}` : '',
     '',
@@ -42,7 +62,7 @@ function buildSeedPrompt(params: {
     '',
     `You have a new idea submission to process. Follow these steps:`,
     '',
-    `1. **Analyze the source** — ${source ? (sourceType === 'url' ? 'Use \`web_fetch\` to crawl and understand the source URL.' : 'Analyze the attached screenshot using vision.') : 'Deeply analyze the description and context provided by the user.'} Extract key concepts, technologies, and potential applications.`,
+    `1. **Analyze all sources** — ${analyzeInstruction} Extract key concepts, technologies, and potential applications from every source.`,
     '',
     `2. **Cross-reference** — Check existing \`samgibson-bot/gold-ideas\` Issues for overlaps or synergies. Scan OpenClaw docs for integration points with existing infrastructure.`,
     '',
@@ -53,7 +73,7 @@ function buildSeedPrompt(params: {
     `   - **Insights**: non-obvious connections, second-order effects, or creative applications the submitter might not have considered`,
     `   - Rank each pathway by feasibility (1-5) and potential impact (1-5)`,
     '',
-    `4. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` — review the suggested title \"${title}\" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like \"Integration: X\" or \"Feature: Y\" or \"Enhancement: Z\".` : ' — generate a concise, descriptive, standardized title based on the analysis.'}. Include source link (if provided), integration pathways, and synergy analysis. **Apply these labels:** \`idea\`, \`seed\`, and any relevant tag labels (e.g. \`automation\`, \`agents\`, \`infrastructure\`). The issue IS the idea — do NOT create any .md files.`,
+    `4. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` — review the suggested title \"${title}\" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like \"Integration: X\" or \"Feature: Y\" or \"Enhancement: Z\".` : ' — generate a concise, descriptive, standardized title based on the analysis.'}. Include all source links (if provided), integration pathways, and synergy analysis. **Apply these labels:** \`idea\`, \`seed\`, and any relevant tag labels (e.g. \`automation\`, \`agents\`, \`infrastructure\`). The issue IS the idea — do NOT create any .md files.`,
     '',
     `5. **Thinking Cycle** — After creating the issue, add an expansive 10-point roadmap as the first comment covering: problem definition, architecture sketch, dependencies, MVP scope, data model, integration points, testing strategy, deployment plan, risks/mitigations, and future extensions.`,
   ]
@@ -71,10 +91,26 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
             unknown
           >
 
-          const source =
-            typeof body.source === 'string' ? body.source.trim() : ''
-          const sourceType =
-            body.sourceType === 'screenshot' ? 'screenshot' : 'url'
+          // Accept new multi-source format, with fallback for old single-source format
+          const sources: Array<string> = Array.isArray(body.sources)
+            ? (body.sources as Array<string>).filter(function isStr(s) {
+                return typeof s === 'string' && s.trim().length > 0
+              }).map(function trim(s) { return (s as string).trim() })
+            : typeof body.source === 'string' &&
+              body.source.trim() &&
+              body.sourceType !== 'screenshot'
+            ? [body.source.trim()]
+            : []
+
+          const screenshot =
+            typeof body.screenshot === 'string' && body.screenshot.trim()
+              ? body.screenshot.trim()
+              : typeof body.source === 'string' &&
+                body.source.trim() &&
+                body.sourceType === 'screenshot'
+              ? body.source.trim()
+              : ''
+
           const context =
             typeof body.context === 'string' ? body.context.trim() : ''
           const title =
@@ -86,8 +122,6 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
                 },
               )
             : []
-
-          // Source is now optional - AI can work with just description
 
           if (!context) {
             return json(
@@ -103,14 +137,16 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
             )
           }
 
-          if (source && sourceType === 'url' && !isValidUrl(source)) {
-            return json(
-              { ok: false, error: 'invalid URL' },
-              { status: 400 },
-            )
+          for (const url of sources) {
+            if (!isValidUrl(url)) {
+              return json(
+                { ok: false, error: `invalid URL: ${url}` },
+                { status: 400 },
+              )
+            }
           }
 
-          if (source && sourceType === 'screenshot' && source.length > MAX_SOURCE_LENGTH) {
+          if (screenshot && screenshot.length > MAX_SOURCE_LENGTH) {
             return json(
               { ok: false, error: 'screenshot too large (max 2MB)' },
               { status: 400 },
@@ -118,17 +154,16 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
           }
 
           const seedPrompt = buildSeedPrompt({
-            source,
-            sourceType,
+            sources: sources.length > 0 ? sources : undefined,
+            screenshot: screenshot || undefined,
             context,
             title: title || undefined,
             tags: tags.length > 0 ? tags : undefined,
           })
 
-          const message =
-            source && sourceType === 'screenshot'
-              ? `${seedPrompt}\n\n[Screenshot data attached as base64]\n${source}`
-              : seedPrompt
+          const message = screenshot
+            ? `${seedPrompt}\n\n[Screenshot data attached as base64]\n${screenshot}`
+            : seedPrompt
 
           const res = await gatewayRpc<{ runId: string }>('chat.send', {
             sessionKey: 'ideas',
