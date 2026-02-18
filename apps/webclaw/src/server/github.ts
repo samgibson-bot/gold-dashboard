@@ -73,9 +73,10 @@ export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
     const labelNames = issue.labels.map(function getName(l) {
       return l.name
     })
-    const status = labelNames.find(function isStatus(l) {
-      return STATUS_LABELS.includes(l)
-    }) ?? 'seed'
+    const status =
+      labelNames.find(function isStatus(l) {
+        return STATUS_LABELS.includes(l)
+      }) ?? 'seed'
     const tags = labelNames.filter(function isTag(l) {
       return l !== 'idea' && !STATUS_LABELS.includes(l)
     })
@@ -107,7 +108,9 @@ export type CreateIdeaResult = {
   issueUrl: string
 }
 
-export async function createIdea(input: CreateIdeaInput): Promise<CreateIdeaResult> {
+export async function createIdea(
+  input: CreateIdeaInput,
+): Promise<CreateIdeaResult> {
   const issueBody = [
     `## ${input.title}`,
     '',
@@ -134,18 +137,15 @@ export async function createIdea(input: CreateIdeaInput): Promise<CreateIdeaResu
   ].join('\n')
   const labels = ['idea', 'seed', ...input.tags.slice(0, 5)]
 
-  const res = await fetch(
-    `${API_BASE}/repos/${OWNER}/${REPO}/issues`,
-    {
-      method: 'POST',
-      headers: headers(),
-      body: JSON.stringify({
-        title: input.title,
-        body: issueBody,
-        labels,
-      }),
-    },
-  )
+  const res = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/issues`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      title: input.title,
+      body: issueBody,
+      labels,
+    }),
+  })
   if (!res.ok) {
     const errText = await res.text()
     throw new Error(`Failed to create issue: ${res.status} ${errText}`)
@@ -155,6 +155,177 @@ export async function createIdea(input: CreateIdeaInput): Promise<CreateIdeaResu
   return {
     issueNumber: issue.number,
     issueUrl: issue.html_url,
+  }
+}
+
+// ---------- Search related issues (keyword relevance, not fixed N) ----------
+
+type SearchResult = {
+  number: number
+  title: string
+  state: string
+  body: string | null
+  html_url: string
+  labels: Array<GitHubLabel>
+}
+
+type GitHubSearchResponse = {
+  total_count: number
+  items: Array<SearchResult>
+}
+
+/**
+ * Search gold-ideas for issues related to a query string.
+ * Uses GitHub search API for keyword relevance ranking across all states.
+ */
+export async function searchRelatedIssues(
+  query: string,
+  opts?: { maxResults?: number },
+): Promise<
+  Array<{
+    number: number
+    title: string
+    state: string
+    url: string
+    snippet: string
+  }>
+> {
+  const max = opts?.maxResults ?? 10
+  const q = encodeURIComponent(`${query} repo:${OWNER}/${REPO} label:idea`)
+  const res = await fetch(
+    `${API_BASE}/search/issues?q=${q}&per_page=${max}&sort=relevance`,
+    { headers: headers() },
+  )
+  if (!res.ok) return [] // Degrade gracefully — search is supplementary
+  const data = (await res.json()) as GitHubSearchResponse
+
+  return data.items.map(function mapResult(item) {
+    const bodySnippet = item.body
+      ? item.body.slice(0, 200).replace(/\n/g, ' ')
+      : ''
+    return {
+      number: item.number,
+      title: item.title,
+      state: item.state,
+      url: item.html_url,
+      snippet: bodySnippet,
+    }
+  })
+}
+
+/**
+ * Search across multiple repos for issues/PRs related to a query.
+ * Uses GitHub search API — repos are passed as a list of "owner/repo" strings.
+ */
+export async function searchAcrossRepos(
+  query: string,
+  repos: Array<string>,
+  opts?: { maxResults?: number },
+): Promise<
+  Array<{
+    number: number
+    title: string
+    state: string
+    url: string
+    repo: string
+    snippet: string
+  }>
+> {
+  if (repos.length === 0) return []
+  const max = opts?.maxResults ?? 10
+  const repoFilters = repos
+    .map(function toFilter(r) {
+      return `repo:${r}`
+    })
+    .join('+')
+  const q = encodeURIComponent(`${query}`) + `+${repoFilters}`
+  const res = await fetch(
+    `${API_BASE}/search/issues?q=${q}&per_page=${max}&sort=relevance`,
+    { headers: headers() },
+  )
+  if (!res.ok) return []
+  const data = (await res.json()) as GitHubSearchResponse
+
+  return data.items.map(function mapResult(item) {
+    // Extract repo from html_url: https://github.com/owner/repo/issues/N
+    const urlParts = item.html_url.split('/')
+    const repo = `${urlParts[3]}/${urlParts[4]}`
+    const bodySnippet = item.body
+      ? item.body.slice(0, 200).replace(/\n/g, ' ')
+      : ''
+    return {
+      number: item.number,
+      title: item.title,
+      state: item.state,
+      url: item.html_url,
+      repo,
+      snippet: bodySnippet,
+    }
+  })
+}
+
+// ---------- Fleet repo discovery (cached) ----------
+
+type GitHubRepo = {
+  name: string
+  full_name: string
+  pushed_at: string
+  archived: boolean
+  fork: boolean
+}
+
+const PINNED_REPOS = [
+  'samgibson-bot/gold-dashboard',
+  'samgibson-bot/gold-ideas',
+]
+
+let fleetReposCache: { repos: Array<string>; fetchedAt: number } | null = null
+const FLEET_CACHE_TTL = 6 * 60 * 60 * 1000 // 6 hours
+
+/**
+ * Get the list of active fleet repos. Uses GitHub API with a 6-hour cache.
+ * Falls back to pinned repos if the API call fails.
+ */
+export async function getFleetRepos(): Promise<Array<string>> {
+  if (
+    fleetReposCache &&
+    Date.now() - fleetReposCache.fetchedAt < FLEET_CACHE_TTL
+  ) {
+    return fleetReposCache.repos
+  }
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/users/${OWNER}/repos?per_page=100&sort=pushed&direction=desc`,
+      { headers: headers() },
+    )
+    if (!res.ok) return PINNED_REPOS
+
+    const repos = (await res.json()) as Array<GitHubRepo>
+    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000
+
+    const activeRepos = repos
+      .filter(function isActive(r) {
+        if (r.archived) return false
+        if (r.name.startsWith('.') || r.name === OWNER) return false
+        const pushedAt = new Date(r.pushed_at).getTime()
+        return pushedAt > ninetyDaysAgo || PINNED_REPOS.includes(r.full_name)
+      })
+      .map(function toFullName(r) {
+        return r.full_name
+      })
+
+    // Ensure pinned repos are always included
+    for (const pinned of PINNED_REPOS) {
+      if (!activeRepos.includes(pinned)) {
+        activeRepos.push(pinned)
+      }
+    }
+
+    fleetReposCache = { repos: activeRepos, fetchedAt: Date.now() }
+    return activeRepos
+  } catch {
+    return PINNED_REPOS
   }
 }
 
@@ -170,7 +341,9 @@ export async function updateIdeaStatus(
     { headers: headers() },
   )
   if (!getRes.ok) {
-    throw new Error(`GitHub API error fetching issue #${issueNumber}: ${getRes.status}`)
+    throw new Error(
+      `GitHub API error fetching issue #${issueNumber}: ${getRes.status}`,
+    )
   }
   const issue = (await getRes.json()) as GitHubIssue
 
@@ -199,7 +372,11 @@ export async function updateIdeaStatus(
   )
 
   if (!updateRes.ok) {
-    const errBody = await updateRes.text().catch(function fallback() { return '' })
-    throw new Error(`GitHub API error updating issue #${issueNumber}: ${updateRes.status} ${errBody}`)
+    const errBody = await updateRes.text().catch(function fallback() {
+      return ''
+    })
+    throw new Error(
+      `GitHub API error updating issue #${issueNumber}: ${updateRes.status} ${errBody}`,
+    )
   }
 }
