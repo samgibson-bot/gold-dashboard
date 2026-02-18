@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd ~/openclaw/openclaw-dashboard && git pull
-cd ~/openclaw && docker compose build openclaw-dashboard
-docker compose up -d openclaw-dashboard
-echo "Deploy complete. Check: docker compose ps"
+cd ~/openclaw/openclaw-dashboard
+git pull
+pnpm install --frozen-lockfile
+pnpm build
+systemctl --user restart openclaw-dashboard.service
+echo "Deploy complete. Check: systemctl --user status openclaw-dashboard.service"
