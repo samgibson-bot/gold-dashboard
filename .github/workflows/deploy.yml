@@ -37,17 +37,17 @@ jobs:
             pnpm build
 
             echo "♻️  Restarting service..."
-            systemctl --user restart openclaw-dashboard.service
+            systemctl --user restart gold-dashboard.service
 
             # Wait a moment for service to start
             sleep 3
 
             # Verify deployment
             echo "✅ Checking service status..."
-            systemctl --user status openclaw-dashboard.service --no-pager
+            systemctl --user status gold-dashboard.service --no-pager
 
             echo "📋 Recent logs:"
-            journalctl --user -u openclaw-dashboard.service -n 10 --no-pager 2>&1 || true
+            journalctl --user -u gold-dashboard.service -n 10 --no-pager 2>&1 || true
 
             echo "🎉 Deployment complete!"
 
