@@ -5,6 +5,7 @@ import { gatewayRpc } from '../../server/gateway'
 import { sanitizeError } from '../../server/errors'
 
 const MAX_MESSAGE_BYTES = 100 * 1024
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
 
 type SessionsResolveResponse = {
   ok?: boolean
@@ -29,7 +30,18 @@ export const Route = createFileRoute('/api/send')({
           const thinking =
             typeof body.thinking === 'string' ? body.thinking : undefined
 
-          if (!message.trim()) {
+          const rawAttachments = body.attachments
+          const attachments = Array.isArray(rawAttachments)
+            ? rawAttachments.filter(
+                (a: unknown): a is { mimeType: string; content: string } =>
+                  typeof a === 'object' &&
+                  a !== null &&
+                  typeof (a as Record<string, unknown>).mimeType === 'string' &&
+                  typeof (a as Record<string, unknown>).content === 'string',
+              )
+            : undefined
+
+          if (!message.trim() && (!attachments || attachments.length === 0)) {
             return json(
               { ok: false, error: 'message required' },
               { status: 400 },
@@ -41,6 +53,18 @@ export const Route = createFileRoute('/api/send')({
               { ok: false, error: 'message too large' },
               { status: 413 },
             )
+          }
+
+          if (attachments && attachments.length > 0) {
+            const totalAttachmentBytes = attachments.reduce((sum, a) => {
+              return sum + new TextEncoder().encode(a.content).byteLength
+            }, 0)
+            if (totalAttachmentBytes > MAX_ATTACHMENT_BYTES) {
+              return json(
+                { ok: false, error: 'attachments too large' },
+                { status: 413 },
+              )
+            }
           }
 
           let sessionKey = rawSessionKey.length > 0 ? rawSessionKey : ''
@@ -73,6 +97,7 @@ export const Route = createFileRoute('/api/send')({
             sessionKey,
             message,
             thinking,
+            attachments,
             deliver: false,
             timeoutMs: 120_000,
             idempotencyKey:

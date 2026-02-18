@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ChatSessionKeyRouteImport } from './routes/chat/$sessionKey'
+import { Route as ApiStreamRouteImport } from './routes/api/stream'
 import { Route as ApiSessionsRouteImport } from './routes/api/sessions'
 import { Route as ApiSendRouteImport } from './routes/api/send'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
@@ -79,6 +80,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const ChatSessionKeyRoute = ChatSessionKeyRouteImport.update({
   id: '/chat/$sessionKey',
   path: '/chat/$sessionKey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStreamRoute = ApiStreamRouteImport.update({
+  id: '/api/stream',
+  path: '/api/stream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSessionsRoute = ApiSessionsRouteImport.update({
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
+  '/api/stream': typeof ApiStreamRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/activity': typeof ApiAdminActivityRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
+  '/api/stream': typeof ApiStreamRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
   '/admin': typeof AdminIndexRoute
   '/api/admin/activity': typeof ApiAdminActivityRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
+  '/api/stream': typeof ApiStreamRoute
   '/chat/$sessionKey': typeof ChatSessionKeyRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/activity': typeof ApiAdminActivityRoute
@@ -411,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
+    | '/api/stream'
     | '/chat/$sessionKey'
     | '/admin/'
     | '/api/admin/activity'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
+    | '/api/stream'
     | '/chat/$sessionKey'
     | '/admin'
     | '/api/admin/activity'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
+    | '/api/stream'
     | '/chat/$sessionKey'
     | '/admin/'
     | '/api/admin/activity'
@@ -526,6 +538,7 @@ export interface RootRouteChildren {
   ApiPingRoute: typeof ApiPingRoute
   ApiSendRoute: typeof ApiSendRoute
   ApiSessionsRoute: typeof ApiSessionsRoute
+  ApiStreamRoute: typeof ApiStreamRoute
   ChatSessionKeyRoute: typeof ChatSessionKeyRoute
   ApiAdminActivityRoute: typeof ApiAdminActivityRoute
   ApiAdminApprovalsRoute: typeof ApiAdminApprovalsRoute
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       path: '/chat/$sessionKey'
       fullPath: '/chat/$sessionKey'
       preLoaderRoute: typeof ChatSessionKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stream': {
+      id: '/api/stream'
+      path: '/api/stream'
+      fullPath: '/api/stream'
+      preLoaderRoute: typeof ApiStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/sessions': {
@@ -898,6 +918,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPingRoute: ApiPingRoute,
   ApiSendRoute: ApiSendRoute,
   ApiSessionsRoute: ApiSessionsRoute,
+  ApiStreamRoute: ApiStreamRoute,
   ChatSessionKeyRoute: ChatSessionKeyRoute,
   ApiAdminActivityRoute: ApiAdminActivityRoute,
   ApiAdminApprovalsRoute: ApiAdminApprovalsRoute,

@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
-import { createHighlighter } from 'shiki'
-import type { BundledLanguage, Highlighter } from 'shiki'
+import { createHighlighterCore } from 'shiki/core'
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
+import { bundledThemes, bundledLanguages } from 'shiki'
+import { formatLanguageName, normalizeLanguage, resolveLanguage } from './utils'
+import type { HighlighterCore } from 'shiki/core'
 import { useResolvedTheme } from '@/hooks/use-chat-settings'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { formatLanguageName, normalizeLanguage, resolveLanguage } from './utils'
+
+const PRELOADED_LANGS = [
+  'javascript', 'typescript', 'tsx', 'jsx', 'python', 'bash', 'shell',
+  'json', 'yaml', 'toml', 'markdown', 'html', 'css', 'sql', 'rust',
+  'go', 'java', 'kotlin', 'swift', 'ruby', 'php', 'c', 'cpp', 'csharp',
+  'dockerfile', 'diff', 'graphql', 'regexp', 'xml',
+] as const
 
 type CodeBlockProps = {
   content: string
@@ -15,13 +24,14 @@ type CodeBlockProps = {
   className?: string
 }
 
-let highlighterPromise: Promise<Highlighter> | null = null
+let highlighterPromise: Promise<HighlighterCore> | null = null
 
 function getHighlighter() {
   if (!highlighterPromise) {
-    highlighterPromise = createHighlighter({
-      themes: ['vitesse-light', 'vitesse-dark'],
-      langs: ['text'],
+    highlighterPromise = createHighlighterCore({
+      themes: [bundledThemes['vitesse-light'], bundledThemes['vitesse-dark']],
+      langs: PRELOADED_LANGS.map((lang) => bundledLanguages[lang]).filter(Boolean),
+      engine: createJavaScriptRegexEngine(),
     })
   }
   return highlighterPromise
@@ -49,17 +59,10 @@ export function CodeBlock({
   useEffect(() => {
     let active = true
     getHighlighter()
-      .then(async (highlighter) => {
-        let lang = resolveLanguage(normalizedLanguage)
-        if (lang !== 'text') {
-          try {
-            await highlighter.loadLanguage(lang as BundledLanguage)
-          } catch {
-            lang = 'text'
-          }
-        }
+      .then((highlighter) => {
+        const lang = resolveLanguage(normalizedLanguage)
         const highlighted = highlighter.codeToHtml(content, {
-          lang: lang as BundledLanguage,
+          lang,
           theme: themeName,
         })
         if (active) {

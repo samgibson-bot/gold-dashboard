@@ -1,10 +1,7 @@
-import { marked } from 'marked'
-import { memo, useId, useMemo } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkBreaks from 'remark-breaks'
-import remarkGfm from 'remark-gfm'
+import { memo } from 'react'
+import { Streamdown } from 'streamdown'
+import type { Components } from 'streamdown'
 import { CodeBlock } from './code-block'
-import type { Components } from 'react-markdown'
 import { cn } from '@/lib/utils'
 
 export type MarkdownProps = {
@@ -12,11 +9,6 @@ export type MarkdownProps = {
   id?: string
   className?: string
   components?: Partial<Components>
-}
-
-function parseMarkdownIntoBlocks(markdown: string): Array<string> {
-  const tokens = marked.lexer(markdown)
-  return tokens.map((token) => token.raw)
 }
 
 function extractLanguage(className?: string): string {
@@ -50,13 +42,23 @@ const INITIAL_COMPONENTS: Partial<Components> = {
     return <>{children}</>
   },
   h1: function H1Component({ children }) {
-    return <h1 className="text-xl font-medium text-primary-950">{children}</h1>
+    return (
+      <h1 className="text-xl font-medium text-primary-950 text-balance">
+        {children}
+      </h1>
+    )
   },
   h2: function H2Component({ children }) {
-    return <h2 className="text-lg font-medium text-primary-900">{children}</h2>
+    return (
+      <h2 className="text-lg font-medium text-primary-900 text-balance">
+        {children}
+      </h2>
+    )
   },
   h3: function H3Component({ children }) {
-    return <h3 className="font-medium text-primary-900">{children}</h3>
+    return (
+      <h3 className="font-medium text-primary-900 text-balance">{children}</h3>
+    )
   },
   p: function PComponent({ children }) {
     return (
@@ -144,50 +146,18 @@ const INITIAL_COMPONENTS: Partial<Components> = {
   },
 }
 
-const MemoizedMarkdownBlock = memo(
-  function MarkdownBlock({
-    content,
-    components = INITIAL_COMPONENTS,
-  }: {
-    content: string
-    components?: Partial<Components>
-  }) {
-    return (
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
-        components={components}
-      >
-        {content}
-      </ReactMarkdown>
-    )
-  },
-  function propsAreEqual(prevProps, nextProps) {
-    return prevProps.content === nextProps.content
-  },
-)
-
-MemoizedMarkdownBlock.displayName = 'MemoizedMarkdownBlock'
-
 function MarkdownComponent({
   children,
-  id,
   className,
   components = INITIAL_COMPONENTS,
 }: MarkdownProps) {
-  const generatedId = useId()
-  const blockId = id ?? generatedId
-  const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children])
-
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      {blocks.map((block, index) => (
-        <MemoizedMarkdownBlock
-          key={`${blockId}-block-${index}`}
-          content={block}
-          components={components}
-        />
-      ))}
-    </div>
+    <Streamdown
+      className={cn('flex flex-col gap-2', className)}
+      components={components}
+    >
+      {children}
+    </Streamdown>
   )
 }
 

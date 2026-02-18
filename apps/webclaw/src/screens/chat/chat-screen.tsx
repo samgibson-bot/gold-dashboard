@@ -15,6 +15,7 @@ import {
   readError,
   textFromMessage,
 } from './utils'
+import { randomUUID } from '@/lib/utils'
 import { createOptimisticMessage } from './chat-screen-utils'
 import {
   chatQueryKeys,
@@ -29,6 +30,7 @@ import { ChatHeader } from './components/chat-header'
 import { useExport } from '@/hooks/use-export'
 import { ChatMessageList } from './components/chat-message-list'
 import { ChatComposer } from './components/chat-composer'
+import type { AttachmentFile } from '@/components/attachment-button'
 import { GatewayStatusMessage } from './components/gateway-status-message'
 import { SearchDialog } from '@/components/search-dialog'
 import {
@@ -328,7 +330,7 @@ export function ChatScreen({
     }
     setWaitingForResponse(true)
     setPinToTop(true)
-    sendMessage(pending.sessionKey, pending.friendlyId, pending.message, true)
+    sendMessage(pending.sessionKey, pending.friendlyId, pending.message, true, pending.attachments)
   }, [
     activeFriendlyId,
     activeSessionKey,
@@ -343,10 +345,11 @@ export function ChatScreen({
     friendlyId: string,
     body: string,
     skipOptimistic = false,
+    attachments?: AttachmentFile[],
   ) {
     let optimisticClientId = ''
     if (!skipOptimistic) {
-      const { clientId, optimisticMessage } = createOptimisticMessage(body)
+      const { clientId, optimisticMessage } = createOptimisticMessage(body, attachments)
       optimisticClientId = clientId
       appendHistoryMessage(
         queryClient,
@@ -368,6 +371,11 @@ export function ChatScreen({
     setWaitingForResponse(true)
     setPinToTop(true)
 
+    const attachmentsPayload = attachments?.map((a) => ({
+      mimeType: a.file.type,
+      content: a.base64,
+    }))
+
     fetch('/api/send', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -376,7 +384,8 @@ export function ChatScreen({
         friendlyId,
         message: body,
         thinking: 'low',
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: randomUUID(),
+        attachments: attachmentsPayload,
       }),
     })
       .then(async (res) => {
@@ -445,12 +454,14 @@ export function ChatScreen({
 
   const send = useCallback(
     (body: string, helpers: ChatComposerHelpers) => {
-      if (body.length === 0) return
+      const attachments = helpers.attachments
+      const validAttachments = attachments?.filter((a) => !a.error && a.base64)
+      if (body.length === 0 && (!validAttachments || validAttachments.length === 0)) return
       helpers.reset()
 
       if (isNewChat) {
         const { clientId, optimisticId, optimisticMessage } =
-          createOptimisticMessage(body)
+          createOptimisticMessage(body, validAttachments)
         appendHistoryMessage(queryClient, 'new', 'new', optimisticMessage)
         setPendingGeneration(true)
         setSending(true)
@@ -465,6 +476,7 @@ export function ChatScreen({
               friendlyId,
               message: body,
               optimisticMessage,
+              attachments: validAttachments,
             })
             if (onSessionResolved) {
               onSessionResolved({ sessionKey, friendlyId })
@@ -498,7 +510,7 @@ export function ChatScreen({
 
       const sessionKeyForSend =
         forcedSessionKey || resolvedSessionKey || activeSessionKey
-      sendMessage(sessionKeyForSend, activeFriendlyId, body)
+      sendMessage(sessionKeyForSend, activeFriendlyId, body, false, validAttachments)
     },
     [
       activeFriendlyId,

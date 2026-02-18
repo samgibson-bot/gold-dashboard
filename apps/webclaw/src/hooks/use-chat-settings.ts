@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 
 export type ThemeMode = 'system' | 'light' | 'dark'
 export type TextSize = 'sm' | 'md' | 'lg' | 'xl'
+export type ThinkingLevel = 'low' | 'medium' | 'high'
 
 export const textSizeClasses: Record<TextSize, string> = {
   sm: 'text-sm',
@@ -15,6 +16,7 @@ export const textSizeClasses: Record<TextSize, string> = {
 export type ChatSettings = {
   showToolMessages: boolean
   showReasoningBlocks: boolean
+  thinkingLevel: ThinkingLevel
   theme: ThemeMode
   textSize: TextSize
 }
@@ -30,6 +32,7 @@ export const useChatSettingsStore = create<ChatSettingsState>()(
       settings: {
         showToolMessages: true,
         showReasoningBlocks: true,
+        thinkingLevel: 'medium',
         theme: 'system',
         textSize: 'md',
       },

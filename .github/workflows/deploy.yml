@@ -28,23 +28,26 @@ jobs:
             echo "📥 Pulling latest code from GitHub..."
             git pull origin main
 
-            # Build and restart the container
-            cd ~/openclaw
-            echo "🔨 Building Docker image..."
-            docker compose build openclaw-dashboard
+            # Install dependencies and build
+            cd ~/openclaw/openclaw-dashboard
+            echo "📦 Installing dependencies..."
+            pnpm install --frozen-lockfile
 
-            echo "♻️  Restarting container..."
-            docker compose up -d openclaw-dashboard
+            echo "🔨 Building dashboard..."
+            pnpm build
 
-            # Wait a moment for container to start
+            echo "♻️  Restarting service..."
+            systemctl --user restart openclaw-dashboard.service
+
+            # Wait a moment for service to start
             sleep 3
 
             # Verify deployment
-            echo "✅ Checking container status..."
-            docker compose ps openclaw-dashboard
+            echo "✅ Checking service status..."
+            systemctl --user status openclaw-dashboard.service --no-pager
 
             echo "📋 Recent logs:"
-            docker logs --tail 10 openclaw-openclaw-dashboard-1 2>&1 | grep -v "variable is not set" || true
+            journalctl --user -u openclaw-dashboard.service -n 10 --no-pager 2>&1 || true
 
             echo "🎉 Deployment complete!"
 
