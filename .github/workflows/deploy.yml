@@ -21,6 +21,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
+            set -e
             echo "🚀 Starting deployment..."
 
             # Navigate to repo and pull latest
@@ -31,7 +32,7 @@ jobs:
             # Install dependencies and build
             cd ~/openclaw/openclaw-dashboard
             echo "📦 Installing dependencies..."
-            pnpm install --frozen-lockfile
+            pnpm install
 
             echo "🔨 Building dashboard..."
             pnpm build
