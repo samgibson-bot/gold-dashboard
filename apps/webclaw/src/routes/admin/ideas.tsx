@@ -732,10 +732,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     }
   }
 
-  const canSubmit =
-    activeTab === 'idea'
-      ? description.trim().length > 0
-      : title.trim().length > 0 && description.trim().length > 0
+  const canSubmit = description.trim().length > 0
 
   return (
     <DialogContent className="w-[min(520px,92vw)]">
@@ -785,9 +782,6 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           <div>
             <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
               Title
-              {activeTab === 'project' ? (
-                <span className="text-red-500 ml-0.5">*</span>
-              ) : null}
             </label>
             <input
               type="text"
@@ -795,11 +789,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
               onChange={function handleTitle(e) {
                 setTitle(e.target.value)
               }}
-              placeholder={
-                activeTab === 'idea'
-                  ? 'Optional — OpenClaw will generate or refine'
-                  : 'What are you building?'
-              }
+              placeholder="Optional — OpenClaw will generate or refine"
               className="w-full px-3 py-2 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
               disabled={isPending}
             />

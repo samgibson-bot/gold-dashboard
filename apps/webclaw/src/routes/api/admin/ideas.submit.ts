@@ -40,14 +40,14 @@ type CrossRepoMatch = {
 
 function buildProjectPrompt(params: {
   context: string
-  title: string
+  title?: string
   tags?: Array<string>
 }): string {
   const { context, title, tags } = params
 
   const parts = [
     `## New Project Submission`,
-    `**Title:** ${title}`,
+    title ? `**Title:** ${title}` : '',
     tags && tags.length > 0 ? `**Tags:** ${tags.join(', ')}` : '',
     `**Description:**\n${context}`,
     '',
@@ -57,7 +57,7 @@ function buildProjectPrompt(params: {
     '',
     `1. **Understand the vision** — What is being built? Who is it for? What problem does it solve?`,
     '',
-    `2. **Create a GitHub Issue** in \`samgibson-bot/gold-ideas\` with label \`project\`. Do NOT apply \`idea\`, \`seed\`, or any lifecycle labels. The issue title should be the project name exactly as given (clean it up only if there's an obvious typo — don't reformat it).`,
+    `2. **Create a GitHub Issue** in \`samgibson-bot/gold-ideas\` with label \`project\`. Do NOT apply \`idea\`, \`seed\`, or any lifecycle labels. ${title ? `The issue title should be the project name exactly as given (clean it up only if there's an obvious typo — don't reformat it).` : `Generate a concise, descriptive title from the description.`}`,
     '',
     `   The issue body should be a concise product brief with these sections:`,
     `   - **Problem / Goal** — What problem does this solve? What's the desired outcome?`,
@@ -250,13 +250,6 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
             )
           }
 
-          if (type === 'project' && !title) {
-            return json(
-              { ok: false, error: 'title is required for project submissions' },
-              { status: 400 },
-            )
-          }
-
           for (const url of sources) {
             if (!isValidUrl(url)) {
               return json(
@@ -278,7 +271,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
           if (type === 'project') {
             message = buildProjectPrompt({
               context,
-              title,
+              title: title || undefined,
               tags: tags.length > 0 ? tags : undefined,
             })
           } else {
