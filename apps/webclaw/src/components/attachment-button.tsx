@@ -5,6 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Attachment01Icon } from '@hugeicons/core-free-icons'
 
 import { Button } from '@/components/ui/button'
+import { randomUUID } from '@/lib/utils'
 
 /** Maximum file size before compression (10MB) */
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -176,7 +177,7 @@ export function AttachmentButton({
 
       event.target.value = ''
 
-      const id = crypto.randomUUID()
+      const id = randomUUID()
 
       if (!isAcceptedImage(file)) {
         onFileSelect({

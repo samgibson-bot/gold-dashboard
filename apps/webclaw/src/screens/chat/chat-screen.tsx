@@ -15,6 +15,7 @@ import {
   readError,
   textFromMessage,
 } from './utils'
+import { randomUUID } from '@/lib/utils'
 import { createOptimisticMessage } from './chat-screen-utils'
 import {
   chatQueryKeys,
@@ -383,7 +384,7 @@ export function ChatScreen({
         friendlyId,
         message: body,
         thinking: 'low',
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: randomUUID(),
         attachments: attachmentsPayload,
       }),
     })
