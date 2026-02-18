@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { WebhookConfig } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
-import type { WebhookConfig } from '@/screens/admin/types'
 
 type WebhooksResponse = {
   ok: boolean
@@ -210,7 +210,9 @@ function WebhooksPage() {
                   {webhook.last_received ? (
                     <span>Last: {webhook.last_received}</span>
                   ) : null}
-                  <span>Created: {new Date(webhook.created).toLocaleDateString()}</span>
+                  <span>
+                    Created: {new Date(webhook.created).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             )

@@ -10,7 +10,7 @@ import type { ToolPart } from '@/components/prompt-kit/tool'
 import { Message, MessageContent } from '@/components/prompt-kit/message'
 import { Thinking } from '@/components/prompt-kit/thinking'
 import { Tool } from '@/components/prompt-kit/tool'
-import { useChatSettings, textSizeClasses } from '@/hooks/use-chat-settings'
+import { textSizeClasses, useChatSettings } from '@/hooks/use-chat-settings'
 import { cn } from '@/lib/utils'
 
 type MessageItemProps = {
@@ -138,9 +138,9 @@ type ImagePart = {
   }
 }
 
-function imagesFromMessage(msg: GatewayMessage): ImagePart[] {
+function imagesFromMessage(msg: GatewayMessage): Array<ImagePart> {
   const parts = Array.isArray(msg.content) ? msg.content : []
-  const images: ImagePart[] = []
+  const images: Array<ImagePart> = []
   for (const part of parts) {
     if (
       part.type === 'image' &&
@@ -193,10 +193,12 @@ function MessageItemComponent({
         </div>
       )}
       {images.length > 0 && (
-        <div className={cn(
-          'flex flex-wrap gap-2 mb-2',
-          isUser ? 'justify-end' : 'justify-start'
-        )}>
+        <div
+          className={cn(
+            'flex flex-wrap gap-2 mb-2',
+            isUser ? 'justify-end' : 'justify-start',
+          )}
+        >
           {images.map((img, idx) => (
             <img
               key={idx}

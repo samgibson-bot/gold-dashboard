@@ -4,9 +4,9 @@ import { useEffect } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Cancel01Icon, File01Icon } from '@hugeicons/core-free-icons'
 
+import type { AttachmentFile } from './attachment-button'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { AttachmentFile } from './attachment-button'
 
 type AttachmentPreviewProps = {
   attachment: AttachmentFile
@@ -97,7 +97,7 @@ export function AttachmentPreview({
 }
 
 type AttachmentPreviewListProps = {
-  attachments: AttachmentFile[]
+  attachments: Array<AttachmentFile>
   onRemove: (id: string) => void
   className?: string
 }

@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { LogEntry } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
-import type { LogEntry } from '@/screens/admin/types'
 
 type LogsResponse = {
   ok: boolean
@@ -13,7 +13,15 @@ type LogsResponse = {
   }
 }
 
-const LOG_LEVELS = ['all', 'trace', 'debug', 'info', 'warn', 'error', 'fatal'] as const
+const LOG_LEVELS = [
+  'all',
+  'trace',
+  'debug',
+  'info',
+  'warn',
+  'error',
+  'fatal',
+] as const
 
 const levelColors: Record<string, string> = {
   trace: 'text-primary-400',

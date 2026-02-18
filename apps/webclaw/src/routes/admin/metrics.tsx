@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import type { MetricPoint } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
-import type { MetricPoint } from '@/screens/admin/types'
 
 type MetricsResponse = {
   ok: boolean
@@ -36,14 +36,14 @@ type TokenStats = {
       outputCost: number
     }
   >
-  bySession: {
+  bySession: Array<{
     key: string
     model: string
     input: number
     output: number
     total: number
     cost: number
-  }[]
+  }>
 }
 
 type TokensResponse = {
@@ -184,30 +184,20 @@ function MetricsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <PlaceholderCard
           label="Fleet Agents"
-          value={
-            kpis?.fleet
-              ? String(kpis.fleet.total_agents ?? 0)
-              : null
-          }
+          value={kpis?.fleet ? String(kpis.fleet.total_agents ?? 0) : null}
           detail={
-            kpis?.fleet
-              ? `${kpis.fleet.active_agents ?? 0} active`
-              : undefined
+            kpis?.fleet ? `${kpis.fleet.active_agents ?? 0} active` : undefined
           }
         />
         <PlaceholderCard
           label="Outputs Today"
           value={
-            kpis?.fleet
-              ? String(kpis.fleet.total_outputs_today ?? 0)
-              : null
+            kpis?.fleet ? String(kpis.fleet.total_outputs_today ?? 0) : null
           }
         />
         <PlaceholderCard
           label="Ideas"
-          value={
-            kpis?.ideas ? String(kpis.ideas.total ?? 0) : null
-          }
+          value={kpis?.ideas ? String(kpis.ideas.total ?? 0) : null}
           detail={
             kpis?.ideas
               ? `${kpis.ideas.in_progress ?? 0} in progress`
@@ -216,11 +206,7 @@ function MetricsPage() {
         />
         <PlaceholderCard
           label="Pending Feedback"
-          value={
-            kpis?.fleet
-              ? String(kpis.fleet.pending_feedback ?? 0)
-              : null
-          }
+          value={kpis?.fleet ? String(kpis.fleet.pending_feedback ?? 0) : null}
         />
       </div>
 

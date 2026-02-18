@@ -13,7 +13,7 @@ type Session = {
 }
 
 type SessionsResponse = {
-  sessions?: Session[]
+  sessions?: Array<Session>
   count?: number
 }
 
@@ -26,7 +26,7 @@ type OpenRouterModel = {
 }
 
 type OpenRouterModelsResponse = {
-  data: OpenRouterModel[]
+  data: Array<OpenRouterModel>
 }
 
 // Cache pricing data for 1 hour
@@ -101,14 +101,14 @@ export const Route = createFileRoute('/api/admin/tokens')({
               outputCost: number
             }
           > = {}
-          const bySession: {
+          const bySession: Array<{
             key: string
             model: string
             input: number
             output: number
             total: number
             cost: number
-          }[] = []
+          }> = []
 
           for (const s of sessions) {
             const input = s.inputTokens ?? 0
@@ -173,10 +173,7 @@ export const Route = createFileRoute('/api/admin/tokens')({
             },
           })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

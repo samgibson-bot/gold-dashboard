@@ -1,8 +1,9 @@
 import { useMemo, useRef } from 'react'
-import { useQuery, type QueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 
 import { chatQueryKeys, fetchHistory } from '../chat-queries'
 import { getMessageTimestamp, textFromMessage } from '../utils'
+import type { QueryClient } from '@tanstack/react-query'
 import type { GatewayMessage, HistoryResponse } from '../types'
 
 type UseChatHistoryInput = {
@@ -35,9 +36,7 @@ export function useChatHistory({
   const historyQuery = useQuery({
     queryKey: historyKey,
     queryFn: async function fetchHistoryForSession() {
-      const cached = queryClient.getQueryData(historyKey) as
-        | HistoryResponse
-        | undefined
+      const cached = queryClient.getQueryData(historyKey)
       const optimisticMessages = Array.isArray(cached?.messages)
         ? cached.messages.filter((message) => {
             if (message.status === 'sending') return true

@@ -2,21 +2,21 @@
 
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { memo, useCallback, useMemo } from 'react'
+import { SessionItem } from './session-item'
+import type { SessionMeta } from '../../types'
 import {
   Collapsible,
-  CollapsibleTrigger,
   CollapsiblePanel,
+  CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import {
   ScrollAreaRoot,
-  ScrollAreaViewport,
   ScrollAreaScrollbar,
   ScrollAreaThumb,
+  ScrollAreaViewport,
 } from '@/components/ui/scroll-area'
-import { SessionItem } from './session-item'
 import { usePinnedSessions } from '@/hooks/use-pinned-sessions'
-import type { SessionMeta } from '../../types'
-import { memo, useCallback, useMemo } from 'react'
 
 type SidebarSessionsProps = {
   sessions: Array<SessionMeta>

@@ -10,7 +10,7 @@ type OptimisticMessagePayload = {
 
 export function createOptimisticMessage(
   body: string,
-  attachments?: AttachmentFile[],
+  attachments?: Array<AttachmentFile>,
 ): OptimisticMessagePayload {
   const clientId = randomUUID()
   const optimisticId = `opt-${clientId}`

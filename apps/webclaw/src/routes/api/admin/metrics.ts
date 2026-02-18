@@ -35,8 +35,9 @@ export const Route = createFileRoute('/api/admin/metrics')({
             (tokensResult as Record<string, unknown>)?.history,
           )
             ? (
-                (tokensResult as Record<string, unknown>)
-                  .history as Array<Record<string, unknown>>
+                (tokensResult as Record<string, unknown>).history as Array<
+                  Record<string, unknown>
+                >
               ).map(function mapPoint(h) {
                 return {
                   date: String(h.date ?? ''),
@@ -67,10 +68,7 @@ export const Route = createFileRoute('/api/admin/metrics')({
             tokens: tokensResult,
           })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

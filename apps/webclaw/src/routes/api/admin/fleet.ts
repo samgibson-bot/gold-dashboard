@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
-import type { FleetRegistry, FleetAgent } from '../../../screens/admin/types'
+import type { FleetAgent, FleetRegistry } from '../../../screens/admin/types'
 
 async function readFleetRegistry(): Promise<FleetRegistry | null> {
   try {
@@ -79,10 +79,7 @@ export const Route = createFileRoute('/api/admin/fleet')({
             active_sessions: activeSessionKeys,
           })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -116,7 +113,10 @@ export const Route = createFileRoute('/api/admin/fleet')({
             })
             if (!agent) {
               return json(
-                { ok: false, error: `Agent "${agentId}" not found in registry` },
+                {
+                  ok: false,
+                  error: `Agent "${agentId}" not found in registry`,
+                },
                 { status: 404 },
               )
             }
@@ -153,10 +153,7 @@ export const Route = createFileRoute('/api/admin/fleet')({
             { status: 400 },
           )
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

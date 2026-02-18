@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { sanitizeError } from '../../../server/errors'
-import { listIdeas, createIdea } from '../../../server/github'
+import { createIdea, listIdeas } from '../../../server/github'
 import type { CreateIdeaInput } from '../../../server/github'
 
 export const Route = createFileRoute('/api/admin/ideas')({
@@ -16,10 +16,7 @@ export const Route = createFileRoute('/api/admin/ideas')({
             ideas,
           })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -33,9 +30,9 @@ export const Route = createFileRoute('/api/admin/ideas')({
           const description =
             typeof body.description === 'string' ? body.description.trim() : ''
           const tags = Array.isArray(body.tags)
-            ? (body.tags as Array<string>).filter(
-                function isString(t) { return typeof t === 'string' },
-              )
+            ? (body.tags as Array<string>).filter(function isString(t) {
+                return typeof t === 'string'
+              })
             : []
 
           if (!title) {
@@ -56,10 +53,7 @@ export const Route = createFileRoute('/api/admin/ideas')({
 
           return json({ ok: true, result })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

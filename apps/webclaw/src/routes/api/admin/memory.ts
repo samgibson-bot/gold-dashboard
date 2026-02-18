@@ -86,10 +86,7 @@ export const Route = createFileRoute('/api/admin/memory')({
             { status: 400 },
           )
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -101,8 +98,7 @@ export const Route = createFileRoute('/api/admin/memory')({
           const action = typeof body.action === 'string' ? body.action : ''
 
           if (action === 'update_priorities') {
-            const content =
-              typeof body.content === 'string' ? body.content : ''
+            const content = typeof body.content === 'string' ? body.content : ''
             if (!content) {
               return json(
                 { ok: false, error: 'content is required' },
@@ -123,10 +119,7 @@ export const Route = createFileRoute('/api/admin/memory')({
             { status: 400 },
           )
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

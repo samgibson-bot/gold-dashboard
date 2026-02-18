@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Attachment01Icon } from '@hugeicons/core-free-icons'
 
@@ -23,7 +23,12 @@ const IMAGE_QUALITY = 0.75
 const TARGET_IMAGE_SIZE = 300 * 1024
 
 /** Supported image MIME types */
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+const ACCEPTED_IMAGE_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+]
 
 /** File extensions accepted by the file input */
 const ACCEPTED_EXTENSIONS = '.png,.jpg,.jpeg,.gif,.webp'
@@ -112,7 +117,8 @@ async function compressImage(file: File): Promise<string> {
 
         ctx.drawImage(img, 0, 0, width, height)
 
-        const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+        const outputType =
+          file.type === 'image/png' ? 'image/png' : 'image/jpeg'
         let quality = IMAGE_QUALITY
 
         let dataUrl = canvas.toDataURL(outputType, quality)
@@ -136,7 +142,9 @@ async function compressImage(file: File): Promise<string> {
         resolve(base64)
       } catch (err) {
         cleanup()
-        reject(err instanceof Error ? err : new Error('Image compression failed'))
+        reject(
+          err instanceof Error ? err : new Error('Image compression failed'),
+        )
       }
     }
 
@@ -186,7 +194,8 @@ export function AttachmentButton({
           preview: null,
           type: 'image',
           base64: null,
-          error: 'Unsupported file type. Please use PNG, JPG, GIF, or WebP images.',
+          error:
+            'Unsupported file type. Please use PNG, JPG, GIF, or WebP images.',
         })
         return
       }

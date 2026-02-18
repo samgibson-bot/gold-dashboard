@@ -13,18 +13,15 @@ function ContextMeterComponent({
   className,
 }: ContextMeterProps) {
   const { percentage, color, label } = useMemo(() => {
-    if (!usedTokens || !maxTokens) return { percentage: 0, color: '', label: '' }
+    if (!usedTokens || !maxTokens)
+      return { percentage: 0, color: '', label: '' }
     const pct = Math.min((usedTokens / maxTokens) * 100, 100)
     const fmt = (n: number) =>
       n >= 1000 ? `${(n / 1000).toFixed(0)}K` : String(n)
     return {
       percentage: pct,
       color:
-        pct >= 90
-          ? 'bg-red-500'
-          : pct >= 70
-            ? 'bg-yellow-500'
-            : 'bg-green-500',
+        pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-yellow-500' : 'bg-green-500',
       label: `${fmt(usedTokens)} / ${fmt(maxTokens)} tokens (${pct.toFixed(0)}%)`,
     }
   }, [usedTokens, maxTokens])

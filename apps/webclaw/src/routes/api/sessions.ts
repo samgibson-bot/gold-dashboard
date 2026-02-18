@@ -75,10 +75,7 @@ export const Route = createFileRoute('/api/sessions')({
 
           return json(normalizeSessions(payload))
         } catch (err) {
-          return json(
-            { error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -124,10 +121,7 @@ export const Route = createFileRoute('/api/sessions')({
             entry: payload.entry,
           })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       PATCH: async ({ request }) => {
@@ -182,10 +176,7 @@ export const Route = createFileRoute('/api/sessions')({
             entry: payload.entry,
           })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       DELETE: async ({ request }) => {
@@ -231,10 +222,7 @@ export const Route = createFileRoute('/api/sessions')({
 
           return json({ ok: true, sessionKey })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

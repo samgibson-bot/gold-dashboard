@@ -11,10 +11,7 @@ export const Route = createFileRoute('/api/ping')({
           await gatewayConnectCheck()
           return json({ ok: true })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 503 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 503 })
         }
       },
     },

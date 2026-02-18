@@ -1,7 +1,6 @@
 import { useLayoutEffect, useState } from 'react'
-import type { QueryClient } from '@tanstack/react-query'
-
 import { setChatUiState } from '../chat-ui'
+import type { QueryClient } from '@tanstack/react-query'
 
 export function useChatMobile(queryClient: QueryClient) {
   const [isMobile, setIsMobile] = useState(false)

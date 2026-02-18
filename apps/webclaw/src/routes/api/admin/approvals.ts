@@ -36,11 +36,14 @@ async function listApprovals(): Promise<Array<ApprovalItem>> {
         approvals.push({
           id: entry.name.replace('.md', ''),
           type: 'decision',
-          title: entry.name.replace('.md', '').replace(/^\d{4}-\d{2}-\d{2}-/, ''),
+          title: entry.name
+            .replace('.md', '')
+            .replace(/^\d{4}-\d{2}-\d{2}-/, ''),
           description: body || 'No description',
           agent: getField('agent') || undefined,
           task: getField('task') || undefined,
-          status: (getField('decision') as 'approved' | 'rejected') || 'pending',
+          status:
+            (getField('decision') as 'approved' | 'rejected') || 'pending',
           created: getField('date') || (entry.modified ?? ''),
           reviewer: getField('reviewer') || undefined,
           comment: body || undefined,
@@ -64,10 +67,7 @@ export const Route = createFileRoute('/api/admin/approvals')({
           const approvals = await listApprovals()
           return json({ ok: true, approvals })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -78,18 +78,14 @@ export const Route = createFileRoute('/api/admin/approvals')({
           >
 
           const action = typeof body.action === 'string' ? body.action : ''
-          const taskSlug =
-            typeof body.task === 'string' ? body.task : ''
+          const taskSlug = typeof body.task === 'string' ? body.task : ''
           const decision =
             typeof body.decision === 'string' ? body.decision : ''
           const comment = typeof body.comment === 'string' ? body.comment : ''
           const agent = typeof body.agent === 'string' ? body.agent : ''
 
           if (action !== 'decide') {
-            return json(
-              { ok: false, error: 'Unknown action' },
-              { status: 400 },
-            )
+            return json({ ok: false, error: 'Unknown action' }, { status: 400 })
           }
 
           if (!decision || !taskSlug) {
@@ -118,10 +114,7 @@ ${comment}
 
           return json({ ok: true })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

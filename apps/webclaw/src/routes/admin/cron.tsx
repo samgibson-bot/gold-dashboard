@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { CronJob } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { CronJob } from '@/screens/admin/types'
 
 type CronResponse = {
   ok: boolean
@@ -101,7 +101,9 @@ function CronPage() {
       name: String(formData.get('name') ?? ''),
       description: String(formData.get('description') ?? ''),
       enabled: formData.get('enabled') === 'on',
-      scheduleKind: String(formData.get('scheduleKind') ?? 'every') as CronJob['scheduleKind'],
+      scheduleKind: String(
+        formData.get('scheduleKind') ?? 'every',
+      ) as CronJob['scheduleKind'],
       everyAmount: String(formData.get('everyAmount') ?? ''),
       everyUnit: String(formData.get('everyUnit') ?? ''),
       cronExpr: String(formData.get('cronExpr') ?? ''),
@@ -267,10 +269,10 @@ function CronPage() {
               {jobs.map(function renderJob(job, i) {
                 const schedule =
                   job.scheduleKind === 'cron'
-                    ? job.cronExpr ?? '—'
+                    ? (job.cronExpr ?? '—')
                     : job.scheduleKind === 'every'
                       ? `${job.everyAmount ?? ''} ${job.everyUnit ?? ''}`
-                      : job.scheduleAt ?? '—'
+                      : (job.scheduleAt ?? '—')
 
                 return (
                   <tr key={job.id ?? i}>

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
@@ -156,9 +156,7 @@ function MemoryPage() {
       {activeTab === 'workspace' ? (
         <div className="space-y-4">
           {workspaceQuery.isLoading ? (
-            <div className="text-sm text-primary-500">
-              Loading workspace...
-            </div>
+            <div className="text-sm text-primary-500">Loading workspace...</div>
           ) : workspaceQuery.error ? (
             <div className="text-sm text-red-600">
               {workspaceQuery.error instanceof Error
@@ -285,7 +283,9 @@ function MemoryPage() {
                             : 'text-primary-600',
                         )}
                       >
-                        {entry.type === 'directory' ? `${entry.name}/` : entry.name}
+                        {entry.type === 'directory'
+                          ? `${entry.name}/`
+                          : entry.name}
                       </button>
                     )
                   })

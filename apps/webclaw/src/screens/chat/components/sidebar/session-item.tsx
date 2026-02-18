@@ -8,6 +8,8 @@ import {
   Pen01Icon,
   PinIcon,
 } from '@hugeicons/core-free-icons'
+import { memo } from 'react'
+import type { SessionMeta } from '../../types'
 import { cn } from '@/lib/utils'
 import {
   MenuContent,
@@ -15,8 +17,6 @@ import {
   MenuRoot,
   MenuTrigger,
 } from '@/components/ui/menu'
-import { memo } from 'react'
-import type { SessionMeta } from '../../types'
 
 type SessionItemProps = {
   session: SessionMeta

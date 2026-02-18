@@ -27,10 +27,7 @@ export const Route = createFileRoute('/api/admin/browser')({
             },
           })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -45,14 +42,11 @@ export const Route = createFileRoute('/api/admin/browser')({
 
           switch (action) {
             case 'launch':
-              result = await gatewayRpc<Record<string, unknown>>(
-                'browser.launch',
-              )
+              result =
+                await gatewayRpc<Record<string, unknown>>('browser.launch')
               break
             case 'stop':
-              result = await gatewayRpc<Record<string, unknown>>(
-                'browser.stop',
-              )
+              result = await gatewayRpc<Record<string, unknown>>('browser.stop')
               break
             case 'navigate':
               result = await gatewayRpc<Record<string, unknown>>(
@@ -78,10 +72,7 @@ export const Route = createFileRoute('/api/admin/browser')({
 
           return json({ ok: true, result })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

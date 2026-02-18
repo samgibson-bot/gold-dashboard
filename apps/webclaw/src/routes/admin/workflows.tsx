@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { WorkflowRun, WorkflowStep } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
-import type { WorkflowRun, WorkflowStep } from '@/screens/admin/types'
 
 type WorkflowsResponse = {
   ok: boolean
@@ -35,7 +35,9 @@ export const Route = createFileRoute('/admin/workflows')({
 function WorkflowsPage() {
   const queryClient = useQueryClient()
   const [newTask, setNewTask] = useState('')
-  const [selectedSynthesis, setSelectedSynthesis] = useState<string | null>(null)
+  const [selectedSynthesis, setSelectedSynthesis] = useState<string | null>(
+    null,
+  )
 
   const { data, isLoading, error } = useQuery({
     queryKey: adminQueryKeys.workflows,
@@ -166,7 +168,10 @@ function WorkflowsPage() {
                       i: number,
                     ) {
                       return (
-                        <div key={`${step.agent}-${i}`} className="flex items-center gap-2">
+                        <div
+                          key={`${step.agent}-${i}`}
+                          className="flex items-center gap-2"
+                        >
                           {i > 0 ? (
                             <div className="w-8 h-px bg-primary-200" />
                           ) : null}

@@ -8,15 +8,10 @@ export const Route = createFileRoute('/api/admin/config')({
     handlers: {
       GET: async () => {
         try {
-          const config = await gatewayRpc<Record<string, unknown>>(
-            'config.get',
-          )
+          const config = await gatewayRpc<Record<string, unknown>>('config.get')
           return json({ ok: true, config })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -31,10 +26,7 @@ export const Route = createFileRoute('/api/admin/config')({
           )
           return json({ ok: true, result })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

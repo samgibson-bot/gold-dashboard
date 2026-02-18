@@ -11,10 +11,7 @@ export const Route = createFileRoute('/api/admin/cron')({
           const cron = await gatewayRpc<Record<string, unknown>>('cron.list')
           return json({ ok: true, cron })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -29,10 +26,7 @@ export const Route = createFileRoute('/api/admin/cron')({
           )
           return json({ ok: true, result })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       PATCH: async ({ request }) => {
@@ -47,10 +41,7 @@ export const Route = createFileRoute('/api/admin/cron')({
           )
           return json({ ok: true, result })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       DELETE: async ({ request }) => {
@@ -61,18 +52,12 @@ export const Route = createFileRoute('/api/admin/cron')({
           >
           const id = typeof body.id === 'string' ? body.id : ''
           if (!id) {
-            return json(
-              { ok: false, error: 'id required' },
-              { status: 400 },
-            )
+            return json({ ok: false, error: 'id required' }, { status: 400 })
           }
           await gatewayRpc('cron.delete', { id })
           return json({ ok: true })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

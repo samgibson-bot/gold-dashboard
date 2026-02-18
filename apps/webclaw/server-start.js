@@ -47,7 +47,7 @@ const server = createServer(async (req, res) => {
           'Content-Length': content.length,
           'Cache-Control': pathname.startsWith('/assets/')
             ? 'public, max-age=31536000, immutable'
-            : 'public, max-age=3600'
+            : 'public, max-age=3600',
         })
 
         if (req.method === 'HEAD') {
@@ -68,20 +68,25 @@ const server = createServer(async (req, res) => {
         if (value) acc[key] = Array.isArray(value) ? value.join(', ') : value
         return acc
       }, {}),
-      body: req.method !== 'GET' && req.method !== 'HEAD'
-        ? await new Promise((resolve) => {
-            const chunks = []
-            req.on('data', chunk => chunks.push(chunk))
-            req.on('end', () => resolve(Buffer.concat(chunks)))
-          })
-        : undefined,
+      body:
+        req.method !== 'GET' && req.method !== 'HEAD'
+          ? await new Promise((resolve) => {
+              const chunks = []
+              req.on('data', (chunk) => chunks.push(chunk))
+              req.on('end', () => resolve(Buffer.concat(chunks)))
+            })
+          : undefined,
     })
 
     // Call the TanStack Start fetch handler
     const response = await handler.fetch(request)
 
     // Write response
-    res.writeHead(response.status, response.statusText, Object.fromEntries(response.headers))
+    res.writeHead(
+      response.status,
+      response.statusText,
+      Object.fromEntries(response.headers),
+    )
 
     if (response.body) {
       const reader = response.body.getReader()

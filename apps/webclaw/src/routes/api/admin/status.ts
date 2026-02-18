@@ -1,9 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
 import os from 'node:os'
 import fs from 'node:fs/promises'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
+import { json } from '@tanstack/react-start'
+import { createFileRoute } from '@tanstack/react-router'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
 import type { SystemMetrics } from '../../../screens/admin/types'
@@ -224,10 +224,7 @@ export const Route = createFileRoute('/api/admin/status')({
 
           return json({ ok: true, system, sessions })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { StatusCard } from '@/components/ui/status-card'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 type TokenStats = {
   totalInput: number
@@ -21,14 +21,14 @@ type TokenStats = {
       outputCost: number
     }
   >
-  bySession: {
+  bySession: Array<{
     key: string
     model: string
     input: number
     output: number
     total: number
     cost: number
-  }[]
+  }>
 }
 
 type TokensResponse = {
@@ -116,10 +116,7 @@ function TokensPage() {
       </h1>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatusCard
-          label="Total Cost"
-          value={formatCost(stats.totalCost)}
-        />
+        <StatusCard label="Total Cost" value={formatCost(stats.totalCost)} />
         <StatusCard
           label="Total Tokens"
           value={stats.totalTokens.toLocaleString()}
@@ -132,10 +129,7 @@ function TokensPage() {
           label="Output Tokens"
           value={stats.totalOutput.toLocaleString()}
         />
-        <StatusCard
-          label="Sessions"
-          value={String(stats.sessionCount)}
-        />
+        <StatusCard label="Sessions" value={String(stats.sessionCount)} />
       </div>
 
       {pieData.length > 0 && (

@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { BrowserPage, BrowserStatus } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { StatusCard } from '@/components/ui/status-card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { BrowserStatus, BrowserPage } from '@/screens/admin/types'
 
 type BrowserResponse = {
   ok: boolean
@@ -65,7 +65,9 @@ function BrowserPage_() {
       <h1 className="text-lg font-medium text-primary-950">Browser</h1>
 
       {isLoading ? (
-        <div className="text-sm text-primary-500">Loading browser status...</div>
+        <div className="text-sm text-primary-500">
+          Loading browser status...
+        </div>
       ) : error ? (
         <div className="text-sm text-red-600">
           {error instanceof Error ? error.message : 'Failed to load'}
@@ -81,10 +83,7 @@ function BrowserPage_() {
               label="Open Pages"
               value={String(status.pages ?? pages.length)}
             />
-            <StatusCard
-              label="State"
-              value={String(status.status ?? '—')}
-            />
+            <StatusCard label="State" value={String(status.status ?? '—')} />
           </div>
 
           <div className="flex gap-2">

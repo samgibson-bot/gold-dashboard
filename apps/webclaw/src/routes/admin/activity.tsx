@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { ActivityEvent } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
-import type { ActivityEvent } from '@/screens/admin/types'
 
 type ActivityResponse = {
   ok: boolean
@@ -20,7 +20,14 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   system: 'bg-primary-100 text-primary-600',
 }
 
-const EVENT_TYPES = ['all', 'gateway', 'agent', 'feedback', 'cron', 'github'] as const
+const EVENT_TYPES = [
+  'all',
+  'gateway',
+  'agent',
+  'feedback',
+  'cron',
+  'github',
+] as const
 
 export const Route = createFileRoute('/admin/activity')({
   component: ActivityPage,
@@ -113,7 +120,9 @@ function ActivityPage() {
                   {event.type}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-primary-900">{event.summary}</div>
+                  <div className="text-sm text-primary-900">
+                    {event.summary}
+                  </div>
                   {event.agent ? (
                     <div className="text-xs text-primary-500 mt-0.5">
                       Agent: {event.agent}

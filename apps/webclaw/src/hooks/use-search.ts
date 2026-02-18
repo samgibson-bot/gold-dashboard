@@ -63,7 +63,9 @@ export function useSearch({
   )
 
   const searchAllSessions = useCallback(
-    async function searchAllSessions(query: string): Promise<Array<SearchMatch>> {
+    async function searchAllSessions(
+      query: string,
+    ): Promise<Array<SearchMatch>> {
       const normalizedQuery = normalizeQuery(query)
       if (!normalizedQuery) return []
 
@@ -181,9 +183,6 @@ function collectMatches(
 
 function getSessionTitle(session: SessionMeta): string {
   return (
-    session.label ||
-    session.title ||
-    session.derivedTitle ||
-    session.friendlyId
+    session.label || session.title || session.derivedTitle || session.friendlyId
   )
 }

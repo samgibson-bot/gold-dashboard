@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import type { SystemMetrics } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { StatusCard } from '@/components/ui/status-card'
 import { ProgressBar } from '@/components/ui/progress-bar'
-import { formatBytes, formatUptime, formatPercent } from '@/lib/format'
-import type { SystemMetrics } from '@/screens/admin/types'
+import { formatBytes, formatPercent, formatUptime } from '@/lib/format'
 
 type CombinedStatusResponse = {
   ok: boolean
@@ -101,10 +101,15 @@ function StatusPage() {
                 : '—'}
             </div>
             {system.cpu.usage !== undefined && (
-              <ProgressBar value={system.cpu.usage} max={100} className="mb-2" />
+              <ProgressBar
+                value={system.cpu.usage}
+                max={100}
+                className="mb-2"
+              />
             )}
             <div className="text-xs text-primary-600">
-              {system.cpu.cores} cores • Load: {system.cpu.loadAverage[0].toFixed(2)}
+              {system.cpu.cores} cores • Load:{' '}
+              {system.cpu.loadAverage[0].toFixed(2)}
             </div>
           </div>
 
@@ -112,9 +117,14 @@ function StatusPage() {
           <div className="rounded-lg border border-primary-200 bg-surface p-4">
             <div className="text-xs text-primary-500 mb-1">Memory</div>
             <div className="text-lg font-medium text-primary-950 tabular-nums mb-2">
-              {formatBytes(system.memory.used)} / {formatBytes(system.memory.total)}
+              {formatBytes(system.memory.used)} /{' '}
+              {formatBytes(system.memory.total)}
             </div>
-            <ProgressBar value={system.memory.usagePercent} max={100} className="mb-2" />
+            <ProgressBar
+              value={system.memory.usagePercent}
+              max={100}
+              className="mb-2"
+            />
             <div className="text-xs text-primary-600">
               {formatPercent(system.memory.usagePercent)} used
             </div>
@@ -126,7 +136,11 @@ function StatusPage() {
             <div className="text-lg font-medium text-primary-950 tabular-nums mb-2">
               {system.disk.used} / {system.disk.total}
             </div>
-            <ProgressBar value={system.disk.usagePercent} max={100} className="mb-2" />
+            <ProgressBar
+              value={system.disk.usagePercent}
+              max={100}
+              className="mb-2"
+            />
             <div className="text-xs text-primary-600">
               {system.disk.available} available
             </div>
@@ -189,7 +203,9 @@ function StatusPage() {
                         {String(session.status ?? '—')}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {String(session.messageCount ?? session.messages ?? '—')}
+                        {String(
+                          session.messageCount ?? session.messages ?? '—',
+                        )}
                       </td>
                     </tr>
                   )

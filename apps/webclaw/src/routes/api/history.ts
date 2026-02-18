@@ -59,10 +59,7 @@ export const Route = createFileRoute('/api/history')({
 
           return json(payload)
         } catch (err) {
-          return json(
-            { error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

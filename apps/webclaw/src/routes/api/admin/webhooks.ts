@@ -1,6 +1,6 @@
+import { randomUUID } from 'node:crypto'
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
-import { randomUUID } from 'node:crypto'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
 import type { WebhookConfig } from '../../../screens/admin/types'
@@ -35,10 +35,7 @@ export const Route = createFileRoute('/api/admin/webhooks')({
           const webhooks = await readWebhooks()
           return json({ ok: true, webhooks })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -123,10 +120,7 @@ export const Route = createFileRoute('/api/admin/webhooks')({
             { status: 400 },
           )
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

@@ -38,9 +38,7 @@ export function ExportMenu({ onExport, disabled }: ExportMenuProps) {
     [onExport],
   )
 
-  const handleBlur = useCallback(function handleBlur(
-    event: React.FocusEvent,
-  ) {
+  const handleBlur = useCallback(function handleBlur(event: React.FocusEvent) {
     if (
       containerRef.current &&
       !containerRef.current.contains(event.relatedTarget as Node)

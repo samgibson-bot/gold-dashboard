@@ -1,8 +1,5 @@
 'use client'
 
-import type { KeyboardEvent } from 'react'
-import type { SearchMatch } from '@/hooks/use-search'
-import type { SessionMeta } from '@/screens/chat/types'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Cancel01Icon,
@@ -11,6 +8,9 @@ import {
 } from '@hugeicons/core-free-icons'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import type { SessionMeta } from '@/screens/chat/types'
+import type { SearchMatch } from '@/hooks/use-search'
+import type { KeyboardEvent } from 'react'
 
 import {
   DialogContent,
@@ -113,13 +113,7 @@ export function SearchDialog({
         })
     }, 300)
     return () => window.clearTimeout(timer)
-  }, [
-    mode,
-    open,
-    searchAllSessions,
-    searchCurrentConversation,
-    trimmedQuery,
-  ])
+  }, [mode, open, searchAllSessions, searchCurrentConversation, trimmedQuery])
 
   const resultCountLabel = useMemo(() => {
     if (!trimmedQuery) return '0 results'
@@ -156,8 +150,7 @@ export function SearchDialog({
       return
     }
     if (event.key === 'Enter') {
-      const selectedResult =
-        results[Math.min(activeIndex, results.length - 1)]
+      const selectedResult = results[Math.min(activeIndex, results.length - 1)]
       event.preventDefault()
       handleSelectResult(selectedResult)
     }
@@ -166,9 +159,7 @@ export function SearchDialog({
   function renderSnippet(result: SearchMatch) {
     const highlight = highlightMatch(result.messageText, trimmedQuery)
     const normalizedQuery = trimmedQuery.toLowerCase()
-    const matchIndex = result.messageText
-      .toLowerCase()
-      .indexOf(normalizedQuery)
+    const matchIndex = result.messageText.toLowerCase().indexOf(normalizedQuery)
     const matchEnd = matchIndex + normalizedQuery.length
     const showLeading = matchIndex > 0
     const showTrailing = matchEnd < result.messageText.length
@@ -190,8 +181,7 @@ export function SearchDialog({
 
   function renderResult(result: SearchMatch, index: number) {
     const isActive = index === activeIndex
-    const roleLabel =
-      result.message.role === 'user' ? 'You' : 'Assistant'
+    const roleLabel = result.message.role === 'user' ? 'You' : 'Assistant'
 
     return (
       <li key={`${result.sessionKey}-${result.messageIndex}-${index}`}>

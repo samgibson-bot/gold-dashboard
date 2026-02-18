@@ -51,10 +51,7 @@ export const Route = createFileRoute('/api/admin/ideas/chat')({
 
           return json({ ok: true, sessionKey: 'ideas', ...res })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

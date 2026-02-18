@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { Button } from '@/components/ui/button'
@@ -85,9 +85,7 @@ function ConfigPage() {
           {Object.entries(config).map(function renderEntry([key, value]) {
             const isEditing = editingKey === key
             const displayValue =
-              typeof value === 'string'
-                ? value
-                : JSON.stringify(value, null, 2)
+              typeof value === 'string' ? value : JSON.stringify(value, null, 2)
 
             return (
               <div

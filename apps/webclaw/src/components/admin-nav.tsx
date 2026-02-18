@@ -2,25 +2,25 @@
 
 import { Link } from '@tanstack/react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
-  DashboardSquare01Icon,
-  File01Icon,
-  Clock01Icon,
-  Settings01Icon,
-  BrowserIcon,
-  Idea01Icon,
-  UserGroupIcon,
   Activity01Icon,
-  CheckmarkBadge01Icon,
   Analytics01Icon,
-  WebhookIcon,
-  WorkflowSquare01Icon,
-  FolderDetailsIcon,
   ArrowDown01Icon,
   ArrowRight01Icon,
-  Search01Icon,
+  BrowserIcon,
+  CheckmarkBadge01Icon,
+  Clock01Icon,
+  DashboardSquare01Icon,
+  File01Icon,
+  FolderDetailsIcon,
+  Idea01Icon,
   PencilEdit02Icon,
+  Search01Icon,
+  Settings01Icon,
+  UserGroupIcon,
+  WebhookIcon,
+  WorkflowSquare01Icon,
 } from '@hugeicons/core-free-icons'
 import { WebClawIconBig } from '@/components/icons/webclaw-big'
 import { cn } from '@/lib/utils'
@@ -39,9 +39,7 @@ type NavSection = {
 const navSections: Array<NavSection> = [
   {
     title: 'Chat',
-    items: [
-      { to: '/new', label: 'New Chat', icon: PencilEdit02Icon },
-    ],
+    items: [{ to: '/new', label: 'New Chat', icon: PencilEdit02Icon }],
   },
   {
     title: 'Overview',
@@ -55,16 +53,22 @@ const navSections: Array<NavSection> = [
     title: 'Agents',
     items: [
       { to: '/admin/fleet', label: 'Fleet', icon: UserGroupIcon },
-      { to: '/admin/workflows', label: 'Workflows', icon: WorkflowSquare01Icon },
+      {
+        to: '/admin/workflows',
+        label: 'Workflows',
+        icon: WorkflowSquare01Icon,
+      },
       { to: '/admin/memory', label: 'Memory', icon: FolderDetailsIcon },
-      { to: '/admin/approvals', label: 'Approvals', icon: CheckmarkBadge01Icon },
+      {
+        to: '/admin/approvals',
+        label: 'Approvals',
+        icon: CheckmarkBadge01Icon,
+      },
     ],
   },
   {
     title: 'Ideas',
-    items: [
-      { to: '/admin/ideas', label: 'Ideas', icon: Idea01Icon },
-    ],
+    items: [{ to: '/admin/ideas', label: 'Ideas', icon: Idea01Icon }],
   },
   {
     title: 'System',

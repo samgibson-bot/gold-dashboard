@@ -7,7 +7,12 @@ type StatusCardProps = {
   className?: string
 }
 
-export function StatusCard({ label, value, detail, className }: StatusCardProps) {
+export function StatusCard({
+  label,
+  value,
+  detail,
+  className,
+}: StatusCardProps) {
   return (
     <div
       className={cn(

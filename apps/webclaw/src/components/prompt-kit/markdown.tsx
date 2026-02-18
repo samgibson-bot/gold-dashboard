@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { Streamdown } from 'streamdown'
-import type { Components } from 'streamdown'
 import { CodeBlock } from './code-block'
+import type { Components } from 'streamdown'
 import { cn } from '@/lib/utils'
 
 export type MarkdownProps = {

@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { FleetAgent, FleetStatus } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
-import type { FleetStatus, FleetAgent } from '@/screens/admin/types'
 
 const COST_TIER_COLORS: Record<string, string> = {
   low: 'bg-green-100 text-green-700',
@@ -90,7 +90,9 @@ function FleetPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-lg font-medium text-primary-950">Fleet Management</h1>
+        <h1 className="text-lg font-medium text-primary-950">
+          Fleet Management
+        </h1>
         <p className="text-sm text-primary-600 mt-1">
           {agents.length} registered agents
         </p>
@@ -102,13 +104,18 @@ function FleetPage() {
           Model Routing
         </h2>
         <div className="flex gap-3">
-          {Object.entries(modelRouting).map(function renderRouting([tier, model]) {
+          {Object.entries(modelRouting).map(function renderRouting([
+            tier,
+            model,
+          ]) {
             return (
               <div
                 key={tier}
                 className="rounded-lg border border-primary-200 bg-surface px-4 py-2"
               >
-                <div className="text-xs text-primary-500 capitalize">{tier}</div>
+                <div className="text-xs text-primary-500 capitalize">
+                  {tier}
+                </div>
                 <div className="text-sm font-medium text-primary-900 tabular-nums">
                   {model}
                 </div>
@@ -157,7 +164,8 @@ function FleetPage() {
                     <span
                       className={cn(
                         'text-[10px] px-2 py-0.5 rounded-full font-medium',
-                        COST_TIER_COLORS[agent.cost_tier] ?? COST_TIER_COLORS.standard,
+                        COST_TIER_COLORS[agent.cost_tier] ??
+                          COST_TIER_COLORS.standard,
                       )}
                     >
                       {agent.cost_tier}
@@ -182,13 +190,18 @@ function FleetPage() {
                 {/* Cron Schedule */}
                 {agent.cron_schedule ? (
                   <div className="text-xs text-primary-500 mb-3">
-                    Cron: <code className="text-primary-700">{agent.cron_schedule}</code>
+                    Cron:{' '}
+                    <code className="text-primary-700">
+                      {agent.cron_schedule}
+                    </code>
                   </div>
                 ) : null}
 
                 {/* Shared-Context Access */}
                 <div className="mb-3 text-xs">
-                  <div className="text-primary-500 mb-1">Shared-Context Access:</div>
+                  <div className="text-primary-500 mb-1">
+                    Shared-Context Access:
+                  </div>
                   <div className="flex flex-wrap gap-1">
                     {agent.reads.map(function renderRead(dir) {
                       return (
@@ -219,7 +232,9 @@ function FleetPage() {
                     onClick={function handleSpawn() {
                       spawnMutation.mutate(agent.id)
                     }}
-                    disabled={spawnMutation.isPending || agent.status === 'active'}
+                    disabled={
+                      spawnMutation.isPending || agent.status === 'active'
+                    }
                     className={cn(
                       'text-xs px-3 py-1.5 rounded-md font-medium transition-colors',
                       agent.status === 'active'
@@ -282,9 +297,7 @@ function FleetPage() {
 
       {/* Spawn Success */}
       {spawnMutation.isSuccess ? (
-        <div className="text-sm text-green-600">
-          Agent spawned successfully
-        </div>
+        <div className="text-sm text-green-600">Agent spawned successfully</div>
       ) : null}
     </div>
   )

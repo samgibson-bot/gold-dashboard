@@ -1,8 +1,8 @@
 import { memo } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon } from '@hugeicons/core-free-icons'
-import { Button } from '@/components/ui/button'
 import { ContextMeter } from './context-meter'
+import { Button } from '@/components/ui/button'
 import { ExportMenu } from '@/components/export-menu'
 
 type ExportFormat = 'markdown' | 'json' | 'text'
@@ -50,9 +50,7 @@ function ChatHeaderComponent({
         maxTokens={maxTokens}
         className="ml-3 hidden sm:flex"
       />
-      {onExport && hasMessages ? (
-        <ExportMenu onExport={onExport} />
-      ) : null}
+      {onExport && hasMessages ? <ExportMenu onExport={onExport} /> : null}
     </div>
   )
 }

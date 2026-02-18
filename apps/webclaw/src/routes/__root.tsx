@@ -5,10 +5,9 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import appCss from '../styles.css?url'
 import { CommandPalette } from '@/components/command-palette'
 import { AdminNav } from '@/components/admin-nav'
-
-import appCss from '../styles.css?url'
 
 const themeScript = `
 (() => {

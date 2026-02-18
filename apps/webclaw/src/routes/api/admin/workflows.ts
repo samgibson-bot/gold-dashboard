@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
-import type { WorkflowRun, FleetRegistry } from '../../../screens/admin/types'
+import type { FleetRegistry, WorkflowRun } from '../../../screens/admin/types'
 
 async function getCronPipeline(): Promise<WorkflowRun | null> {
   try {
@@ -115,10 +115,7 @@ export const Route = createFileRoute('/api/admin/workflows')({
 
           return json({ ok: true, workflows, syntheses })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
@@ -131,7 +128,9 @@ export const Route = createFileRoute('/api/admin/workflows')({
 
           if (action === 'start_review_chain') {
             const task = typeof body.task === 'string' ? body.task.trim() : ''
-            const agents = Array.isArray(body.agents) ? body.agents : ['engineer', 'critic', 'architect']
+            const agents = Array.isArray(body.agents)
+              ? body.agents
+              : ['engineer', 'critic', 'architect']
 
             if (!task) {
               return json(
@@ -153,7 +152,11 @@ created: ${new Date().toISOString()}
 # Review Chain: ${task}
 
 ## Agents
-${(agents as Array<string>).map(function formatAgent(a) { return `- ${a}: pending` }).join('\n')}
+${(agents as Array<string>)
+  .map(function formatAgent(a) {
+    return `- ${a}: pending`
+  })
+  .join('\n')}
 `
 
             await gatewayRpc('fs.writeFile', {
@@ -169,10 +172,7 @@ ${(agents as Array<string>).map(function formatAgent(a) { return `- ${a}: pendin
             { status: 400 },
           )
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

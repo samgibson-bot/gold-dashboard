@@ -1,20 +1,27 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
+  BrowserIcon,
+  Clock01Icon,
+  CoinsIcon,
+  Settings01Icon as ConfigIcon,
   DashboardSquare01Icon,
+  File01Icon,
+  Idea01Icon,
   PencilEdit02Icon,
   Search01Icon,
   Settings01Icon,
   SidebarLeft01Icon,
-  CoinsIcon,
-  File01Icon,
-  Clock01Icon,
-  Settings01Icon as ConfigIcon,
-  BrowserIcon,
-  Idea01Icon,
 } from '@hugeicons/core-free-icons'
 import { AnimatePresence, motion } from 'motion/react'
 import { memo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { useChatSettings } from '../hooks/use-chat-settings'
+import { useDeleteSession } from '../hooks/use-delete-session'
+import { useRenameSession } from '../hooks/use-rename-session'
 import { SettingsDialog } from './settings-dialog'
+import { SessionRenameDialog } from './sidebar/session-rename-dialog'
+import { SessionDeleteDialog } from './sidebar/session-delete-dialog'
+import { SidebarSessions } from './sidebar/sidebar-sessions'
 import type { SessionMeta } from '../types'
 import {
   TooltipContent,
@@ -22,15 +29,8 @@ import {
   TooltipRoot,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { SessionRenameDialog } from './sidebar/session-rename-dialog'
-import { SessionDeleteDialog } from './sidebar/session-delete-dialog'
-import { SidebarSessions } from './sidebar/sidebar-sessions'
 import { cn } from '@/lib/utils'
-import { useChatSettings } from '../hooks/use-chat-settings'
-import { useDeleteSession } from '../hooks/use-delete-session'
-import { useRenameSession } from '../hooks/use-rename-session'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Link } from '@tanstack/react-router'
 import { WebClawIconBig } from '@/components/icons/webclaw-big'
 
 type ChatSidebarProps = {
@@ -295,7 +295,11 @@ function ChatSidebarComponent({
           )}
         </AnimatePresence>
 
-        <motion.div layout transition={{ layout: transition }} className="w-full">
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full"
+        >
           <Link
             to="/admin/status"
             className={cn(
@@ -325,7 +329,11 @@ function ChatSidebarComponent({
           </Link>
         </motion.div>
 
-        <motion.div layout transition={{ layout: transition }} className="w-full">
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full"
+        >
           <Link
             to="/admin/tokens"
             className={cn(
@@ -355,7 +363,11 @@ function ChatSidebarComponent({
           </Link>
         </motion.div>
 
-        <motion.div layout transition={{ layout: transition }} className="w-full">
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full"
+        >
           <Link
             to="/admin/logs"
             className={cn(
@@ -385,7 +397,11 @@ function ChatSidebarComponent({
           </Link>
         </motion.div>
 
-        <motion.div layout transition={{ layout: transition }} className="w-full">
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full"
+        >
           <Link
             to="/admin/cron"
             className={cn(
@@ -415,7 +431,11 @@ function ChatSidebarComponent({
           </Link>
         </motion.div>
 
-        <motion.div layout transition={{ layout: transition }} className="w-full">
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full"
+        >
           <Link
             to="/admin/config"
             className={cn(
@@ -445,7 +465,11 @@ function ChatSidebarComponent({
           </Link>
         </motion.div>
 
-        <motion.div layout transition={{ layout: transition }} className="w-full">
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full"
+        >
           <Link
             to="/admin/browser"
             className={cn(
@@ -475,7 +499,11 @@ function ChatSidebarComponent({
           </Link>
         </motion.div>
 
-        <motion.div layout transition={{ layout: transition }} className="w-full">
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full"
+        >
           <Link
             to="/admin/ideas"
             className={cn(

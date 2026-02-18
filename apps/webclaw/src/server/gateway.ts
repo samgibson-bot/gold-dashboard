@@ -118,7 +118,9 @@ function loadOrCreateDeviceIdentity(): DeviceIdentity {
 
   if (existsSync(DEVICE_KEYS_PATH)) {
     try {
-      const stored = JSON.parse(readFileSync(DEVICE_KEYS_PATH, 'utf8')) as unknown
+      const stored = JSON.parse(
+        readFileSync(DEVICE_KEYS_PATH, 'utf8'),
+      ) as unknown
       if (isStoredDeviceKeys(stored)) {
         keyPair = importStoredKeyPair(stored)
       }
@@ -235,7 +237,10 @@ type GatewayEventStreamOptions = {
 
 type GatewayClient = {
   connect: () => Promise<void>
-  sendReq: <TPayload = unknown>(method: string, params?: unknown) => Promise<TPayload>
+  sendReq: <TPayload = unknown>(
+    method: string,
+    params?: unknown,
+  ) => Promise<TPayload>
   close: () => void
   setOnEvent: (handler?: (event: GatewayEventFrame) => void) => void
   setOnError: (handler?: (error: Error) => void) => void
@@ -279,7 +284,10 @@ function getGatewayConfig() {
 function getGatewayScopes(): Array<string> {
   const envScopes = process.env.CLAWDBOT_GATEWAY_SCOPES?.trim()
   if (envScopes) {
-    return envScopes.split(',').map((s) => s.trim()).filter(Boolean)
+    return envScopes
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
   }
   return ['operator.admin']
 }
@@ -419,7 +427,11 @@ async function wsClose(ws: WebSocket): Promise<void> {
       resolve()
     }
     ws.addEventListener('close', onClose)
-    try { ws.close() } catch { /* ignore */ }
+    try {
+      ws.close()
+    } catch {
+      /* ignore */
+    }
   })
 }
 
@@ -429,21 +441,38 @@ function resetCachedConnection() {
     cachedWaiter = null
   }
   if (cachedWs) {
-    try { cachedWs.close() } catch { /* ignore */ }
+    try {
+      cachedWs.close()
+    } catch {
+      /* ignore */
+    }
     cachedWs = null
   }
   cachedConnected = false
   connectionPromise = null
 }
 
-async function getConnection(): Promise<{ ws: WebSocket; waiter: GatewayWaiter }> {
-  if (cachedWs && cachedWs.readyState === WebSocket.OPEN && cachedConnected && cachedWaiter) {
+async function getConnection(): Promise<{
+  ws: WebSocket
+  waiter: GatewayWaiter
+}> {
+  if (
+    cachedWs &&
+    cachedWs.readyState === WebSocket.OPEN &&
+    cachedConnected &&
+    cachedWaiter
+  ) {
     return { ws: cachedWs, waiter: cachedWaiter }
   }
 
   if (connectionPromise) {
     await connectionPromise
-    if (cachedWs && cachedWs.readyState === WebSocket.OPEN && cachedConnected && cachedWaiter) {
+    if (
+      cachedWs &&
+      cachedWs.readyState === WebSocket.OPEN &&
+      cachedConnected &&
+      cachedWaiter
+    ) {
       return { ws: cachedWs, waiter: cachedWaiter }
     }
   }
@@ -458,9 +487,9 @@ async function getConnection(): Promise<{ ws: WebSocket; waiter: GatewayWaiter }
 
     ws.addEventListener('message', waiter.handleMessage)
     ws.addEventListener('close', (evt) => {
-      if ((evt as any)?.code === 1008) {
+      if (evt?.code === 1008) {
         reportPairingRequired(
-          typeof (evt as any)?.reason === 'string' ? (evt as any).reason : undefined,
+          typeof evt?.reason === 'string' ? evt.reason : undefined,
         )
       }
       resetCachedConnection()

@@ -49,10 +49,7 @@ export const Route = createFileRoute('/api/admin/ideas/status')({
 
           return json({ ok: true })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

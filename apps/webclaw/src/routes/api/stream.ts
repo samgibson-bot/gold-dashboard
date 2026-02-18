@@ -71,7 +71,11 @@ export const Route = createFileRoute('/api/stream')({
                   send({ event: 'error', payload: sanitizeError(err) })
                   closed = true
                   clearInterval(heartbeat)
-                  try { controller.close() } catch { /* ignore */ }
+                  try {
+                    controller.close()
+                  } catch {
+                    /* ignore */
+                  }
                 })
             }
 
@@ -82,7 +86,11 @@ export const Route = createFileRoute('/api/stream')({
                 releaseClient()
                 releaseClient = null
               }
-              try { controller.close() } catch { /* ignore */ }
+              try {
+                controller.close()
+              } catch {
+                /* ignore */
+              }
             })
           },
         })

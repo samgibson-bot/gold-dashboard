@@ -1,36 +1,36 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Dialog } from '@base-ui/react/dialog'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { cn } from '@/lib/utils'
 import Fuse from 'fuse.js'
 import {
-  DashboardSquare01Icon,
-  Coins01Icon,
-  FileScriptIcon,
-  Settings01Icon,
+  Activity01Icon,
+  Analytics01Icon,
   BrowserIcon,
   Calendar03Icon,
-  Target01Icon,
-  Idea01Icon,
-  UserGroupIcon,
-  Activity01Icon,
   CheckmarkBadge01Icon,
-  Analytics01Icon,
+  Coins01Icon,
+  DashboardSquare01Icon,
+  FileScriptIcon,
+  FolderDetailsIcon,
+  Idea01Icon,
+  Settings01Icon,
+  Target01Icon,
+  UserGroupIcon,
   WebhookIcon,
   WorkflowSquare01Icon,
-  FolderDetailsIcon,
 } from '@hugeicons/core-free-icons'
 import type { IconSvgObject } from '@hugeicons/core-free-icons'
+import { cn } from '@/lib/utils'
 
 type QuickAction = {
   id: string
   label: string
   description: string
   icon: IconSvgObject
-  keywords: string[]
+  keywords: Array<string>
   action: () => void
 }
 
@@ -40,7 +40,7 @@ export function CommandPalette() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const navigate = useNavigate()
 
-  const actions: QuickAction[] = useMemo(
+  const actions: Array<QuickAction> = useMemo(
     () => [
       {
         id: 'new-idea',
@@ -58,7 +58,15 @@ export function CommandPalette() {
         label: 'Ideas',
         description: 'View and manage ideas',
         icon: Idea01Icon,
-        keywords: ['ideas', 'view', 'list', 'manage', 'kanban', 'board', 'workflow'],
+        keywords: [
+          'ideas',
+          'view',
+          'list',
+          'manage',
+          'kanban',
+          'board',
+          'workflow',
+        ],
         action: () => {
           navigate({ to: '/admin/ideas' })
           setOpen(false)

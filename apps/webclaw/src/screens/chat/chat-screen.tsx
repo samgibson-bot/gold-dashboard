@@ -15,11 +15,10 @@ import {
   readError,
   textFromMessage,
 } from './utils'
-import { randomUUID } from '@/lib/utils'
 import { createOptimisticMessage } from './chat-screen-utils'
 import {
-  chatQueryKeys,
   appendHistoryMessage,
+  chatQueryKeys,
   clearHistoryMessages,
   fetchGatewayStatus,
   removeHistoryMessageByClientId,
@@ -27,28 +26,29 @@ import {
   updateSessionLastMessage,
 } from './chat-queries'
 import { ChatHeader } from './components/chat-header'
-import { useExport } from '@/hooks/use-export'
 import { ChatMessageList } from './components/chat-message-list'
 import { ChatComposer } from './components/chat-composer'
-import type { AttachmentFile } from '@/components/attachment-button'
 import { GatewayStatusMessage } from './components/gateway-status-message'
-import { SearchDialog } from '@/components/search-dialog'
 import {
   consumePendingSend,
   hasPendingGeneration,
   hasPendingSend,
   isRecentSession,
   resetPendingSend,
-  setRecentSession,
   setPendingGeneration,
+  setRecentSession,
   stashPendingSend,
 } from './pending-send'
 import { useChatMeasurements } from './hooks/use-chat-measurements'
 import { useChatHistory } from './hooks/use-chat-history'
 import { useChatSessions } from './hooks/use-chat-sessions'
-import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import type { AttachmentFile } from '@/components/attachment-button'
 import type { ChatComposerHelpers } from './components/chat-composer'
 import type { HistoryResponse } from './types'
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { SearchDialog } from '@/components/search-dialog'
+import { useExport } from '@/hooks/use-export'
+import { randomUUID } from '@/lib/utils'
 
 type ChatScreenProps = {
   activeFriendlyId: string
@@ -302,9 +302,7 @@ export function ChatScreen({
       pending.friendlyId,
       pending.sessionKey,
     )
-    const cached = queryClient.getQueryData(historyKey) as
-      | HistoryResponse
-      | undefined
+    const cached = queryClient.getQueryData(historyKey)
     const cachedMessages = Array.isArray(cached?.messages)
       ? cached.messages
       : []
@@ -330,7 +328,13 @@ export function ChatScreen({
     }
     setWaitingForResponse(true)
     setPinToTop(true)
-    sendMessage(pending.sessionKey, pending.friendlyId, pending.message, true, pending.attachments)
+    sendMessage(
+      pending.sessionKey,
+      pending.friendlyId,
+      pending.message,
+      true,
+      pending.attachments,
+    )
   }, [
     activeFriendlyId,
     activeSessionKey,
@@ -345,11 +349,14 @@ export function ChatScreen({
     friendlyId: string,
     body: string,
     skipOptimistic = false,
-    attachments?: AttachmentFile[],
+    attachments?: Array<AttachmentFile>,
   ) {
     let optimisticClientId = ''
     if (!skipOptimistic) {
-      const { clientId, optimisticMessage } = createOptimisticMessage(body, attachments)
+      const { clientId, optimisticMessage } = createOptimisticMessage(
+        body,
+        attachments,
+      )
       optimisticClientId = clientId
       appendHistoryMessage(
         queryClient,
@@ -456,7 +463,11 @@ export function ChatScreen({
     (body: string, helpers: ChatComposerHelpers) => {
       const attachments = helpers.attachments
       const validAttachments = attachments?.filter((a) => !a.error && a.base64)
-      if (body.length === 0 && (!validAttachments || validAttachments.length === 0)) return
+      if (
+        body.length === 0 &&
+        (!validAttachments || validAttachments.length === 0)
+      )
+        return
       helpers.reset()
 
       if (isNewChat) {
@@ -510,7 +521,13 @@ export function ChatScreen({
 
       const sessionKeyForSend =
         forcedSessionKey || resolvedSessionKey || activeSessionKey
-      sendMessage(sessionKeyForSend, activeFriendlyId, body, false, validAttachments)
+      sendMessage(
+        sessionKeyForSend,
+        activeFriendlyId,
+        body,
+        false,
+        validAttachments,
+      )
     },
     [
       activeFriendlyId,

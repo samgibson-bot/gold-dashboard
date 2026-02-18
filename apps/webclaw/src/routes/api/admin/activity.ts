@@ -103,8 +103,7 @@ export const Route = createFileRoute('/api/admin/activity')({
           // Sort by timestamp descending
           events.sort(function sortByTime(a, b) {
             return (
-              new Date(b.timestamp).getTime() -
-              new Date(a.timestamp).getTime()
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
             )
           })
 
@@ -117,10 +116,7 @@ export const Route = createFileRoute('/api/admin/activity')({
 
           return json({ ok: true, events })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

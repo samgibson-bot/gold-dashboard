@@ -3,7 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { createHighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
-import { bundledThemes, bundledLanguages } from 'shiki'
+import { bundledLanguages, bundledThemes } from 'shiki'
 import { formatLanguageName, normalizeLanguage, resolveLanguage } from './utils'
 import type { HighlighterCore } from 'shiki/core'
 import { useResolvedTheme } from '@/hooks/use-chat-settings'
@@ -11,10 +11,35 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 const PRELOADED_LANGS = [
-  'javascript', 'typescript', 'tsx', 'jsx', 'python', 'bash', 'shell',
-  'json', 'yaml', 'toml', 'markdown', 'html', 'css', 'sql', 'rust',
-  'go', 'java', 'kotlin', 'swift', 'ruby', 'php', 'c', 'cpp', 'csharp',
-  'dockerfile', 'diff', 'graphql', 'regexp', 'xml',
+  'javascript',
+  'typescript',
+  'tsx',
+  'jsx',
+  'python',
+  'bash',
+  'shell',
+  'json',
+  'yaml',
+  'toml',
+  'markdown',
+  'html',
+  'css',
+  'sql',
+  'rust',
+  'go',
+  'java',
+  'kotlin',
+  'swift',
+  'ruby',
+  'php',
+  'c',
+  'cpp',
+  'csharp',
+  'dockerfile',
+  'diff',
+  'graphql',
+  'regexp',
+  'xml',
 ] as const
 
 type CodeBlockProps = {
@@ -30,7 +55,9 @@ function getHighlighter() {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighterCore({
       themes: [bundledThemes['vitesse-light'], bundledThemes['vitesse-dark']],
-      langs: PRELOADED_LANGS.map((lang) => bundledLanguages[lang]).filter(Boolean),
+      langs: PRELOADED_LANGS.map((lang) => bundledLanguages[lang]).filter(
+        Boolean,
+      ),
       engine: createJavaScriptRegexEngine(),
     })
   }

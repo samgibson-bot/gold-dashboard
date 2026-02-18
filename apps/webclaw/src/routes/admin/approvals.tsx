@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { ApprovalItem } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
-import type { ApprovalItem } from '@/screens/admin/types'
 
 type ApprovalsResponse = {
   ok: boolean
@@ -173,13 +173,16 @@ function ApprovalsPage() {
                   <div className="text-sm font-medium text-primary-900">
                     {approval.title}
                   </div>
-                  {approval.description && approval.description !== 'No description' ? (
+                  {approval.description &&
+                  approval.description !== 'No description' ? (
                     <div className="text-xs text-primary-600 mt-0.5 line-clamp-2">
                       {approval.description}
                     </div>
                   ) : null}
                   <div className="flex gap-3 mt-1 text-xs text-primary-500">
-                    {approval.agent ? <span>Agent: {approval.agent}</span> : null}
+                    {approval.agent ? (
+                      <span>Agent: {approval.agent}</span>
+                    ) : null}
                     {approval.reviewer ? (
                       <span>Reviewer: {approval.reviewer}</span>
                     ) : null}

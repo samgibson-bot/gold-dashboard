@@ -21,10 +21,7 @@ export const Route = createFileRoute('/api/admin/logs')({
           )
           return json({ ok: true, logs })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },

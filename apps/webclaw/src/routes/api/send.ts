@@ -48,7 +48,9 @@ export const Route = createFileRoute('/api/send')({
             )
           }
 
-          if (new TextEncoder().encode(message).byteLength > MAX_MESSAGE_BYTES) {
+          if (
+            new TextEncoder().encode(message).byteLength > MAX_MESSAGE_BYTES
+          ) {
             return json(
               { ok: false, error: 'message too large' },
               { status: 413 },
@@ -108,10 +110,7 @@ export const Route = createFileRoute('/api/send')({
 
           return json({ ok: true, ...res, sessionKey })
         } catch (err) {
-          return json(
-            { ok: false, error: sanitizeError(err) },
-            { status: 500 },
-          )
+          return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
       },
     },
