@@ -3,42 +3,19 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { createHighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
-import vitesseDark from '@shikijs/themes/vitesse-dark'
-import vitesseLight from '@shikijs/themes/vitesse-light'
-import langBash from '@shikijs/langs/bash'
-import langC from '@shikijs/langs/c'
-import langCpp from '@shikijs/langs/cpp'
-import langCsharp from '@shikijs/langs/csharp'
-import langCss from '@shikijs/langs/css'
-import langDiff from '@shikijs/langs/diff'
-import langDockerfile from '@shikijs/langs/dockerfile'
-import langGo from '@shikijs/langs/go'
-import langGraphql from '@shikijs/langs/graphql'
-import langHtml from '@shikijs/langs/html'
-import langJava from '@shikijs/langs/java'
-import langJavascript from '@shikijs/langs/javascript'
-import langJson from '@shikijs/langs/json'
-import langJsx from '@shikijs/langs/jsx'
-import langKotlin from '@shikijs/langs/kotlin'
-import langMarkdown from '@shikijs/langs/markdown'
-import langPhp from '@shikijs/langs/php'
-import langPython from '@shikijs/langs/python'
-import langRegexp from '@shikijs/langs/regexp'
-import langRuby from '@shikijs/langs/ruby'
-import langRust from '@shikijs/langs/rust'
-import langShell from '@shikijs/langs/shell'
-import langSql from '@shikijs/langs/sql'
-import langSwift from '@shikijs/langs/swift'
-import langToml from '@shikijs/langs/toml'
-import langTypescript from '@shikijs/langs/typescript'
-import langTsx from '@shikijs/langs/tsx'
-import langXml from '@shikijs/langs/xml'
-import langYaml from '@shikijs/langs/yaml'
+import { bundledThemes, bundledLanguages } from 'shiki'
 import { formatLanguageName, normalizeLanguage, resolveLanguage } from './utils'
 import type { HighlighterCore } from 'shiki/core'
 import { useResolvedTheme } from '@/hooks/use-chat-settings'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+
+const PRELOADED_LANGS = [
+  'javascript', 'typescript', 'tsx', 'jsx', 'python', 'bash', 'shell',
+  'json', 'yaml', 'toml', 'markdown', 'html', 'css', 'sql', 'rust',
+  'go', 'java', 'kotlin', 'swift', 'ruby', 'php', 'c', 'cpp', 'csharp',
+  'dockerfile', 'diff', 'graphql', 'regexp', 'xml',
+] as const
 
 type CodeBlockProps = {
   content: string
@@ -52,38 +29,8 @@ let highlighterPromise: Promise<HighlighterCore> | null = null
 function getHighlighter() {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighterCore({
-      themes: [vitesseLight, vitesseDark],
-      langs: [
-        langJavascript,
-        langTypescript,
-        langTsx,
-        langJsx,
-        langPython,
-        langBash,
-        langShell,
-        langJson,
-        langYaml,
-        langToml,
-        langMarkdown,
-        langHtml,
-        langCss,
-        langSql,
-        langRust,
-        langGo,
-        langJava,
-        langKotlin,
-        langSwift,
-        langRuby,
-        langPhp,
-        langC,
-        langCpp,
-        langCsharp,
-        langDockerfile,
-        langDiff,
-        langGraphql,
-        langRegexp,
-        langXml,
-      ],
+      themes: [bundledThemes['vitesse-light'], bundledThemes['vitesse-dark']],
+      langs: PRELOADED_LANGS.map((lang) => bundledLanguages[lang]).filter(Boolean),
       engine: createJavaScriptRegexEngine(),
     })
   }
