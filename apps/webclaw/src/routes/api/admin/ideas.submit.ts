@@ -186,7 +186,7 @@ function buildSeedPrompt(params: {
     '',
     `5. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` — review the suggested title \"${title}\" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like \"Integration: X\" or \"Feature: Y\" or \"Enhancement: Z\".` : ' — generate a concise, descriptive, standardized title based on the analysis.'}. Include all source links (if provided), integration pathways, synergy analysis, and the Ancestry section. **Apply these labels:** \`idea\`, \`seed\`, and any relevant tag labels (e.g. \`automation\`, \`agents\`, \`infrastructure\`). The issue IS the idea — do NOT create any .md files.`,
     '',
-    `6. **Thinking Cycle** — After creating the issue, add an expansive 10-point roadmap as the first comment covering: problem definition, architecture sketch, dependencies, MVP scope, data model, integration points, testing strategy, deployment plan, risks/mitigations, and future extensions.`,
+    `6. **Thinking Cycle** — After creating the issue, add a focused first comment with your honest assessment: what it would realistically take to build this, the strongest argument against it, and any non-obvious connections to other open ideas. Be specific to this idea — a sharp 200-word comment beats a padded template. The comment MUST begin with exactly this sentinel on the first line: <!-- roadmap-posted -->`,
   ]
 
   return parts.filter(Boolean).join('\n')
