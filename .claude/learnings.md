@@ -22,3 +22,17 @@
 - Never write an object-literal Zustand selector — always individual selectors
 - When merging a PR that other PRs depend on, immediately rebase the dependent branches before they get auto-closed
 - TanStack Router's routeTree.gen.ts can be pre-populated for TypeScript, with Vite handling the authoritative regeneration at build time
+
+## 2026-02-21 — Skill Routing + Fleet Visibility (PR #17)
+
+**What was built:**
+- SOUL.md: Added `## Skill Routing` section with detection rules, priority, model escalation — teaches OpenClaw to route "spin up agents to consider" → Roundtable + Sonnet instead of bare `sessions_spawn` on Flash
+- Dashboard Activity tab: `skill` and `subagent` event types — scans `rt-*` roundtable files and detects sub-agent sessions
+- Dashboard Workflows tab: `roundtable` workflow type with two-round pipeline visualization (Scholar/Engineer/Muse x2 + Synthesis)
+
+**What was tricky:**
+- Subagent SSH permission: launched a Bash subagent for the VPS edit but it was denied Bash access. Had to fall back to running the SSH command directly from the main context. Subagents don't inherit all permissions.
+
+**Patterns worth carrying forward:**
+- SSH edits to VPS should be done directly, not delegated to subagents (permission boundary)
+- `pnpm check` reformats files as a side effect — always commit linter changes separately from feature changes
