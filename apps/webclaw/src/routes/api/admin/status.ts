@@ -6,7 +6,7 @@ import { json } from '@tanstack/react-start'
 import { createFileRoute } from '@tanstack/react-router'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
-import type { SystemMetrics } from '../../../screens/admin/types'
+import type { ProviderHealth, SystemMetrics } from '../../../screens/admin/types'
 
 const execAsync = promisify(exec)
 
@@ -173,6 +173,28 @@ export const Route = createFileRoute('/api/admin/status')({
             ? sessionsList.sessions
             : []
 
+          // Extract provider health from gateway status if available
+          const rawProvider = gatewayStatus?.provider as Record<string, unknown> | undefined
+          const providerHealth: ProviderHealth | undefined = rawProvider?.active
+            ? {
+                active: String(rawProvider.active),
+                fallbackChain: Array.isArray(rawProvider.fallbackChain)
+                  ? (rawProvider.fallbackChain as Array<unknown>).map(String)
+                  : undefined,
+                lastSwitch: rawProvider.lastSwitch
+                  ? (() => {
+                      const sw = rawProvider.lastSwitch as Record<string, unknown>
+                      return {
+                        from: String(sw.from ?? ''),
+                        to: String(sw.to ?? ''),
+                        at: String(sw.at ?? ''),
+                        reason: sw.reason ? String(sw.reason) : undefined,
+                      }
+                    })()
+                  : undefined,
+              }
+            : undefined
+
           const system: SystemMetrics = {
             hostname,
             os: `${platform} ${release}`,
@@ -220,6 +242,7 @@ export const Route = createFileRoute('/api/admin/status')({
                   sessions: sessions.length,
                 }
               : undefined,
+            provider: providerHealth,
           }
 
           return json({ ok: true, system, sessions })

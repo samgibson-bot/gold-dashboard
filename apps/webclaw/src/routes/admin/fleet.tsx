@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import type { FleetAgent, FleetStatus } from '@/screens/admin/types'
+import type { FleetAgent, FleetStatus, McpServer } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +20,107 @@ const STATUS_COLORS: Record<string, string> = {
 export const Route = createFileRoute('/admin/fleet')({
   component: FleetPage,
 })
+
+function McpServersPanel() {
+  const [expanded, setExpanded] = useState(false)
+  const [expandedServer, setExpandedServer] = useState<string | null>(null)
+
+  const mcpQuery = useQuery({
+    queryKey: ['admin', 'fleet', 'mcp'],
+    queryFn: async function fetchMcp() {
+      const res = await fetch('/api/admin/fleet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'list_mcp' }),
+      })
+      if (!res.ok) return { ok: true, mcp: [] }
+      return (await res.json()) as { ok: boolean; mcp: Array<McpServer> }
+    },
+    staleTime: 60_000,
+  })
+
+  const servers = mcpQuery.data?.mcp ?? []
+
+  return (
+    <div>
+      <button
+        onClick={function handleToggle() {
+          setExpanded(function toggle(v) {
+            return !v
+          })
+        }}
+        className="w-full flex items-center justify-between text-sm font-medium text-primary-900 mb-3 hover:text-primary-700 transition-colors"
+      >
+        <span>MCP Servers</span>
+        <span className="text-xs text-primary-400">
+          {expanded ? '▲' : '▼'} {servers.length} server{servers.length !== 1 ? 's' : ''}
+        </span>
+      </button>
+      {expanded && (
+        <div className="space-y-2">
+          {mcpQuery.isLoading ? (
+            <div className="text-xs text-primary-400 py-2">Loading MCP servers...</div>
+          ) : servers.length === 0 ? (
+            <div className="text-xs text-primary-400 py-2">No MCP servers connected</div>
+          ) : (
+            servers.map(function renderServer(server) {
+              const isServerExpanded = expandedServer === server.name
+              return (
+                <div
+                  key={server.name}
+                  className="rounded-lg border border-primary-200 bg-surface overflow-hidden"
+                >
+                  <button
+                    onClick={function handleServerToggle() {
+                      setExpandedServer(function toggle(v) {
+                        return v === server.name ? null : server.name
+                      })
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-primary-50 transition-colors"
+                  >
+                    <span
+                      className={cn(
+                        'w-2 h-2 rounded-full shrink-0',
+                        server.status === 'connected' ? 'bg-green-500' : 'bg-red-400',
+                      )}
+                    />
+                    <span className="text-sm font-medium text-primary-900 flex-1">
+                      {server.name}
+                    </span>
+                    <span className="text-xs text-primary-400">
+                      {server.tools?.length ?? 0} tools
+                    </span>
+                    <span className="text-xs text-primary-400">
+                      {isServerExpanded ? '▲' : '▼'}
+                    </span>
+                  </button>
+                  {isServerExpanded && server.tools && server.tools.length > 0 && (
+                    <div className="border-t border-primary-100 px-4 py-2 space-y-1">
+                      {server.tools.map(function renderTool(tool) {
+                        return (
+                          <div key={tool.name} className="flex items-start gap-2 py-1">
+                            <code className="text-[10px] text-primary-700 bg-primary-100 px-1.5 py-0.5 rounded font-mono shrink-0">
+                              {tool.name}
+                            </code>
+                            {tool.description && (
+                              <span className="text-xs text-primary-500 leading-relaxed">
+                                {tool.description}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function FleetPage() {
   const queryClient = useQueryClient()
@@ -299,6 +400,9 @@ function FleetPage() {
       {spawnMutation.isSuccess ? (
         <div className="text-sm text-green-600">Agent spawned successfully</div>
       ) : null}
+
+      {/* MCP Servers */}
+      <McpServersPanel />
     </div>
   )
 }
