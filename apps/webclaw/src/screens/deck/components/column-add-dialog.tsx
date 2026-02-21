@@ -3,14 +3,10 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDeckStore } from '../deck-store'
+import type { SessionMeta } from '@/screens/chat/types'
 import { chatQueryKeys, fetchSessions } from '@/screens/chat/chat-queries'
 import { cn } from '@/lib/utils'
-import {
-  DialogContent,
-  DialogRoot,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import type { SessionMeta } from '@/screens/chat/types'
+import { DialogContent, DialogRoot, DialogTitle } from '@/components/ui/dialog'
 
 type ColumnAddDialogProps = {
   open: boolean

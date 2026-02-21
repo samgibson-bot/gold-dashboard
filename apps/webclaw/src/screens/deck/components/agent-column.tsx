@@ -5,9 +5,9 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Cancel01Icon } from '@hugeicons/core-free-icons'
 import { useStickToBottom } from 'use-stick-to-bottom'
 import { useDeckStore } from '../deck-store'
+import type { DeckColumn, DeckColumnStatus } from '../types'
 import { ContextMeter } from '@/screens/chat/components/context-meter'
 import { cn } from '@/lib/utils'
-import type { DeckColumn, DeckColumnStatus } from '../types'
 
 type AgentColumnProps = {
   columnId: string
@@ -39,9 +39,13 @@ function StatusBadge({ status }: { status: DeckColumnStatus }) {
   )
 }
 
-export function AgentColumn({ columnId, columnIndex, onSend }: AgentColumnProps) {
+export function AgentColumn({
+  columnId,
+  columnIndex,
+  onSend,
+}: AgentColumnProps) {
   const column = useDeckStore(
-    (s) => s.columns.find((c) => c.id === columnId) as DeckColumn | undefined,
+    (s) => s.columns.find((c) => c.id === columnId),
   )
   const removeColumn = useDeckStore((s) => s.removeColumn)
   const [inputValue, setInputValue] = useState('')
@@ -127,7 +131,11 @@ export function AgentColumn({ columnId, columnIndex, onSend }: AgentColumnProps)
         ) : null}
         <button
           onClick={handleDeleteClick}
-          title={confirmDelete ? 'Click again to confirm delete' : 'Remove column (double-click)'}
+          title={
+            confirmDelete
+              ? 'Click again to confirm delete'
+              : 'Remove column (double-click)'
+          }
           className={cn(
             'text-[10px] p-1 rounded transition-colors',
             confirmDelete

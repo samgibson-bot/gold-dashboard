@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useBlocker  } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useBlocker } from '@tanstack/react-router'
 import { useState } from 'react'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
@@ -74,9 +73,7 @@ function MemoryPage() {
 
   useBlocker({
     blockerFn: () => {
-      return !window.confirm(
-        'You have unsaved changes. Leave anyway?',
-      )
+      return !window.confirm('You have unsaved changes. Leave anyway?')
     },
     condition: isDirty,
   })
@@ -263,7 +260,10 @@ function MemoryPage() {
                           {name}
                         </h3>
                         {isEditing ? (
-                          <span className="w-2 h-2 rounded-full bg-amber-400" title="Unsaved changes" />
+                          <span
+                            className="w-2 h-2 rounded-full bg-amber-400"
+                            title="Unsaved changes"
+                          />
                         ) : null}
                       </div>
                       {content ? (

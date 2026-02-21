@@ -3,9 +3,9 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import { memo, useCallback, useMemo } from 'react'
+import { isProtectedSession } from '../../utils'
 import { SessionItem } from './session-item'
 import type { SessionMeta } from '../../types'
-import { isProtectedSession } from '../../utils'
 import {
   Collapsible,
   CollapsiblePanel,
@@ -136,8 +136,7 @@ export const SidebarSessions = memo(function SidebarSessions({
   )
 
   const otherSessions = useMemo(
-    () =>
-      unpinnedSessions.filter((s) => s.kind === 'other'),
+    () => unpinnedSessions.filter((s) => s.kind === 'other'),
     [unpinnedSessions],
   )
 

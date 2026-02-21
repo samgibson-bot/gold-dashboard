@@ -104,7 +104,9 @@ function StatusPage() {
                   </span>
                 )}
                 {' · '}
-                <span className="text-primary-400">{provider.lastSwitch.at}</span>
+                <span className="text-primary-400">
+                  {provider.lastSwitch.at}
+                </span>
               </div>
             )}
           </div>

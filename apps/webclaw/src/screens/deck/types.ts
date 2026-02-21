@@ -13,7 +13,11 @@ export type DeckMessage = {
   timestamp: number
   streaming?: boolean
   toolUse?: { name: string; status: 'running' | 'done' | 'error' }
-  compaction?: { beforeTokens: number; afterTokens: number; droppedMessages: number }
+  compaction?: {
+    beforeTokens: number
+    afterTokens: number
+    droppedMessages: number
+  }
 }
 
 export type DeckColumn = {
