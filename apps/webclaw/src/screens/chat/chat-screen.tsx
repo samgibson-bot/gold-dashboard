@@ -555,6 +555,22 @@ export function ChatScreen({
     navigate({ to: '/new' })
   }, [navigate, queryClient])
 
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      if (sending || !suggestion.trim()) return
+      const sessionKeyForSend =
+        forcedSessionKey || resolvedSessionKey || activeSessionKey
+      sendMessage(sessionKeyForSend, activeFriendlyId, suggestion)
+    },
+    [
+      sending,
+      forcedSessionKey,
+      resolvedSessionKey,
+      activeSessionKey,
+      activeFriendlyId,
+    ],
+  )
+
   const handleSearchCurrent = useCallback(() => {
     setSearchMode('current')
     setShowSearchDialog(true)
@@ -617,6 +633,7 @@ export function ChatScreen({
             pinGroupMinHeight={pinGroupMinHeight}
             headerHeight={headerHeight}
             contentStyle={stableContentStyle}
+            onSuggestionClick={isNewChat ? undefined : handleSuggestionClick}
           />
           <ChatComposer
             onSubmit={send}
