@@ -17,11 +17,9 @@ const MODES: Array<{ value: DeckMode; label: string }> = [
 ]
 
 export function DeckHeader({ onAddColumn }: DeckHeaderProps) {
-  const { columns, mode, setMode } = useDeckStore((s) => ({
-    columns: s.columns,
-    mode: s.mode,
-    setMode: s.setMode,
-  }))
+  const columns = useDeckStore((s) => s.columns)
+  const mode = useDeckStore((s) => s.mode)
+  const setMode = useDeckStore((s) => s.setMode)
 
   const streamingCount = columns.filter(
     (c) => c.status === 'streaming' || c.status === 'thinking',
