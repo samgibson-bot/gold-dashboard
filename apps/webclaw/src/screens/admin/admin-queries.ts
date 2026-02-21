@@ -17,4 +17,5 @@ export const adminQueryKeys = {
   },
   webhooks: ['admin', 'webhooks'] as const,
   workflows: ['admin', 'workflows'] as const,
+  skills: ['admin', 'skills'] as const,
 } as const

@@ -254,6 +254,35 @@ export type McpServer = {
   tools?: Array<McpTool>
 }
 
+export type SkillFrontmatter = {
+  name: string
+  description?: string
+  version?: string
+  trigger?: string
+  on_demand?: boolean
+  agent?: string
+  schedule?: string
+  'user-invocable'?: boolean
+  'disable-model-invocation'?: boolean
+  'command-dispatch'?: string
+  'command-tool'?: string
+  metadata?: Record<string, unknown>
+}
+
+export type SkillInfo = {
+  name: string
+  description: string
+  version: string
+  trigger?: string
+  on_demand: boolean
+  agent?: string
+  schedule?: string
+  source: 'workspace' | 'shared' | 'bundled'
+  path: string
+  frontmatter: SkillFrontmatter
+  body: string
+}
+
 export type SystemMetrics = {
   hostname: string
   os: string
