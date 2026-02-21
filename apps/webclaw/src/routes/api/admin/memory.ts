@@ -114,6 +114,48 @@ export const Route = createFileRoute('/api/admin/memory')({
             return json({ ok: true })
           }
 
+          if (action === 'write_file') {
+            const path = typeof body.path === 'string' ? body.path.trim() : ''
+            const content =
+              typeof body.content === 'string' ? body.content : null
+
+            if (!path) {
+              return json(
+                { ok: false, error: 'path is required' },
+                { status: 400 },
+              )
+            }
+            if (content === null) {
+              return json(
+                { ok: false, error: 'content is required' },
+                { status: 400 },
+              )
+            }
+
+            // Safety whitelist — only allow writes to known safe paths
+            const allowedPrefixes = [
+              '.openclaw/workspace/',
+              '.openclaw/souls/',
+              '.openclaw/skills/',
+              '.openclaw/shared-context/',
+            ]
+            const isAllowed = allowedPrefixes.some((prefix) =>
+              path.startsWith(prefix),
+            )
+            if (!isAllowed) {
+              return json(
+                {
+                  ok: false,
+                  error: `Path not allowed. Must start with one of: ${allowedPrefixes.join(', ')}`,
+                },
+                { status: 400 },
+              )
+            }
+
+            await gatewayRpc('fs.writeFile', { path, content })
+            return json({ ok: true })
+          }
+
           return json(
             { ok: false, error: `Unknown action: ${action}` },
             { status: 400 },
