@@ -18,12 +18,16 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   agent: 'bg-purple-100 text-purple-700',
   feedback: 'bg-green-100 text-green-700',
   system: 'bg-primary-100 text-primary-600',
+  skill: 'bg-teal-100 text-teal-700',
+  subagent: 'bg-indigo-100 text-indigo-700',
 }
 
 const EVENT_TYPES = [
   'all',
   'gateway',
   'agent',
+  'skill',
+  'subagent',
   'feedback',
   'cron',
   'github',

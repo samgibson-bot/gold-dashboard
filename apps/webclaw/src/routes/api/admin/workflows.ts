@@ -2,7 +2,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
-import type { FleetRegistry, WorkflowRun } from '../../../screens/admin/types'
+import type {
+  FleetRegistry,
+  WorkflowRun,
+  WorkflowStep,
+} from '../../../screens/admin/types'
 
 async function getCronPipeline(): Promise<WorkflowRun | null> {
   try {
@@ -65,6 +69,85 @@ async function getReviewChains(): Promise<Array<WorkflowRun>> {
   }
 }
 
+const RT_AGENTS = ['scholar', 'engineer', 'muse'] as const
+
+async function getActiveRoundtables(): Promise<Array<WorkflowRun>> {
+  try {
+    const result = await gatewayRpc<{
+      entries?: Array<{ name: string; type: string; modified?: string }>
+    }>('fs.listDir', { path: '.openclaw/shared-context/roundtable' })
+
+    const entries = result?.entries ?? []
+    const rtFiles = entries.filter(function isRtFile(e) {
+      return e.type === 'file' && e.name.startsWith('rt-')
+    })
+
+    // Group by slug: rt-{slug}-round1-scholar.md → slug
+    const slugs = new Map<
+      string,
+      { files: Set<string>; earliest?: string; latest?: string }
+    >()
+    for (const f of rtFiles) {
+      const match = f.name.match(/^rt-(.+?)-(round[12]-.+|synthesis)\.md$/)
+      if (!match) continue
+      const slug = match[1]
+      if (!slugs.has(slug)) slugs.set(slug, { files: new Set() })
+      const group = slugs.get(slug)!
+      group.files.add(match[2])
+      if (f.modified) {
+        if (!group.earliest || f.modified < group.earliest)
+          group.earliest = f.modified
+        if (!group.latest || f.modified > group.latest)
+          group.latest = f.modified
+      }
+    }
+
+    const workflows: Array<WorkflowRun> = []
+    for (const [slug, { files, earliest, latest }] of slugs) {
+      const hasSynthesis = files.has('synthesis')
+
+      const steps = [
+        ...RT_AGENTS.map(function r1Step(agent) {
+          return {
+            agent: `${agent} (R1)`,
+            status: (files.has(`round1-${agent}`)
+              ? 'completed'
+              : 'pending') as WorkflowStep['status'],
+          }
+        }),
+        ...RT_AGENTS.map(function r2Step(agent) {
+          return {
+            agent: `${agent} (R2)`,
+            status: (files.has(`round2-${agent}`)
+              ? 'completed'
+              : 'pending') as WorkflowStep['status'],
+          }
+        }),
+        {
+          agent: 'synthesis',
+          status: (hasSynthesis
+            ? 'completed'
+            : 'pending') as WorkflowStep['status'],
+        },
+      ]
+
+      workflows.push({
+        id: `rt-${slug}`,
+        name: `Roundtable: ${slug}`,
+        type: 'roundtable',
+        status: hasSynthesis ? 'completed' : 'running',
+        steps,
+        started: earliest,
+        completed: hasSynthesis ? latest : undefined,
+      })
+    }
+
+    return workflows
+  } catch {
+    return []
+  }
+}
+
 async function getDailySyntheses(): Promise<
   Array<{ date: string; content: string }>
 > {
@@ -103,15 +186,18 @@ export const Route = createFileRoute('/api/admin/workflows')({
     handlers: {
       GET: async () => {
         try {
-          const [cronPipeline, reviewChains, syntheses] = await Promise.all([
-            getCronPipeline(),
-            getReviewChains(),
-            getDailySyntheses(),
-          ])
+          const [cronPipeline, reviewChains, roundtables, syntheses] =
+            await Promise.all([
+              getCronPipeline(),
+              getReviewChains(),
+              getActiveRoundtables(),
+              getDailySyntheses(),
+            ])
 
           const workflows: Array<WorkflowRun> = []
           if (cronPipeline) workflows.push(cronPipeline)
           workflows.push(...reviewChains)
+          workflows.push(...roundtables)
 
           return json({ ok: true, workflows, syntheses })
         } catch (err) {
