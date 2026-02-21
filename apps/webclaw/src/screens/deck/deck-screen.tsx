@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearch } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { useDeckStore } from './deck-store'
 import { AgentColumn } from './components/agent-column'
 import { DeckHeader } from './components/deck-header'
 import { ColumnAddDialog } from './components/column-add-dialog'
-import { chatQueryKeys, fetchSessions } from '@/screens/chat/chat-queries'
-import { useQuery } from '@tanstack/react-query'
 import type { DeckColumn } from './types'
+import { chatQueryKeys, fetchSessions } from '@/screens/chat/chat-queries'
 
 // Parse SSE events and route to store actions
 function handleGatewayEvent(
@@ -22,7 +22,11 @@ function handleGatewayEvent(
   if (frame.event === 'agent') {
     const payload = frame.payload as Record<string, unknown> | undefined
     if (!payload) return
-    const { stream, data: eventData, sessionKey } = payload as {
+    const {
+      stream,
+      data: eventData,
+      sessionKey,
+    } = payload as {
       stream?: string
       data?: Record<string, unknown>
       sessionKey?: string
@@ -108,7 +112,7 @@ export function DeckScreen() {
   const eventSourceRefs = useRef<Map<string, EventSource>>(new Map())
 
   // Handle URL ?add=<sessionKey> query param
-  const search = useSearch({ strict: false }) as Record<string, unknown>
+  const search = useSearch({ strict: false })
   const addParam = typeof search.add === 'string' ? search.add : null
 
   useEffect(() => {
@@ -234,10 +238,7 @@ export function DeckScreen() {
         )}
       </div>
 
-      <ColumnAddDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-      />
+      <ColumnAddDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
     </div>
   )
 }

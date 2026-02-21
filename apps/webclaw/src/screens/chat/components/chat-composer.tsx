@@ -4,6 +4,7 @@ import { ArrowUp02Icon } from '@hugeicons/core-free-icons'
 import type { Ref } from 'react'
 
 import type { AttachmentFile } from '@/components/attachment-button'
+import type { SlashCommand } from '@/components/slash-command-menu'
 import {
   PromptInput,
   PromptInputAction,
@@ -14,10 +15,9 @@ import { Button } from '@/components/ui/button'
 import { AttachmentButton } from '@/components/attachment-button'
 import { AttachmentPreviewList } from '@/components/attachment-preview'
 import {
-  SlashCommandMenu,
   SLASH_COMMANDS,
+  SlashCommandMenu,
 } from '@/components/slash-command-menu'
-import type { SlashCommand } from '@/components/slash-command-menu'
 
 type ChatComposerProps = {
   onSubmit: (value: string, helpers: ChatComposerHelpers) => void
@@ -46,7 +46,9 @@ function ChatComposerComponent({
   const [slashMenuDismissed, setSlashMenuDismissed] = useState(false)
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0)
 
-  const slashQuery = /^\/(\S*)$/.test(value) ? value.slice(1).toLowerCase() : null
+  const slashQuery = /^\/(\S*)$/.test(value)
+    ? value.slice(1).toLowerCase()
+    : null
   const filteredCommands =
     slashQuery !== null
       ? SLASH_COMMANDS.filter((c) =>

@@ -2,7 +2,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
-import type { FleetAgent, FleetRegistry, McpServer, McpTool } from '../../../screens/admin/types'
+import type {
+  FleetAgent,
+  FleetRegistry,
+  McpServer,
+  McpTool,
+} from '../../../screens/admin/types'
 
 async function readFleetRegistry(): Promise<FleetRegistry | null> {
   try {
@@ -160,17 +165,24 @@ export const Route = createFileRoute('/api/admin/fleet')({
               if (Array.isArray(result?.servers)) {
                 for (const s of result.servers) {
                   const rawTools = Array.isArray(s.tools) ? s.tools : []
-                  const tools: Array<McpTool> = (rawTools as Array<Record<string, unknown>>).map(function mapTool(t) {
+                  const tools: Array<McpTool> = (
+                    rawTools as Array<Record<string, unknown>>
+                  ).map(function mapTool(t) {
                     return {
                       name: String(t.name ?? ''),
-                      description: t.description ? String(t.description) : undefined,
+                      description: t.description
+                        ? String(t.description)
+                        : undefined,
                     }
                   })
                   servers.push({
                     name: String(s.name ?? s.id ?? 'unknown'),
-                    status: (s.status === 'connected' || s.status === 'disconnected' || s.status === 'error')
-                      ? s.status
-                      : 'disconnected',
+                    status:
+                      s.status === 'connected' ||
+                      s.status === 'disconnected' ||
+                      s.status === 'error'
+                        ? s.status
+                        : 'disconnected',
                     tools,
                   })
                 }

@@ -53,15 +53,20 @@ function McpServersPanel() {
       >
         <span>MCP Servers</span>
         <span className="text-xs text-primary-400">
-          {expanded ? '▲' : '▼'} {servers.length} server{servers.length !== 1 ? 's' : ''}
+          {expanded ? '▲' : '▼'} {servers.length} server
+          {servers.length !== 1 ? 's' : ''}
         </span>
       </button>
       {expanded && (
         <div className="space-y-2">
           {mcpQuery.isLoading ? (
-            <div className="text-xs text-primary-400 py-2">Loading MCP servers...</div>
+            <div className="text-xs text-primary-400 py-2">
+              Loading MCP servers...
+            </div>
           ) : servers.length === 0 ? (
-            <div className="text-xs text-primary-400 py-2">No MCP servers connected</div>
+            <div className="text-xs text-primary-400 py-2">
+              No MCP servers connected
+            </div>
           ) : (
             servers.map(function renderServer(server) {
               const isServerExpanded = expandedServer === server.name
@@ -81,7 +86,9 @@ function McpServersPanel() {
                     <span
                       className={cn(
                         'w-2 h-2 rounded-full shrink-0',
-                        server.status === 'connected' ? 'bg-green-500' : 'bg-red-400',
+                        server.status === 'connected'
+                          ? 'bg-green-500'
+                          : 'bg-red-400',
                       )}
                     />
                     <span className="text-sm font-medium text-primary-900 flex-1">
@@ -94,24 +101,29 @@ function McpServersPanel() {
                       {isServerExpanded ? '▲' : '▼'}
                     </span>
                   </button>
-                  {isServerExpanded && server.tools && server.tools.length > 0 && (
-                    <div className="border-t border-primary-100 px-4 py-2 space-y-1">
-                      {server.tools.map(function renderTool(tool) {
-                        return (
-                          <div key={tool.name} className="flex items-start gap-2 py-1">
-                            <code className="text-[10px] text-primary-700 bg-primary-100 px-1.5 py-0.5 rounded font-mono shrink-0">
-                              {tool.name}
-                            </code>
-                            {tool.description && (
-                              <span className="text-xs text-primary-500 leading-relaxed">
-                                {tool.description}
-                              </span>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
+                  {isServerExpanded &&
+                    server.tools &&
+                    server.tools.length > 0 && (
+                      <div className="border-t border-primary-100 px-4 py-2 space-y-1">
+                        {server.tools.map(function renderTool(tool) {
+                          return (
+                            <div
+                              key={tool.name}
+                              className="flex items-start gap-2 py-1"
+                            >
+                              <code className="text-[10px] text-primary-700 bg-primary-100 px-1.5 py-0.5 rounded font-mono shrink-0">
+                                {tool.name}
+                              </code>
+                              {tool.description && (
+                                <span className="text-xs text-primary-500 leading-relaxed">
+                                  {tool.description}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                 </div>
               )
             })
@@ -354,7 +366,7 @@ function FleetPage() {
                   >
                     View Soul
                   </button>
-                  {(agent.status === 'active' || agent.status === 'spawned') ? (
+                  {agent.status === 'active' || agent.status === 'spawned' ? (
                     <a
                       href={`/deck?add=${encodeURIComponent(agent.id)}`}
                       className="text-xs px-3 py-1.5 rounded-md font-medium bg-primary-100 text-primary-700 hover:bg-primary-200 transition-colors"

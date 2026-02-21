@@ -6,7 +6,10 @@ import { json } from '@tanstack/react-start'
 import { createFileRoute } from '@tanstack/react-router'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
-import type { ProviderHealth, SystemMetrics } from '../../../screens/admin/types'
+import type {
+  ProviderHealth,
+  SystemMetrics,
+} from '../../../screens/admin/types'
 
 const execAsync = promisify(exec)
 
@@ -174,7 +177,9 @@ export const Route = createFileRoute('/api/admin/status')({
             : []
 
           // Extract provider health from gateway status if available
-          const rawProvider = gatewayStatus?.provider as Record<string, unknown> | undefined
+          const rawProvider = gatewayStatus?.provider as
+            | Record<string, unknown>
+            | undefined
           const providerHealth: ProviderHealth | undefined = rawProvider?.active
             ? {
                 active: String(rawProvider.active),
@@ -183,7 +188,10 @@ export const Route = createFileRoute('/api/admin/status')({
                   : undefined,
                 lastSwitch: rawProvider.lastSwitch
                   ? (() => {
-                      const sw = rawProvider.lastSwitch as Record<string, unknown>
+                      const sw = rawProvider.lastSwitch as Record<
+                        string,
+                        unknown
+                      >
                       return {
                         from: String(sw.from ?? ''),
                         to: String(sw.to ?? ''),

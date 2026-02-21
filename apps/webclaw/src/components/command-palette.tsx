@@ -343,7 +343,11 @@ export function CommandPalette() {
                   className="text-primary-400 hover:text-primary-700 p-0.5 rounded transition-colors"
                   aria-label="Clear search"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={1.5} />
+                  <HugeiconsIcon
+                    icon={Cancel01Icon}
+                    size={16}
+                    strokeWidth={1.5}
+                  />
                 </button>
               ) : (
                 <kbd className="px-2 py-1 text-xs font-medium text-primary-500 bg-primary-100 border border-primary-200 rounded">

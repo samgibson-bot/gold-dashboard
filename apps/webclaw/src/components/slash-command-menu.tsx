@@ -1,5 +1,4 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import type { IconSvgObject } from '@hugeicons/core-free-icons'
 import {
   AiBrain01Icon,
   ArrowShrink01Icon,
@@ -7,6 +6,7 @@ import {
   PencilEdit02Icon,
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
+import type { IconSvgObject } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 
 export type SlashCommand = {

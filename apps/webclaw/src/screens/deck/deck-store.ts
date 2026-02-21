@@ -1,6 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { DeckColumn, DeckColumnStatus, DeckMessage, DeckMode } from './types'
+import type {
+  DeckColumn,
+  DeckColumnStatus,
+  DeckMessage,
+  DeckMode,
+} from './types'
 import { randomUUID } from '@/lib/utils'
 
 export const COLUMN_ACCENTS = [
@@ -28,8 +33,15 @@ type DeckStore = {
   finalizeMessage: (columnId: string) => void
   setColumnStatus: (columnId: string, status: DeckColumnStatus) => void
   setColumnModel: (columnId: string, model: string) => void
-  updateColumnUsage: (columnId: string, totalTokens: number, contextTokens?: number) => void
-  setColumnFailover: (columnId: string, failover: DeckColumn['failover']) => void
+  updateColumnUsage: (
+    columnId: string,
+    totalTokens: number,
+    contextTokens?: number,
+  ) => void
+  setColumnFailover: (
+    columnId: string,
+    failover: DeckColumn['failover'],
+  ) => void
   appendCompaction: (columnId: string, data: DeckMessage['compaction']) => void
   startUserMessage: (columnId: string, text: string) => void
 }
@@ -88,7 +100,10 @@ export const useDeckStore = create<DeckStore>()(
             const messages = [...col.messages]
             const last = messages[messages.length - 1]
             if (last && last.role === 'assistant' && last.streaming) {
-              messages[messages.length - 1] = { ...last, text: last.text + delta }
+              messages[messages.length - 1] = {
+                ...last,
+                text: last.text + delta,
+              }
             } else {
               messages.push({
                 id: randomUUID(),

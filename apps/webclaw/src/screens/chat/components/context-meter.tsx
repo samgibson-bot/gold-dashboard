@@ -52,7 +52,10 @@ function ContextMeterComponent({
 
   return (
     <div
-      className={cn('flex items-center gap-2 text-xs text-primary-500 relative', className)}
+      className={cn(
+        'flex items-center gap-2 text-xs text-primary-500 relative',
+        className,
+      )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -71,9 +74,7 @@ function ContextMeterComponent({
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="tabular-nums whitespace-nowrap">
-        {compactLabel}
-      </span>
+      <span className="tabular-nums whitespace-nowrap">{compactLabel}</span>
       {hovered ? (
         <div className="absolute bottom-full mb-1.5 left-0 z-50 pointer-events-none">
           <div className="bg-primary-900 text-white text-[11px] rounded px-2 py-1 whitespace-nowrap shadow-lg">
