@@ -31,6 +31,12 @@ type SessionItemProps = {
   onOpenInDeck?: (session: SessionMeta) => void
 }
 
+function formatTokensCompact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`
+  return String(n)
+}
+
 function SessionItemComponent({
   session,
   active,
@@ -44,6 +50,10 @@ function SessionItemComponent({
 }: SessionItemProps) {
   const label =
     session.label || session.title || session.derivedTitle || session.friendlyId
+  const tokenBadge =
+    session.totalTokens && session.totalTokens > 0
+      ? formatTokensCompact(session.totalTokens)
+      : null
 
   return (
     <Link
@@ -59,8 +69,13 @@ function SessionItemComponent({
           : 'bg-transparent text-primary-950 [&:hover:not(:has(button:hover))]:bg-primary-200',
       )}
     >
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-[450] line-clamp-1">{label}</div>
+      <div className="flex-1 min-w-0 flex items-center gap-1.5">
+        <div className="text-sm font-[450] line-clamp-1 min-w-0">{label}</div>
+        {tokenBadge ? (
+          <span className="shrink-0 text-[10px] text-primary-400 tabular-nums group-hover:hidden">
+            {tokenBadge}
+          </span>
+        ) : null}
       </div>
       <div className="inline-flex items-center">
         <button
@@ -179,7 +194,8 @@ function areSessionItemsEqual(prev: SessionItemProps, next: SessionItemProps) {
     prev.session.title === next.session.title &&
     prev.session.derivedTitle === next.session.derivedTitle &&
     prev.session.updatedAt === next.session.updatedAt &&
-    prev.session.kind === next.session.kind
+    prev.session.kind === next.session.kind &&
+    prev.session.totalTokens === next.session.totalTokens
   )
 }
 
