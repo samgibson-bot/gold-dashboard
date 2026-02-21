@@ -232,6 +232,28 @@ export type WorkflowStep = {
   output_preview?: string
 }
 
+export type ProviderHealth = {
+  active: string
+  fallbackChain?: Array<string>
+  lastSwitch?: {
+    from: string
+    to: string
+    at: string
+    reason?: string
+  }
+}
+
+export type McpTool = {
+  name: string
+  description?: string
+}
+
+export type McpServer = {
+  name: string
+  status: 'connected' | 'disconnected' | 'error'
+  tools?: Array<McpTool>
+}
+
 export type SystemMetrics = {
   hostname: string
   os: string
@@ -264,4 +286,5 @@ export type SystemMetrics = {
     version?: string
     sessions: number
   }
+  provider?: ProviderHealth
 }
