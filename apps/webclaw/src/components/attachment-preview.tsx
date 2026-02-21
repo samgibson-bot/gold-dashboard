@@ -62,7 +62,7 @@ export function AttachmentPreview({
             <HugeiconsIcon
               icon={File01Icon}
               size={24}
-              className="text-primary-500"
+              className={hasError ? 'text-red-400' : 'text-primary-500'}
             />
           </div>
         )}

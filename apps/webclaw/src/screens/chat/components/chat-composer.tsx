@@ -191,7 +191,7 @@ function ChatComposerComponent({
         />
         <PromptInputActions className="justify-end px-3">
           <div className="flex items-center gap-1">
-            <PromptInputAction tooltip="Attach image">
+            <PromptInputAction tooltip="Attach file">
               <AttachmentButton
                 onFileSelect={handleFileSelect}
                 disabled={disabled}
