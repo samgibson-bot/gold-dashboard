@@ -251,6 +251,32 @@ export type ProviderHealth = {
   }
 }
 
+export type FileEntry = {
+  name: string
+  path: string
+  type: 'file' | 'directory'
+  modified?: string
+}
+
+export type FileListResponse = {
+  ok: boolean
+  error?: string
+  path?: string
+  entries?: Array<FileEntry>
+}
+
+export type FileReadResponse = {
+  ok: boolean
+  error?: string
+  path?: string
+  content?: string
+}
+
+export type FileWriteResponse = {
+  ok: boolean
+  error?: string
+}
+
 export type McpTool = {
   name: string
   description?: string

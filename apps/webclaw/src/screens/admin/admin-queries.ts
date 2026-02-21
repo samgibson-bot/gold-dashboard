@@ -18,4 +18,7 @@ export const adminQueryKeys = {
   webhooks: ['admin', 'webhooks'] as const,
   workflows: ['admin', 'workflows'] as const,
   skills: ['admin', 'skills'] as const,
+  files: function files(path?: string) {
+    return ['admin', 'files', path ?? '.openclaw'] as const
+  },
 } as const
