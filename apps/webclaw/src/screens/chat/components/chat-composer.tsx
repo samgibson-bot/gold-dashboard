@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { AttachmentButton } from '@/components/attachment-button'
 import { AttachmentPreviewList } from '@/components/attachment-preview'
+import { ModelSelector } from '@/components/model-selector'
 import {
   SLASH_COMMANDS,
   SlashCommandMenu,
@@ -30,6 +31,7 @@ type ChatComposerHelpers = {
   reset: () => void
   setValue: (value: string) => void
   attachments?: Array<AttachmentFile>
+  model?: string
 }
 
 function ChatComposerComponent({
@@ -40,6 +42,7 @@ function ChatComposerComponent({
 }: ChatComposerProps) {
   const [value, setValue] = useState('')
   const [attachments, setAttachments] = useState<Array<AttachmentFile>>([])
+  const [selectedModel, setSelectedModel] = useState<string>('')
   const promptRef = useRef<HTMLTextAreaElement | null>(null)
 
   // Slash command state
@@ -102,6 +105,7 @@ function ChatComposerComponent({
       reset,
       setValue: setComposerValue,
       attachments: validAttachments,
+      model: selectedModel || undefined,
     })
     focusPrompt()
   }, [
@@ -189,9 +193,10 @@ function ChatComposerComponent({
           inputRef={promptRef}
           onKeyDown={handleKeyDown}
         />
-        <PromptInputActions className="justify-end px-3">
+        <PromptInputActions className="justify-between px-3">
+          <ModelSelector onModelChange={setSelectedModel} />
           <div className="flex items-center gap-1">
-            <PromptInputAction tooltip="Attach image">
+            <PromptInputAction tooltip="Attach file">
               <AttachmentButton
                 onFileSelect={handleFileSelect}
                 disabled={disabled}

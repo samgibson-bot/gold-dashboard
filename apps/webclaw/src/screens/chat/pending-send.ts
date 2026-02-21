@@ -7,6 +7,7 @@ export type PendingSendPayload = {
   message: string
   optimisticMessage: GatewayMessage
   attachments?: Array<AttachmentFile>
+  model?: string
 }
 
 let pendingSend: PendingSendPayload | null = null

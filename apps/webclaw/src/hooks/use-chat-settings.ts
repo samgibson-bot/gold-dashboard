@@ -13,12 +13,33 @@ export const textSizeClasses: Record<TextSize, string> = {
   xl: 'text-xl',
 }
 
+export type WorkspaceVisibility = {
+  memory: boolean
+  skills: boolean
+  fleet: boolean
+  cron: boolean
+  logs: boolean
+  browser: boolean
+  ideas: boolean
+}
+
+export const defaultWorkspaceVisibility: WorkspaceVisibility = {
+  memory: true,
+  skills: true,
+  fleet: false,
+  cron: true,
+  logs: true,
+  browser: true,
+  ideas: true,
+}
+
 export type ChatSettings = {
   showToolMessages: boolean
   showReasoningBlocks: boolean
   thinkingLevel: ThinkingLevel
   theme: ThemeMode
   textSize: TextSize
+  workspace: WorkspaceVisibility
 }
 
 type ChatSettingsState = {
@@ -35,6 +56,7 @@ export const useChatSettingsStore = create<ChatSettingsState>()(
         thinkingLevel: 'medium',
         theme: 'system',
         textSize: 'md',
+        workspace: { ...defaultWorkspaceVisibility },
       },
       updateSettings: (updates) =>
         set((state) => ({

@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import {
@@ -8,6 +9,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Button } from '@/components/ui/button'
+import { SearchSourcesBadge } from '@/components/search-sources-badge'
 
 export type ToolPart = {
   type: string
@@ -27,8 +29,37 @@ export type ToolProps = {
   defaultOpen?: boolean
 }
 
+const URL_REGEX = /https?:\/\/[^\s"'<>)\]},]+/g
+
+function extractUrls(data: unknown): Array<string> {
+  const text = typeof data === 'string' ? data : JSON.stringify(data ?? '')
+  const matches = text.match(URL_REGEX)
+  if (!matches) return []
+  const seen = new Set<string>()
+  return matches.filter((url) => {
+    if (seen.has(url)) return false
+    seen.add(url)
+    return true
+  })
+}
+
+function isSearchTool(type: string): boolean {
+  const lower = type.toLowerCase()
+  return (
+    lower.includes('web_search') ||
+    lower.includes('search') ||
+    lower.includes('brave_search') ||
+    lower.includes('tavily')
+  )
+}
+
 function Tool({ toolPart, defaultOpen = false }: ToolProps) {
   const { state, input, output, toolCallId } = toolPart
+
+  const searchUrls = useMemo(() => {
+    if (!isSearchTool(toolPart.type) || !output) return []
+    return extractUrls(output)
+  }, [toolPart.type, output])
 
   const formatValue = (value: unknown): unknown => {
     if (value === null) return 'null'
@@ -60,24 +91,27 @@ function Tool({ toolPart, defaultOpen = false }: ToolProps) {
   return (
     <div className="inline-flex flex-col">
       <Collapsible defaultOpen={defaultOpen}>
-        <CollapsibleTrigger
-          render={
-            <Button
-              variant="ghost"
-              className="h-auto gap-1.5 px-1.5 py-0.5 -mx-2"
+        <div className="flex flex-wrap items-center gap-2">
+          <CollapsibleTrigger
+            render={
+              <Button
+                variant="ghost"
+                className="h-auto gap-1.5 px-1.5 py-0.5 -mx-2"
+              />
+            }
+          >
+            <span className="text-sm font-medium text-primary-900">
+              {toolPart.type}
+            </span>
+            <HugeiconsIcon
+              icon={ArrowDown01Icon}
+              size={14}
+              strokeWidth={1.5}
+              className="text-primary-900 transition-transform duration-150 group-data-panel-open:rotate-180"
             />
-          }
-        >
-          <span className="text-sm font-medium text-primary-900">
-            {toolPart.type}
-          </span>
-          <HugeiconsIcon
-            icon={ArrowDown01Icon}
-            size={14}
-            strokeWidth={1.5}
-            className="text-primary-900 transition-transform duration-150 group-data-panel-open:rotate-180"
-          />
-        </CollapsibleTrigger>
+          </CollapsibleTrigger>
+          {searchUrls.length > 0 && <SearchSourcesBadge urls={searchUrls} />}
+        </div>
         <CollapsiblePanel className="mt-1">
           <div className="space-y-2 bg-primary-100 p-2 border border-primary-200">
             {input && Object.keys(input).length > 0 && (

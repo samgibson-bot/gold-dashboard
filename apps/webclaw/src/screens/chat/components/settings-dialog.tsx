@@ -8,6 +8,11 @@ import {
 import type { PathsPayload } from '../types'
 import type { TextSize, ThemeMode } from '@/hooks/use-chat-settings'
 import {
+  defaultWorkspaceVisibility,
+  textSizeClasses,
+  useChatSettings,
+} from '@/hooks/use-chat-settings'
+import {
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -16,7 +21,6 @@ import {
 } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTab } from '@/components/ui/tabs'
-import { textSizeClasses, useChatSettings } from '@/hooks/use-chat-settings'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -201,6 +205,40 @@ export function SettingsDialog({
                 }
               />
             </SettingsRow>
+          </SettingsSection>
+
+          <SettingsSection title="Workspace">
+            {(
+              [
+                { key: 'memory', label: 'Memory' },
+                { key: 'skills', label: 'Skills' },
+                { key: 'fleet', label: 'Agents' },
+                { key: 'logs', label: 'Logs' },
+                { key: 'cron', label: 'Cron' },
+                { key: 'browser', label: 'Browser' },
+                { key: 'ideas', label: 'Ideas' },
+              ] as const
+            ).map(({ key, label }) => (
+              <SettingsRow
+                key={key}
+                label={label}
+                description={
+                  !defaultWorkspaceVisibility[key] ? 'Beta' : undefined
+                }
+              >
+                <Switch
+                  checked={settings.workspace[key]}
+                  onCheckedChange={(checked) =>
+                    updateSettings({
+                      workspace: {
+                        ...settings.workspace,
+                        [key]: checked,
+                      },
+                    })
+                  }
+                />
+              </SettingsRow>
+            ))}
           </SettingsSection>
 
           <SettingsSection title="About">

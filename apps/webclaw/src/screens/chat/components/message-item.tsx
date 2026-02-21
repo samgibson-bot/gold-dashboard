@@ -7,6 +7,7 @@ import {
 import { MessageActionsBar } from './message-actions-bar'
 import type { GatewayMessage, ToolCallContent } from '../types'
 import type { ToolPart } from '@/components/prompt-kit/tool'
+import { FileCard } from '@/components/file-card'
 import { Message, MessageContent } from '@/components/prompt-kit/message'
 import { Thinking } from '@/components/prompt-kit/thinking'
 import { Tool } from '@/components/prompt-kit/tool'
@@ -153,6 +154,30 @@ function imagesFromMessage(msg: GatewayMessage): Array<ImagePart> {
   return images
 }
 
+type DocumentPart = {
+  type: 'document'
+  source: {
+    type: string
+    media_type: string
+  }
+  title?: string
+}
+
+function documentsFromMessage(msg: GatewayMessage): Array<DocumentPart> {
+  const parts = Array.isArray(msg.content) ? msg.content : []
+  const docs: Array<DocumentPart> = []
+  for (const part of parts) {
+    if (
+      part.type === 'document' &&
+      'source' in part &&
+      typeof (part as DocumentPart).source?.media_type === 'string'
+    ) {
+      docs.push(part as DocumentPart)
+    }
+  }
+  return docs
+}
+
 function MessageItemComponent({
   message,
   toolResultsByCallId,
@@ -166,6 +191,7 @@ function MessageItemComponent({
   const text = textFromMessage(message)
   const thinking = thinkingFromMessage(message)
   const images = imagesFromMessage(message)
+  const documents = documentsFromMessage(message)
   const isUser = role === 'user'
   const timestamp = getMessageTimestamp(message)
 
@@ -205,6 +231,22 @@ function MessageItemComponent({
               src={`data:${img.source.media_type};base64,${img.source.data}`}
               alt={`Attachment ${idx + 1}`}
               className="max-w-[300px] max-h-[300px] rounded-lg object-cover"
+            />
+          ))}
+        </div>
+      )}
+      {documents.length > 0 && (
+        <div
+          className={cn(
+            'flex flex-wrap gap-2 mb-2',
+            isUser ? 'justify-end' : 'justify-start',
+          )}
+        >
+          {documents.map((doc, idx) => (
+            <FileCard
+              key={idx}
+              mediaType={doc.source.media_type}
+              fileName={doc.title}
             />
           ))}
         </div>

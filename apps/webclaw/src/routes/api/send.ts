@@ -29,6 +29,10 @@ export const Route = createFileRoute('/api/send')({
           const message = String(body.message ?? '')
           const thinking =
             typeof body.thinking === 'string' ? body.thinking : undefined
+          const model =
+            typeof body.model === 'string' && body.model.trim().length > 0
+              ? body.model.trim()
+              : undefined
 
           const rawAttachments = body.attachments
           const attachments = Array.isArray(rawAttachments)
@@ -100,6 +104,7 @@ export const Route = createFileRoute('/api/send')({
             message,
             thinking,
             attachments,
+            model,
             deliver: false,
             timeoutMs: 120_000,
             idempotencyKey:

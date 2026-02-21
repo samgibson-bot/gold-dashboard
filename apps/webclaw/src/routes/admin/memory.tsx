@@ -1,4 +1,4 @@
-import { createFileRoute, useBlocker  } from '@tanstack/react-router'
+import { createFileRoute, useBlocker } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'

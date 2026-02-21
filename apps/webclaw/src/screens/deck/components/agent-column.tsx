@@ -44,9 +44,7 @@ export function AgentColumn({
   columnIndex,
   onSend,
 }: AgentColumnProps) {
-  const column = useDeckStore(
-    (s) => s.columns.find((c) => c.id === columnId),
-  )
+  const column = useDeckStore((s) => s.columns.find((c) => c.id === columnId))
   const removeColumn = useDeckStore((s) => s.removeColumn)
   const [inputValue, setInputValue] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
