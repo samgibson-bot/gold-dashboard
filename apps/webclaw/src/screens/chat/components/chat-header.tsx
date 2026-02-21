@@ -12,8 +12,8 @@ type ChatHeaderProps = {
   wrapperRef?: React.Ref<HTMLDivElement>
   showSidebarButton?: boolean
   onOpenSidebar?: () => void
-  usedTokens?: number
-  maxTokens?: number
+  totalTokens?: number
+  contextTokens?: number
   onExport?: (format: ExportFormat) => void
   hasMessages?: boolean
 }
@@ -23,8 +23,8 @@ function ChatHeaderComponent({
   wrapperRef,
   showSidebarButton = false,
   onOpenSidebar,
-  usedTokens,
-  maxTokens,
+  totalTokens,
+  contextTokens,
   onExport,
   hasMessages = false,
 }: ChatHeaderProps) {
@@ -46,8 +46,8 @@ function ChatHeaderComponent({
       ) : null}
       <div className="text-sm font-medium truncate flex-1">{activeTitle}</div>
       <ContextMeter
-        usedTokens={usedTokens}
-        maxTokens={maxTokens}
+        totalTokens={totalTokens}
+        contextTokens={contextTokens}
         className="ml-3 hidden sm:flex"
       />
       {onExport && hasMessages ? <ExportMenu onExport={onExport} /> : null}
