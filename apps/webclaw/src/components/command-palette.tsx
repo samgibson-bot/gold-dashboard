@@ -10,6 +10,7 @@ import {
   Analytics01Icon,
   BrowserIcon,
   Calendar03Icon,
+  Cancel01Icon,
   CheckmarkBadge01Icon,
   Coins01Icon,
   DashboardSquare01Icon,
@@ -259,7 +260,11 @@ export function CommandPalette() {
       if (!open) return
 
       if (e.key === 'Escape') {
-        setOpen(false)
+        if (search) {
+          setSearch('')
+        } else {
+          setOpen(false)
+        }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault()
         setSelectedIndex((prev) =>
@@ -331,9 +336,20 @@ export function CommandPalette() {
                 className="flex-1 bg-transparent text-sm text-primary-900 placeholder:text-primary-400 outline-none"
                 autoFocus
               />
-              <kbd className="px-2 py-1 text-xs font-medium text-primary-500 bg-primary-100 border border-primary-200 rounded">
-                ESC
-              </kbd>
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="text-primary-400 hover:text-primary-700 p-0.5 rounded transition-colors"
+                  aria-label="Clear search"
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={1.5} />
+                </button>
+              ) : (
+                <kbd className="px-2 py-1 text-xs font-medium text-primary-500 bg-primary-100 border border-primary-200 rounded">
+                  ESC
+                </kbd>
+              )}
             </div>
 
             <div className="max-h-[400px] overflow-y-auto py-2">

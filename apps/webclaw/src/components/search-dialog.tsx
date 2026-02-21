@@ -135,7 +135,11 @@ export function SearchDialog({
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Escape') {
       event.preventDefault()
-      onOpenChange(false)
+      if (query) {
+        setQuery('')
+      } else {
+        onOpenChange(false)
+      }
       return
     }
     if (!results.length) return

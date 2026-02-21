@@ -629,6 +629,17 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
       return u.trim().length > 0
     }) || screenshotData.length > 0
 
+  function resetForm() {
+    setActiveTab('idea')
+    setTitle('')
+    setDescription('')
+    setTagInput('')
+    setTags([])
+    setSourceUrls([])
+    setScreenshotData('')
+    setScreenshotName('')
+  }
+
   // Gateway submission mutation (always used)
   const mutation = useMutation({
     mutationFn: async function submitToGateway() {
@@ -656,6 +667,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
       return data
     },
     onSuccess: function handleGatewaySuccess() {
+      resetForm()
       onCreated()
     },
   })
