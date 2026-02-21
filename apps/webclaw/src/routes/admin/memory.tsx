@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useBlocker } from '@tanstack/react-router'
 import { useState } from 'react'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
@@ -33,6 +34,11 @@ type FileResponse = {
 }
 
 const WORKSPACE_FILES = ['SOUL.md', 'MEMORY.md', 'AGENTS.md'] as const
+const WORKSPACE_FILE_PATHS: Record<string, string> = {
+  'SOUL.md': '.openclaw/workspace/SOUL.md',
+  'MEMORY.md': '.openclaw/workspace/MEMORY.md',
+  'AGENTS.md': '.openclaw/workspace/AGENTS.md',
+}
 const SHARED_CONTEXT_DIRS = [
   'agent-outputs',
   'feedback',
@@ -56,6 +62,24 @@ function MemoryPage() {
   const [activeDir, setActiveDir] = useState<string | null>(null)
   const [editingPriorities, setEditingPriorities] = useState(false)
   const [prioritiesText, setPrioritiesText] = useState('')
+
+  // Per-file edit state for workspace files
+  const [editingFile, setEditingFile] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>(
+    'idle',
+  )
+
+  const isDirty = editingFile !== null
+
+  useBlocker({
+    blockerFn: () => {
+      return !window.confirm(
+        'You have unsaved changes. Leave anyway?',
+      )
+    },
+    condition: isDirty,
+  })
 
   const workspaceQuery = useQuery({
     queryKey: adminQueryKeys.memory,
@@ -96,6 +120,35 @@ function MemoryPage() {
     },
   })
 
+  const writeFileMutation = useMutation({
+    mutationFn: async function writeFile({
+      path,
+      content,
+    }: {
+      path: string
+      content: string
+    }) {
+      const res = await fetch('/api/admin/memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'write_file', path, content }),
+      })
+      if (!res.ok) throw new Error('Failed to save file')
+      return res.json()
+    },
+    onSuccess: function onSaveSuccess() {
+      setEditingFile(null)
+      setEditContent('')
+      setSaveStatus('saved')
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.memory })
+      setTimeout(() => setSaveStatus('idle'), 2000)
+    },
+    onError: function onSaveError() {
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus('idle'), 3000)
+    },
+  })
+
   async function loadFile(path: string) {
     setSelectedFile(path)
     try {
@@ -107,6 +160,24 @@ function MemoryPage() {
     } catch {
       setFileContent('Failed to load file')
     }
+  }
+
+  function handleStartEdit(name: string, content: string) {
+    setEditingFile(name)
+    setEditContent(content)
+    setSaveStatus('idle')
+  }
+
+  function handleCancelEdit() {
+    setEditingFile(null)
+    setEditContent('')
+    setSaveStatus('idle')
+  }
+
+  function handleSaveFile(name: string) {
+    const path = WORKSPACE_FILE_PATHS[name]
+    if (!path) return
+    writeFileMutation.mutate({ path, content: editContent })
   }
 
   const workspace = workspaceQuery.data?.workspace
@@ -155,6 +226,15 @@ function MemoryPage() {
       {/* Workspace Tab */}
       {activeTab === 'workspace' ? (
         <div className="space-y-4">
+          {saveStatus === 'saved' ? (
+            <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded px-3 py-2">
+              File saved successfully
+            </div>
+          ) : saveStatus === 'error' ? (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+              Failed to save file
+            </div>
+          ) : null}
           {workspaceQuery.isLoading ? (
             <div className="text-sm text-primary-500">Loading workspace...</div>
           ) : workspaceQuery.error ? (
@@ -171,18 +251,66 @@ function MemoryPage() {
                   | 'memory'
                   | 'agents'
                 const content = workspace?.[key]
+                const isEditing = editingFile === name
                 return (
                   <div
                     key={name}
                     className="rounded-lg border border-primary-200 bg-surface"
                   >
-                    <div className="px-4 py-3 border-b border-primary-200">
-                      <h3 className="text-sm font-medium text-primary-900">
-                        {name}
-                      </h3>
+                    <div className="px-4 py-3 border-b border-primary-200 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-primary-900">
+                          {name}
+                        </h3>
+                        {isEditing ? (
+                          <span className="w-2 h-2 rounded-full bg-amber-400" title="Unsaved changes" />
+                        ) : null}
+                      </div>
+                      {content ? (
+                        <div className="flex gap-2">
+                          {isEditing ? (
+                            <>
+                              <button
+                                onClick={function handleSave() {
+                                  handleSaveFile(name)
+                                }}
+                                disabled={writeFileMutation.isPending}
+                                className="text-xs px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                              >
+                                {writeFileMutation.isPending
+                                  ? 'Saving...'
+                                  : 'Save'}
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="text-xs px-3 py-1 rounded bg-primary-100 text-primary-700 hover:bg-primary-200 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={function handleEdit() {
+                                handleStartEdit(name, content)
+                              }}
+                              className="text-xs px-3 py-1 rounded bg-primary-100 text-primary-700 hover:bg-primary-200 transition-colors"
+                            >
+                              Edit
+                            </button>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="p-4 max-h-[400px] overflow-y-auto">
-                      {content ? (
+                      {isEditing ? (
+                        <textarea
+                          value={editContent}
+                          onChange={function handleChange(e) {
+                            setEditContent(e.target.value)
+                          }}
+                          className="w-full h-[350px] text-xs font-mono bg-primary-50 border border-primary-200 rounded p-3 resize-none outline-none focus:border-blue-400"
+                        />
+                      ) : content ? (
                         <pre className="text-xs text-primary-700 whitespace-pre-wrap font-mono">
                           {content}
                         </pre>
