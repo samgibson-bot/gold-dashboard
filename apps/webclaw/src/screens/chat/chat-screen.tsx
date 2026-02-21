@@ -334,6 +334,7 @@ export function ChatScreen({
       pending.message,
       true,
       pending.attachments,
+      pending.model,
     )
   }, [
     activeFriendlyId,
@@ -350,6 +351,7 @@ export function ChatScreen({
     body: string,
     skipOptimistic = false,
     attachments?: Array<AttachmentFile>,
+    model?: string,
   ) {
     let optimisticClientId = ''
     if (!skipOptimistic) {
@@ -393,6 +395,7 @@ export function ChatScreen({
         thinking: 'low',
         idempotencyKey: randomUUID(),
         attachments: attachmentsPayload,
+        model,
       }),
     })
       .then(async (res) => {
@@ -463,6 +466,7 @@ export function ChatScreen({
     (body: string, helpers: ChatComposerHelpers) => {
       const attachments = helpers.attachments
       const validAttachments = attachments?.filter((a) => !a.error && a.base64)
+      const model = helpers.model
       if (
         body.length === 0 &&
         (!validAttachments || validAttachments.length === 0)
@@ -488,6 +492,7 @@ export function ChatScreen({
               message: body,
               optimisticMessage,
               attachments: validAttachments,
+              model,
             })
             if (onSessionResolved) {
               onSessionResolved({ sessionKey, friendlyId })
@@ -527,6 +532,7 @@ export function ChatScreen({
         body,
         false,
         validAttachments,
+        model,
       )
     },
     [
