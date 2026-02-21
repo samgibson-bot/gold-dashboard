@@ -1,9 +1,30 @@
 import type {
   GatewayMessage,
+  SessionKind,
   SessionMeta,
   SessionSummary,
   ToolCallContent,
 } from './types'
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function deriveSessionKind(key: string): SessionKind {
+  if (key.includes(':subagent:') || key.startsWith('agent:codex:'))
+    return 'subagent'
+  if (key.startsWith('isolated:') || key.includes(':cron:')) return 'cron'
+  if (key.startsWith('agent:') && !key.startsWith('agent:main:')) return 'other'
+  if (key.startsWith('agent:main:')) {
+    const tail = key.slice('agent:main:'.length)
+    if (UUID_PATTERN.test(tail)) return 'webchat'
+    return 'chat'
+  }
+  return 'other'
+}
+
+export function isProtectedSession(key: string): boolean {
+  return key === 'main' || key === 'agent:main:main'
+}
 
 export function deriveFriendlyIdFromKey(key: string | undefined): string {
   if (!key) return 'main'
@@ -105,6 +126,8 @@ export function normalizeSessions(
         typeof session.contextTokens === 'number'
           ? session.contextTokens
           : undefined,
+      model: typeof session.model === 'string' ? session.model : undefined,
+      kind: deriveSessionKind(key),
     }
   })
 }

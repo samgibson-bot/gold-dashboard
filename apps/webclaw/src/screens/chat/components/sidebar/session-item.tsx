@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Delete01Icon,
+  LayoutGridIcon,
   MoreHorizontalIcon,
   Pen01Icon,
   PinIcon,
@@ -22,20 +23,24 @@ type SessionItemProps = {
   session: SessionMeta
   active: boolean
   isPinned: boolean
+  isProtected?: boolean
   onSelect?: () => void
   onTogglePin: (session: SessionMeta) => void
   onRename: (session: SessionMeta) => void
   onDelete: (session: SessionMeta) => void
+  onOpenInDeck?: (session: SessionMeta) => void
 }
 
 function SessionItemComponent({
   session,
   active,
   isPinned,
+  isProtected = false,
   onSelect,
   onTogglePin,
   onRename,
   onDelete,
+  onOpenInDeck,
 }: SessionItemProps) {
   const label =
     session.label || session.title || session.derivedTitle || session.friendlyId
@@ -116,17 +121,40 @@ function SessionItemComponent({
               <HugeiconsIcon icon={Pen01Icon} size={20} strokeWidth={1.5} />{' '}
               Rename
             </MenuItem>
-            <MenuItem
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                onDelete(session)
-              }}
-              className="text-red-700 gap-2 hover:bg-red-50/80 data-highlighted:bg-red-50/80"
-            >
-              <HugeiconsIcon icon={Delete01Icon} size={20} strokeWidth={1.5} />{' '}
-              Delete
-            </MenuItem>
+            {onOpenInDeck ? (
+              <MenuItem
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onOpenInDeck(session)
+                }}
+                className="gap-2"
+              >
+                <HugeiconsIcon
+                  icon={LayoutGridIcon}
+                  size={20}
+                  strokeWidth={1.5}
+                />{' '}
+                Open in Deck
+              </MenuItem>
+            ) : null}
+            {!isProtected ? (
+              <MenuItem
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onDelete(session)
+                }}
+                className="text-red-700 gap-2 hover:bg-red-50/80 data-highlighted:bg-red-50/80"
+              >
+                <HugeiconsIcon
+                  icon={Delete01Icon}
+                  size={20}
+                  strokeWidth={1.5}
+                />{' '}
+                Delete
+              </MenuItem>
+            ) : null}
           </MenuContent>
         </MenuRoot>
       </div>
@@ -137,10 +165,12 @@ function SessionItemComponent({
 function areSessionItemsEqual(prev: SessionItemProps, next: SessionItemProps) {
   if (prev.active !== next.active) return false
   if (prev.isPinned !== next.isPinned) return false
+  if (prev.isProtected !== next.isProtected) return false
   if (prev.onSelect !== next.onSelect) return false
   if (prev.onTogglePin !== next.onTogglePin) return false
   if (prev.onRename !== next.onRename) return false
   if (prev.onDelete !== next.onDelete) return false
+  if (prev.onOpenInDeck !== next.onOpenInDeck) return false
   if (prev.session === next.session) return true
   return (
     prev.session.key === next.session.key &&
@@ -148,7 +178,8 @@ function areSessionItemsEqual(prev: SessionItemProps, next: SessionItemProps) {
     prev.session.label === next.session.label &&
     prev.session.title === next.session.title &&
     prev.session.derivedTitle === next.session.derivedTitle &&
-    prev.session.updatedAt === next.session.updatedAt
+    prev.session.updatedAt === next.session.updatedAt &&
+    prev.session.kind === next.session.kind
   )
 }
 
