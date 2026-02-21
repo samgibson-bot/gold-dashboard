@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DeckRouteImport } from './routes/deck'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -52,6 +53,11 @@ import { Route as ApiAdminIdeasSubmitRouteImport } from './routes/api/admin/idea
 import { Route as ApiAdminIdeasStatusRouteImport } from './routes/api/admin/ideas.status'
 import { Route as ApiAdminIdeasChatRouteImport } from './routes/api/admin/ideas.chat'
 
+const DeckRoute = DeckRouteImport.update({
+  id: '/deck',
+  path: '/deck',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewRoute = NewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -267,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/connect': typeof ConnectRoute
+  '/deck': typeof DeckRoute
   '/new': typeof NewRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/approvals': typeof AdminApprovalsRoute
@@ -310,6 +317,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/deck': typeof DeckRoute
   '/new': typeof NewRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/approvals': typeof AdminApprovalsRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/connect': typeof ConnectRoute
+  '/deck': typeof DeckRoute
   '/new': typeof NewRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/approvals': typeof AdminApprovalsRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/connect'
+    | '/deck'
     | '/new'
     | '/admin/activity'
     | '/admin/approvals'
@@ -444,6 +454,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/connect'
+    | '/deck'
     | '/new'
     | '/admin/activity'
     | '/admin/approvals'
@@ -488,6 +499,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/connect'
+    | '/deck'
     | '/new'
     | '/admin/activity'
     | '/admin/approvals'
@@ -533,6 +545,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   ConnectRoute: typeof ConnectRoute
+  DeckRoute: typeof DeckRoute
   NewRoute: typeof NewRoute
   ApiHistoryRoute: typeof ApiHistoryRoute
   ApiPingRoute: typeof ApiPingRoute
@@ -558,6 +571,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/deck': {
+      id: '/deck'
+      path: '/deck'
+      fullPath: '/deck'
+      preLoaderRoute: typeof DeckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new': {
       id: '/new'
       path: '/new'
@@ -913,6 +933,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ConnectRoute: ConnectRoute,
+  DeckRoute: DeckRoute,
   NewRoute: NewRoute,
   ApiHistoryRoute: ApiHistoryRoute,
   ApiPingRoute: ApiPingRoute,

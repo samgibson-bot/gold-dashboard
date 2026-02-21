@@ -15,6 +15,7 @@ import {
   File01Icon,
   FolderDetailsIcon,
   Idea01Icon,
+  LayoutGridIcon,
   PencilEdit02Icon,
   Search01Icon,
   Settings01Icon,
@@ -39,7 +40,10 @@ type NavSection = {
 const navSections: Array<NavSection> = [
   {
     title: 'Chat',
-    items: [{ to: '/new', label: 'New Chat', icon: PencilEdit02Icon }],
+    items: [
+      { to: '/new', label: 'New Chat', icon: PencilEdit02Icon },
+      { to: '/deck', label: 'Deck', icon: LayoutGridIcon },
+    ],
   },
   {
     title: 'Overview',

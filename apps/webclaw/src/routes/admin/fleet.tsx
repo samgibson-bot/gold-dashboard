@@ -354,6 +354,14 @@ function FleetPage() {
                   >
                     View Soul
                   </button>
+                  {(agent.status === 'active' || agent.status === 'spawned') ? (
+                    <a
+                      href={`/deck?add=${encodeURIComponent(agent.id)}`}
+                      className="text-xs px-3 py-1.5 rounded-md font-medium bg-primary-100 text-primary-700 hover:bg-primary-200 transition-colors"
+                    >
+                      Watch in Deck
+                    </a>
+                  ) : null}
                 </div>
               </div>
             )
