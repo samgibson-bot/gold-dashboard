@@ -167,7 +167,15 @@ export type WorkspaceInfo = {
 
 export type ActivityEvent = {
   id: string
-  type: 'gateway' | 'github' | 'cron' | 'agent' | 'feedback' | 'system'
+  type:
+    | 'gateway'
+    | 'github'
+    | 'cron'
+    | 'agent'
+    | 'feedback'
+    | 'system'
+    | 'skill'
+    | 'subagent'
   agent?: string
   action: string
   summary: string
@@ -215,7 +223,7 @@ export type WebhookConfig = {
 export type WorkflowRun = {
   id: string
   name: string
-  type: 'cron_pipeline' | 'review_chain'
+  type: 'cron_pipeline' | 'review_chain' | 'roundtable'
   status: 'pending' | 'running' | 'completed' | 'failed'
   steps: Array<WorkflowStep>
   started?: string

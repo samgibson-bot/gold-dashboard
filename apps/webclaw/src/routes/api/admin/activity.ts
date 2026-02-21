@@ -54,6 +54,78 @@ async function getAgentOutputs(): Promise<Array<ActivityEvent>> {
   }
 }
 
+async function getRoundtableEvents(): Promise<Array<ActivityEvent>> {
+  try {
+    const result = await gatewayRpc<{
+      entries?: Array<{ name: string; type: string; modified?: string }>
+    }>('fs.listDir', { path: '.openclaw/shared-context/roundtable' })
+
+    const entries = result?.entries ?? []
+    const rtFiles = entries.filter(function isRtFile(e) {
+      return e.type === 'file' && e.name.startsWith('rt-')
+    })
+
+    const events: Array<ActivityEvent> = []
+    for (const f of rtFiles) {
+      const match = f.name.match(/^rt-(.+?)-(round[12]-.+|synthesis)\.md$/)
+      if (!match) continue
+      const slug = match[1]
+      const part = match[2]
+      events.push({
+        id: `rt-${f.name}`,
+        type: 'skill' as const,
+        agent: part.includes('synthesis')
+          ? 'synthesis'
+          : (part.split('-')[1] ?? 'unknown'),
+        action: part.includes('synthesis')
+          ? 'synthesis_complete'
+          : `${part.replace(/-/g, '_')}_complete`,
+        summary: `Roundtable "${slug}": ${part.replace(/-/g, ' ')} complete`,
+        timestamp: f.modified ?? new Date().toISOString(),
+      })
+    }
+    return events
+  } catch {
+    return []
+  }
+}
+
+async function getSubagentEvents(): Promise<Array<ActivityEvent>> {
+  try {
+    const result = await gatewayRpc<{
+      sessions?: Array<Record<string, unknown>>
+    }>('sessions.list', { limit: 50 })
+
+    const sessions = result?.sessions ?? []
+    return sessions
+      .filter(function isSubagent(s) {
+        const key = String(s.key ?? '')
+        const friendlyId = String(s.friendlyId ?? '')
+        return (
+          friendlyId.includes('fleet-') ||
+          key.includes('subagent') ||
+          friendlyId.includes('roundtable') ||
+          friendlyId.includes('scholar') ||
+          friendlyId.includes('engineer') ||
+          friendlyId.includes('muse')
+        )
+      })
+      .map(function toEvent(s) {
+        const status = String(s.status ?? 'unknown')
+        return {
+          id: `sub-${String(s.key ?? s.friendlyId)}`,
+          type: 'subagent' as const,
+          agent: String(s.friendlyId ?? s.key ?? 'unknown'),
+          action: status === 'active' ? 'subagent_active' : 'subagent_ended',
+          summary: `Sub-agent ${String(s.friendlyId ?? s.key ?? '')} — ${status} (${String(s.messageCount ?? s.messages ?? 0)} messages)`,
+          timestamp: String(s.lastActivity ?? new Date().toISOString()),
+        }
+      })
+  } catch {
+    return []
+  }
+}
+
 async function getFeedbackEvents(): Promise<Array<ActivityEvent>> {
   try {
     const result = await gatewayRpc<{
@@ -87,17 +159,26 @@ export const Route = createFileRoute('/api/admin/activity')({
           const url = new URL(request.url)
           const typeFilter = url.searchParams.get('type')
 
-          const [gatewaySessions, agentOutputs, feedbackEvents] =
-            await Promise.all([
-              getGatewaySessions(),
-              getAgentOutputs(),
-              getFeedbackEvents(),
-            ])
+          const [
+            gatewaySessions,
+            agentOutputs,
+            feedbackEvents,
+            roundtableEvents,
+            subagentEvents,
+          ] = await Promise.all([
+            getGatewaySessions(),
+            getAgentOutputs(),
+            getFeedbackEvents(),
+            getRoundtableEvents(),
+            getSubagentEvents(),
+          ])
 
           let events: Array<ActivityEvent> = [
             ...gatewaySessions,
             ...agentOutputs,
             ...feedbackEvents,
+            ...roundtableEvents,
+            ...subagentEvents,
           ]
 
           // Sort by timestamp descending

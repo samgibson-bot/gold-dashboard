@@ -161,35 +161,41 @@ function WorkflowsPage() {
                     </span>
                   </div>
 
-                  {/* Pipeline Steps */}
-                  <div className="flex items-center gap-2">
-                    {workflow.steps.map(function renderStep(
-                      step: WorkflowStep,
-                      i: number,
-                    ) {
-                      return (
-                        <div
-                          key={`${step.agent}-${i}`}
-                          className="flex items-center gap-2"
-                        >
-                          {i > 0 ? (
-                            <div className="w-8 h-px bg-primary-200" />
-                          ) : null}
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary-200 bg-primary-50">
-                            <div
-                              className={cn(
-                                'w-2 h-2 rounded-full',
-                                STEP_DOT_COLORS[step.status],
-                              )}
-                            />
-                            <span className="text-xs text-primary-700 capitalize">
-                              {step.agent}
-                            </span>
+                  {/* Pipeline Steps (non-roundtable) */}
+                  {workflow.type !== 'roundtable' ? (
+                    <div className="flex items-center gap-2">
+                      {workflow.steps.map(function renderStep(
+                        step: WorkflowStep,
+                        i: number,
+                      ) {
+                        return (
+                          <div
+                            key={`${step.agent}-${i}`}
+                            className="flex items-center gap-2"
+                          >
+                            {i > 0 ? (
+                              <div className="w-8 h-px bg-primary-200" />
+                            ) : null}
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary-200 bg-primary-50">
+                              <div
+                                className={cn(
+                                  'w-2 h-2 rounded-full',
+                                  STEP_DOT_COLORS[step.status],
+                                )}
+                              />
+                              <span className="text-xs text-primary-700 capitalize">
+                                {step.agent}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                        )
+                      })}
+                    </div>
+                  ) : null}
+
+                  {workflow.type === 'roundtable' ? (
+                    <RoundtableSteps steps={workflow.steps} />
+                  ) : null}
 
                   {workflow.completed ? (
                     <div className="mt-2 text-xs text-primary-500">
@@ -243,6 +249,94 @@ function WorkflowsPage() {
             </div>
           ) : null}
         </div>
+      ) : null}
+    </div>
+  )
+}
+
+function RoundtableSteps({ steps }: { steps: Array<WorkflowStep> }) {
+  // Steps order: scholar(R1), engineer(R1), muse(R1), scholar(R2), engineer(R2), muse(R2), synthesis
+  const round1 = steps.slice(0, 3)
+  const round2 = steps.slice(3, 6)
+  const synthesis = steps[6]
+
+  return (
+    <div className="space-y-3">
+      {/* Round 1 */}
+      <div>
+        <div className="text-[10px] font-medium text-primary-500 uppercase tracking-wider mb-1.5">
+          Round 1
+        </div>
+        <div className="flex items-center gap-2">
+          {round1.map(function renderR1(step, i) {
+            return (
+              <div key={step.agent} className="flex items-center gap-2">
+                {i > 0 ? <div className="w-4 h-px bg-primary-200" /> : null}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary-200 bg-primary-50">
+                  <div
+                    className={cn(
+                      'w-2 h-2 rounded-full',
+                      STEP_DOT_COLORS[step.status],
+                    )}
+                  />
+                  <span className="text-xs text-primary-700 capitalize">
+                    {step.agent}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Connector */}
+      <div className="flex items-center gap-2 pl-4">
+        <div className="w-px h-4 bg-primary-200" />
+      </div>
+
+      {/* Round 2 */}
+      <div>
+        <div className="text-[10px] font-medium text-primary-500 uppercase tracking-wider mb-1.5">
+          Round 2
+        </div>
+        <div className="flex items-center gap-2">
+          {round2.map(function renderR2(step, i) {
+            return (
+              <div key={step.agent} className="flex items-center gap-2">
+                {i > 0 ? <div className="w-4 h-px bg-primary-200" /> : null}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary-200 bg-primary-50">
+                  <div
+                    className={cn(
+                      'w-2 h-2 rounded-full',
+                      STEP_DOT_COLORS[step.status],
+                    )}
+                  />
+                  <span className="text-xs text-primary-700 capitalize">
+                    {step.agent}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Connector + Synthesis */}
+      {synthesis ? (
+        <>
+          <div className="flex items-center gap-2 pl-4">
+            <div className="w-px h-4 bg-primary-200" />
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-teal-200 bg-teal-50 w-fit">
+            <div
+              className={cn(
+                'w-2 h-2 rounded-full',
+                STEP_DOT_COLORS[synthesis.status],
+              )}
+            />
+            <span className="text-xs text-teal-700 font-medium">Synthesis</span>
+          </div>
+        </>
       ) : null}
     </div>
   )
