@@ -591,8 +591,8 @@ export function ChatScreen({
         wrapperRef={headerRef}
         showSidebarButton={false}
         onOpenSidebar={() => {}}
-        usedTokens={activeSession?.totalTokens}
-        maxTokens={activeSession?.contextTokens}
+        totalTokens={activeSession?.totalTokens}
+        contextTokens={activeSession?.contextTokens}
         onExport={exportConversation}
         hasMessages={displayMessages.length > 0}
       />
