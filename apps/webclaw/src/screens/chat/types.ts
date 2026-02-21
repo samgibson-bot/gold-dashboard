@@ -51,6 +51,7 @@ export type SessionSummary = {
   friendlyId?: string
   totalTokens?: number
   contextTokens?: number
+  model?: string
 }
 
 export type SessionListResponse = {
@@ -63,6 +64,8 @@ export type HistoryResponse = {
   messages: Array<GatewayMessage>
 }
 
+export type SessionKind = 'chat' | 'webchat' | 'subagent' | 'cron' | 'other'
+
 export type SessionMeta = {
   key: string
   friendlyId: string
@@ -73,6 +76,8 @@ export type SessionMeta = {
   lastMessage?: GatewayMessage | null
   totalTokens?: number
   contextTokens?: number
+  model?: string
+  kind?: SessionKind
 }
 
 export type PathsPayload = {
