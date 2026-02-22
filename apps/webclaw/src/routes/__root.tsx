@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import appCss from '../styles.css?url'
 import { CommandPalette } from '@/components/command-palette'
 import { AdminNav } from '@/components/admin-nav'
+import { MobileHeader } from '@/components/mobile-header'
+import { MobileNavDrawer } from '@/components/mobile-nav-drawer'
 
 const themeScript = `
 (() => {
@@ -94,12 +96,14 @@ const queryClient = new QueryClient()
 function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="h-screen bg-surface text-primary-900 grid grid-cols-[auto_1fr]">
-        <AdminNav />
-        <main className="flex flex-col h-full min-h-0 overflow-auto">
+      <div className="h-screen bg-surface text-primary-900 flex flex-col md:grid md:grid-cols-[auto_1fr]">
+        <MobileHeader className="flex md:hidden" />
+        <AdminNav className="hidden md:flex" />
+        <main className="flex flex-col flex-1 min-h-0 overflow-auto md:h-full">
           <Outlet />
         </main>
       </div>
+      <MobileNavDrawer />
       <CommandPalette />
     </QueryClientProvider>
   )
