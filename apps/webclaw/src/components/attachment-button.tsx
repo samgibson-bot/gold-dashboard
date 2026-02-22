@@ -30,11 +30,39 @@ const ACCEPTED_IMAGE_TYPES = [
   'image/webp',
 ]
 
+/** Non-image file extensions accepted for text/document uploads */
+const ACCEPTED_NON_IMAGE_EXTENSIONS = [
+  'pdf',
+  'txt',
+  'md',
+  'csv',
+  'json',
+  'xml',
+  'yaml',
+  'yml',
+  'log',
+  'py',
+  'js',
+  'ts',
+  'html',
+  'css',
+]
+
+/** Maximum file size for text files read client-side (1MB) */
+const MAX_TEXT_FILE_SIZE = 1 * 1024 * 1024
+
 /** File extensions accepted by the file input */
-const ACCEPTED_EXTENSIONS = '.png,.jpg,.jpeg,.gif,.webp'
+const ACCEPTED_EXTENSIONS = [
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  ...ACCEPTED_NON_IMAGE_EXTENSIONS.map((ext) => `.${ext}`),
+].join(',')
 
 /**
- * Represents an image attachment ready to be sent with a message.
+ * Represents a file attachment ready to be sent with a message.
  */
 export type AttachmentFile = {
   /** Unique identifier for the attachment */
@@ -43,9 +71,9 @@ export type AttachmentFile = {
   file: File
   /** Object URL for image preview */
   preview: string | null
-  /** Attachment type (always 'image') */
-  type: 'image'
-  /** Base64-encoded image content (without data URL prefix) */
+  /** Attachment type */
+  type: 'image' | 'file'
+  /** Base64-encoded content (without data URL prefix) */
   base64: string | null
   /** Error message if processing failed */
   error?: string
@@ -165,6 +193,67 @@ function isAcceptedImage(file: File): boolean {
 }
 
 /**
+ * Checks if a file has a supported non-image extension.
+ */
+function isAcceptedNonImage(file: File): boolean {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+  return ACCEPTED_NON_IMAGE_EXTENSIONS.includes(ext)
+}
+
+/**
+ * Reads a text file and returns its content as base64.
+ */
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // dataURL format: data:<mime>;base64,<data>
+      const base64 = result.split(',')[1]
+      if (!base64) {
+        reject(new Error('Failed to encode file'))
+        return
+      }
+      resolve(base64)
+    }
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
+/**
+ * Creates an AttachmentFile from a non-image file.
+ */
+async function createAttachmentFromFile(file: File): Promise<AttachmentFile> {
+  const id = randomUUID()
+
+  if (file.size > MAX_TEXT_FILE_SIZE) {
+    return {
+      id,
+      file,
+      preview: null,
+      type: 'file',
+      base64: null,
+      error: `File is too large. Maximum size for text files is ${Math.round(MAX_TEXT_FILE_SIZE / 1024)}KB.`,
+    }
+  }
+
+  try {
+    const base64 = await readFileAsBase64(file)
+    return { id, file, preview: null, type: 'file', base64 }
+  } catch (err) {
+    return {
+      id,
+      file,
+      preview: null,
+      type: 'file',
+      base64: null,
+      error: err instanceof Error ? err.message : 'Failed to process file',
+    }
+  }
+}
+
+/**
  * Button component for attaching images to messages.
  */
 export function AttachmentButton({
@@ -180,58 +269,55 @@ export function AttachmentButton({
 
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0]
-      if (!file) return
+      const files = event.target.files
+      if (!files || files.length === 0) return
 
       event.target.value = ''
 
-      const id = randomUUID()
+      for (const file of Array.from(files)) {
+        if (isAcceptedImage(file)) {
+          const id = randomUUID()
 
-      if (!isAcceptedImage(file)) {
-        onFileSelect({
-          id,
-          file,
-          preview: null,
-          type: 'image',
-          base64: null,
-          error:
-            'Unsupported file type. Please use PNG, JPG, GIF, or WebP images.',
-        })
-        return
-      }
+          if (file.size > MAX_FILE_SIZE) {
+            onFileSelect({
+              id,
+              file,
+              preview: null,
+              type: 'image',
+              base64: null,
+              error: 'Image is too large. Maximum size is 10MB.',
+            })
+            continue
+          }
 
-      if (file.size > MAX_FILE_SIZE) {
-        onFileSelect({
-          id,
-          file,
-          preview: null,
-          type: 'image',
-          base64: null,
-          error: 'Image is too large. Maximum size is 10MB.',
-        })
-        return
-      }
-
-      try {
-        const base64 = await compressImage(file)
-        const preview = URL.createObjectURL(file)
-
-        onFileSelect({
-          id,
-          file,
-          preview,
-          type: 'image',
-          base64,
-        })
-      } catch (err) {
-        onFileSelect({
-          id,
-          file,
-          preview: null,
-          type: 'image',
-          base64: null,
-          error: err instanceof Error ? err.message : 'Failed to process image',
-        })
+          try {
+            const base64 = await compressImage(file)
+            const preview = URL.createObjectURL(file)
+            onFileSelect({ id, file, preview, type: 'image', base64 })
+          } catch (err) {
+            onFileSelect({
+              id,
+              file,
+              preview: null,
+              type: 'image',
+              base64: null,
+              error:
+                err instanceof Error ? err.message : 'Failed to process image',
+            })
+          }
+        } else if (isAcceptedNonImage(file)) {
+          const attachment = await createAttachmentFromFile(file)
+          onFileSelect(attachment)
+        } else {
+          onFileSelect({
+            id: randomUUID(),
+            file,
+            preview: null,
+            type: 'file',
+            base64: null,
+            error: 'Unsupported file type.',
+          })
+        }
       }
     },
     [onFileSelect],
@@ -243,6 +329,7 @@ export function AttachmentButton({
         ref={inputRef}
         type="file"
         accept={ACCEPTED_EXTENSIONS}
+        multiple
         onChange={handleFileChange}
         className="hidden"
         aria-hidden="true"
@@ -253,7 +340,7 @@ export function AttachmentButton({
         onClick={handleClick}
         disabled={disabled}
         className={className}
-        aria-label="Attach image"
+        aria-label="Attach file"
         type="button"
       >
         <HugeiconsIcon icon={Attachment01Icon} size={18} strokeWidth={1.8} />

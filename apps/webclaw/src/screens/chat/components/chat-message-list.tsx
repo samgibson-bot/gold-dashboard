@@ -1,6 +1,7 @@
 import { memo, useLayoutEffect, useMemo, useRef } from 'react'
-import { getToolCallsFromMessage } from '../utils'
+import { getToolCallsFromMessage, textFromMessage } from '../utils'
 import { MessageItem } from './message-item'
+import { FollowUpSuggestions } from './follow-up-suggestions'
 import type { GatewayMessage } from '../types'
 import {
   ChatContainerContent,
@@ -22,6 +23,7 @@ type ChatMessageListProps = {
   pinGroupMinHeight: number
   headerHeight: number
   contentStyle?: React.CSSProperties
+  onSuggestionClick?: (suggestion: string) => void
 }
 
 function ChatMessageListComponent({
@@ -37,6 +39,7 @@ function ChatMessageListComponent({
   pinGroupMinHeight,
   headerHeight,
   contentStyle,
+  onSuggestionClick,
 }: ChatMessageListProps) {
   const anchorRef = useRef<HTMLDivElement | null>(null)
   const lastUserRef = useRef<HTMLDivElement | null>(null)
@@ -76,6 +79,19 @@ function ChatMessageListComponent({
     (typeof lastUserIndex !== 'number' ||
       typeof lastAssistantIndex !== 'number' ||
       lastAssistantIndex < lastUserIndex)
+
+  const lastAssistantText = useMemo(() => {
+    if (typeof lastAssistantIndex !== 'number') return ''
+    const msg = displayMessages[lastAssistantIndex]
+    if (!msg || msg.role === 'user') return ''
+    return textFromMessage(msg)
+  }, [displayMessages, lastAssistantIndex])
+
+  const showFollowUps =
+    !waitingForResponse &&
+    !showTypingIndicator &&
+    lastAssistantText.length >= 50 &&
+    onSuggestionClick
   // Pin the last user+assistant group without adding bottom padding.
   const groupStartIndex = typeof lastUserIndex === 'number' ? lastUserIndex : -1
   const hasGroup = pinToTop && groupStartIndex >= 0
@@ -208,6 +224,14 @@ function ChatMessageListComponent({
             )
           })
         )}
+        {showFollowUps && onSuggestionClick ? (
+          <FollowUpSuggestions
+            responseText={lastAssistantText}
+            onSuggestionClick={onSuggestionClick}
+            disabled={waitingForResponse}
+            className="px-1"
+          />
+        ) : null}
         {notice && noticePosition === 'end' ? notice : null}
         <ChatContainerScrollAnchor
           ref={anchorRef as React.RefObject<HTMLDivElement>}
@@ -233,7 +257,8 @@ function areChatMessageListEqual(
     prev.pinToTop === next.pinToTop &&
     prev.pinGroupMinHeight === next.pinGroupMinHeight &&
     prev.headerHeight === next.headerHeight &&
-    prev.contentStyle === next.contentStyle
+    prev.contentStyle === next.contentStyle &&
+    prev.onSuggestionClick === next.onSuggestionClick
   )
 }
 

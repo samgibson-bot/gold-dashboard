@@ -3,11 +3,13 @@
 import { Link } from '@tanstack/react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
+  CheckmarkSquare01Icon,
   Delete01Icon,
   LayoutGridIcon,
   MoreHorizontalIcon,
   Pen01Icon,
   PinIcon,
+  Square01Icon,
 } from '@hugeicons/core-free-icons'
 import { memo } from 'react'
 import type { SessionMeta } from '../../types'
@@ -24,8 +26,11 @@ type SessionItemProps = {
   active: boolean
   isPinned: boolean
   isProtected?: boolean
+  selectionMode?: boolean
+  isSelected?: boolean
   onSelect?: () => void
   onTogglePin: (session: SessionMeta) => void
+  onToggleSelect?: (session: SessionMeta) => void
   onRename: (session: SessionMeta) => void
   onDelete: (session: SessionMeta) => void
   onOpenInDeck?: (session: SessionMeta) => void
@@ -42,8 +47,11 @@ function SessionItemComponent({
   active,
   isPinned,
   isProtected = false,
+  selectionMode = false,
+  isSelected = false,
   onSelect,
   onTogglePin,
+  onToggleSelect,
   onRename,
   onDelete,
   onOpenInDeck,
@@ -54,6 +62,38 @@ function SessionItemComponent({
     session.totalTokens && session.totalTokens > 0
       ? formatTokensCompact(session.totalTokens)
       : null
+
+  if (selectionMode) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault()
+          onToggleSelect?.(session)
+        }}
+        disabled={isProtected}
+        className={cn(
+          'group inline-flex items-center gap-1.5',
+          'w-full text-left pl-1.5 pr-0.5 h-8 rounded-lg transition-colors duration-0',
+          'select-none',
+          isSelected
+            ? 'bg-primary-200 text-primary-950'
+            : 'bg-transparent text-primary-950 hover:bg-primary-100',
+          isProtected && 'opacity-40 cursor-not-allowed',
+        )}
+      >
+        <span className="shrink-0">
+          <HugeiconsIcon
+            icon={isSelected ? CheckmarkSquare01Icon : Square01Icon}
+            size={16}
+            strokeWidth={1.7}
+            className={isSelected ? 'text-primary-900' : 'text-primary-400'}
+          />
+        </span>
+        <span className="text-sm font-[450] line-clamp-1 min-w-0">{label}</span>
+      </button>
+    )
+  }
 
   return (
     <Link
@@ -181,8 +221,11 @@ function areSessionItemsEqual(prev: SessionItemProps, next: SessionItemProps) {
   if (prev.active !== next.active) return false
   if (prev.isPinned !== next.isPinned) return false
   if (prev.isProtected !== next.isProtected) return false
+  if (prev.selectionMode !== next.selectionMode) return false
+  if (prev.isSelected !== next.isSelected) return false
   if (prev.onSelect !== next.onSelect) return false
   if (prev.onTogglePin !== next.onTogglePin) return false
+  if (prev.onToggleSelect !== next.onToggleSelect) return false
   if (prev.onRename !== next.onRename) return false
   if (prev.onDelete !== next.onDelete) return false
   if (prev.onOpenInDeck !== next.onOpenInDeck) return false
