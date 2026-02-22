@@ -18,17 +18,17 @@ WebClaw app lives in `apps/webclaw` and is built with React + TanStack Router + 
 
 Push to `main` → GitHub Actions deploys automatically (~15s).
 
-**VPS details (keep private):**
-- SSH: `claw@62.146.173.127` (public IP) / `claw@100.77.85.46` (Tailscale)
+**VPS details:**
+- SSH: `claw@100.77.85.46` (Tailscale, preferred) or `claw@62.146.173.127` (public IP)
 - Dashboard dir: `~/openclaw/openclaw-dashboard/`
-- Docker service: `openclaw-dashboard` · Container: `openclaw-openclaw-dashboard-1`
+- Service: `gold-dashboard.service` (systemd user service — NOT Docker)
 
 **Emergency manual deploy:**
 ```bash
-ssh claw@62.146.173.127 "cd ~/openclaw/openclaw-dashboard && git pull && cd ~/openclaw && docker compose build openclaw-dashboard && docker compose up -d openclaw-dashboard"
+ssh claw@100.77.85.46 "bash ~/openclaw/openclaw-dashboard/deploy.sh"
 ```
 
-**Check logs:** `ssh claw@62.146.173.127 "docker logs -f openclaw-openclaw-dashboard-1"`
+**Check logs:** `ssh claw@100.77.85.46 "journalctl --user -u gold-dashboard.service -n 50"`
 
 ## Conventions
 

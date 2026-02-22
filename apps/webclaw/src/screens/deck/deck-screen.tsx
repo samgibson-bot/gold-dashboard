@@ -221,7 +221,7 @@ export function DeckScreen() {
     <div className="h-full flex flex-col min-h-0">
       <DeckHeader onAddColumn={() => setAddDialogOpen(true)} />
 
-      <div className="flex-1 min-h-0 flex overflow-x-auto gap-px bg-primary-200">
+      <div className="flex-1 min-h-0 flex overflow-x-auto snap-x snap-mandatory md:snap-none gap-px bg-primary-200">
         {mode === 'triage' ? (
           <TriageView />
         ) : columns.length === 0 ? (
@@ -266,7 +266,7 @@ function TriageView() {
         return (
           <div
             key={status}
-            className="flex flex-col min-w-[300px] flex-1 bg-surface border-r border-primary-200 last:border-r-0"
+            className="flex flex-col snap-start min-w-full md:min-w-[300px] flex-1 bg-surface border-r border-primary-200 last:border-r-0"
           >
             <div className="shrink-0 px-3 py-2 border-b border-primary-100 bg-primary-50/50 flex items-center gap-2">
               <span className="text-xs font-semibold text-primary-700 capitalize">

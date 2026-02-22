@@ -95,7 +95,7 @@ export function AgentColumn({
 
   return (
     <div
-      className="flex flex-col min-w-[300px] max-w-[480px] flex-1 bg-surface border-r border-primary-200 last:border-r-0"
+      className="flex flex-col snap-start min-w-full md:min-w-[300px] md:max-w-[480px] flex-1 bg-surface border-r border-primary-200 last:border-r-0"
       style={{ borderTopColor: column.accent, borderTopWidth: 2 }}
     >
       {/* Header */}

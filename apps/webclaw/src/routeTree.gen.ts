@@ -9,8 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as DeckRouteImport } from './routes/deck'
 import { Route as NewRouteImport } from './routes/new'
+import { Route as DeckRouteImport } from './routes/deck'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,16 +20,20 @@ import { Route as ApiStreamRouteImport } from './routes/api/stream'
 import { Route as ApiSessionsRouteImport } from './routes/api/sessions'
 import { Route as ApiSendRouteImport } from './routes/api/send'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
+import { Route as ApiModelsRouteImport } from './routes/api/models'
 import { Route as ApiHistoryRouteImport } from './routes/api/history'
+import { Route as ApiFollowUpsRouteImport } from './routes/api/follow-ups'
 import { Route as AdminWorkflowsRouteImport } from './routes/admin/workflows'
 import { Route as AdminWebhooksRouteImport } from './routes/admin/webhooks'
 import { Route as AdminTokensRouteImport } from './routes/admin/tokens'
 import { Route as AdminStatusRouteImport } from './routes/admin/status'
+import { Route as AdminSkillsRouteImport } from './routes/admin/skills'
 import { Route as AdminMetricsRouteImport } from './routes/admin/metrics'
 import { Route as AdminMemoryRouteImport } from './routes/admin/memory'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminIdeasRouteImport } from './routes/admin/ideas'
 import { Route as AdminFleetRouteImport } from './routes/admin/fleet'
+import { Route as AdminFilesRouteImport } from './routes/admin/files'
 import { Route as AdminCronRouteImport } from './routes/admin/cron'
 import { Route as AdminConfigRouteImport } from './routes/admin/config'
 import { Route as AdminBrowserRouteImport } from './routes/admin/browser'
@@ -39,11 +43,13 @@ import { Route as ApiAdminWorkflowsRouteImport } from './routes/api/admin/workfl
 import { Route as ApiAdminWebhooksRouteImport } from './routes/api/admin/webhooks'
 import { Route as ApiAdminTokensRouteImport } from './routes/api/admin/tokens'
 import { Route as ApiAdminStatusRouteImport } from './routes/api/admin/status'
+import { Route as ApiAdminSkillsRouteImport } from './routes/api/admin/skills'
 import { Route as ApiAdminMetricsRouteImport } from './routes/api/admin/metrics'
 import { Route as ApiAdminMemoryRouteImport } from './routes/api/admin/memory'
 import { Route as ApiAdminLogsRouteImport } from './routes/api/admin/logs'
 import { Route as ApiAdminIdeasRouteImport } from './routes/api/admin/ideas'
 import { Route as ApiAdminFleetRouteImport } from './routes/api/admin/fleet'
+import { Route as ApiAdminFilesRouteImport } from './routes/api/admin/files'
 import { Route as ApiAdminCronRouteImport } from './routes/api/admin/cron'
 import { Route as ApiAdminConfigRouteImport } from './routes/api/admin/config'
 import { Route as ApiAdminBrowserRouteImport } from './routes/api/admin/browser'
@@ -53,14 +59,14 @@ import { Route as ApiAdminIdeasSubmitRouteImport } from './routes/api/admin/idea
 import { Route as ApiAdminIdeasStatusRouteImport } from './routes/api/admin/ideas.status'
 import { Route as ApiAdminIdeasChatRouteImport } from './routes/api/admin/ideas.chat'
 
-const DeckRoute = DeckRouteImport.update({
-  id: '/deck',
-  path: '/deck',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const NewRoute = NewRouteImport.update({
   id: '/new',
   path: '/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeckRoute = DeckRouteImport.update({
+  id: '/deck',
+  path: '/deck',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnectRoute = ConnectRouteImport.update({
@@ -108,9 +114,19 @@ const ApiPingRoute = ApiPingRouteImport.update({
   path: '/api/ping',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiModelsRoute = ApiModelsRouteImport.update({
+  id: '/api/models',
+  path: '/api/models',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHistoryRoute = ApiHistoryRouteImport.update({
   id: '/api/history',
   path: '/api/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFollowUpsRoute = ApiFollowUpsRouteImport.update({
+  id: '/api/follow-ups',
+  path: '/api/follow-ups',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminWorkflowsRoute = AdminWorkflowsRouteImport.update({
@@ -131,6 +147,11 @@ const AdminTokensRoute = AdminTokensRouteImport.update({
 const AdminStatusRoute = AdminStatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSkillsRoute = AdminSkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMetricsRoute = AdminMetricsRouteImport.update({
@@ -156,6 +177,11 @@ const AdminIdeasRoute = AdminIdeasRouteImport.update({
 const AdminFleetRoute = AdminFleetRouteImport.update({
   id: '/fleet',
   path: '/fleet',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFilesRoute = AdminFilesRouteImport.update({
+  id: '/files',
+  path: '/files',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCronRoute = AdminCronRouteImport.update({
@@ -203,6 +229,11 @@ const ApiAdminStatusRoute = ApiAdminStatusRouteImport.update({
   path: '/api/admin/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminSkillsRoute = ApiAdminSkillsRouteImport.update({
+  id: '/api/admin/skills',
+  path: '/api/admin/skills',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminMetricsRoute = ApiAdminMetricsRouteImport.update({
   id: '/api/admin/metrics',
   path: '/api/admin/metrics',
@@ -226,6 +257,11 @@ const ApiAdminIdeasRoute = ApiAdminIdeasRouteImport.update({
 const ApiAdminFleetRoute = ApiAdminFleetRouteImport.update({
   id: '/api/admin/fleet',
   path: '/api/admin/fleet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminFilesRoute = ApiAdminFilesRouteImport.update({
+  id: '/api/admin/files',
+  path: '/api/admin/files',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminCronRoute = ApiAdminCronRouteImport.update({
@@ -280,16 +316,20 @@ export interface FileRoutesByFullPath {
   '/admin/browser': typeof AdminBrowserRoute
   '/admin/config': typeof AdminConfigRoute
   '/admin/cron': typeof AdminCronRoute
+  '/admin/files': typeof AdminFilesRoute
   '/admin/fleet': typeof AdminFleetRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/skills': typeof AdminSkillsRoute
   '/admin/status': typeof AdminStatusRoute
   '/admin/tokens': typeof AdminTokensRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
   '/admin/workflows': typeof AdminWorkflowsRoute
+  '/api/follow-ups': typeof ApiFollowUpsRoute
   '/api/history': typeof ApiHistoryRoute
+  '/api/models': typeof ApiModelsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
@@ -301,11 +341,13 @@ export interface FileRoutesByFullPath {
   '/api/admin/browser': typeof ApiAdminBrowserRoute
   '/api/admin/config': typeof ApiAdminConfigRoute
   '/api/admin/cron': typeof ApiAdminCronRoute
+  '/api/admin/files': typeof ApiAdminFilesRoute
   '/api/admin/fleet': typeof ApiAdminFleetRoute
   '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/memory': typeof ApiAdminMemoryRoute
   '/api/admin/metrics': typeof ApiAdminMetricsRoute
+  '/api/admin/skills': typeof ApiAdminSkillsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
   '/api/admin/webhooks': typeof ApiAdminWebhooksRoute
@@ -324,16 +366,20 @@ export interface FileRoutesByTo {
   '/admin/browser': typeof AdminBrowserRoute
   '/admin/config': typeof AdminConfigRoute
   '/admin/cron': typeof AdminCronRoute
+  '/admin/files': typeof AdminFilesRoute
   '/admin/fleet': typeof AdminFleetRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/skills': typeof AdminSkillsRoute
   '/admin/status': typeof AdminStatusRoute
   '/admin/tokens': typeof AdminTokensRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
   '/admin/workflows': typeof AdminWorkflowsRoute
+  '/api/follow-ups': typeof ApiFollowUpsRoute
   '/api/history': typeof ApiHistoryRoute
+  '/api/models': typeof ApiModelsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
@@ -345,11 +391,13 @@ export interface FileRoutesByTo {
   '/api/admin/browser': typeof ApiAdminBrowserRoute
   '/api/admin/config': typeof ApiAdminConfigRoute
   '/api/admin/cron': typeof ApiAdminCronRoute
+  '/api/admin/files': typeof ApiAdminFilesRoute
   '/api/admin/fleet': typeof ApiAdminFleetRoute
   '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/memory': typeof ApiAdminMemoryRoute
   '/api/admin/metrics': typeof ApiAdminMetricsRoute
+  '/api/admin/skills': typeof ApiAdminSkillsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
   '/api/admin/webhooks': typeof ApiAdminWebhooksRoute
@@ -370,16 +418,20 @@ export interface FileRoutesById {
   '/admin/browser': typeof AdminBrowserRoute
   '/admin/config': typeof AdminConfigRoute
   '/admin/cron': typeof AdminCronRoute
+  '/admin/files': typeof AdminFilesRoute
   '/admin/fleet': typeof AdminFleetRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
   '/admin/metrics': typeof AdminMetricsRoute
+  '/admin/skills': typeof AdminSkillsRoute
   '/admin/status': typeof AdminStatusRoute
   '/admin/tokens': typeof AdminTokensRoute
   '/admin/webhooks': typeof AdminWebhooksRoute
   '/admin/workflows': typeof AdminWorkflowsRoute
+  '/api/follow-ups': typeof ApiFollowUpsRoute
   '/api/history': typeof ApiHistoryRoute
+  '/api/models': typeof ApiModelsRoute
   '/api/ping': typeof ApiPingRoute
   '/api/send': typeof ApiSendRoute
   '/api/sessions': typeof ApiSessionsRoute
@@ -391,11 +443,13 @@ export interface FileRoutesById {
   '/api/admin/browser': typeof ApiAdminBrowserRoute
   '/api/admin/config': typeof ApiAdminConfigRoute
   '/api/admin/cron': typeof ApiAdminCronRoute
+  '/api/admin/files': typeof ApiAdminFilesRoute
   '/api/admin/fleet': typeof ApiAdminFleetRoute
   '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/memory': typeof ApiAdminMemoryRoute
   '/api/admin/metrics': typeof ApiAdminMetricsRoute
+  '/api/admin/skills': typeof ApiAdminSkillsRoute
   '/api/admin/status': typeof ApiAdminStatusRoute
   '/api/admin/tokens': typeof ApiAdminTokensRoute
   '/api/admin/webhooks': typeof ApiAdminWebhooksRoute
@@ -417,16 +471,20 @@ export interface FileRouteTypes {
     | '/admin/browser'
     | '/admin/config'
     | '/admin/cron'
+    | '/admin/files'
     | '/admin/fleet'
     | '/admin/ideas'
     | '/admin/logs'
     | '/admin/memory'
     | '/admin/metrics'
+    | '/admin/skills'
     | '/admin/status'
     | '/admin/tokens'
     | '/admin/webhooks'
     | '/admin/workflows'
+    | '/api/follow-ups'
     | '/api/history'
+    | '/api/models'
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
@@ -438,11 +496,13 @@ export interface FileRouteTypes {
     | '/api/admin/browser'
     | '/api/admin/config'
     | '/api/admin/cron'
+    | '/api/admin/files'
     | '/api/admin/fleet'
     | '/api/admin/ideas'
     | '/api/admin/logs'
     | '/api/admin/memory'
     | '/api/admin/metrics'
+    | '/api/admin/skills'
     | '/api/admin/status'
     | '/api/admin/tokens'
     | '/api/admin/webhooks'
@@ -461,16 +521,20 @@ export interface FileRouteTypes {
     | '/admin/browser'
     | '/admin/config'
     | '/admin/cron'
+    | '/admin/files'
     | '/admin/fleet'
     | '/admin/ideas'
     | '/admin/logs'
     | '/admin/memory'
     | '/admin/metrics'
+    | '/admin/skills'
     | '/admin/status'
     | '/admin/tokens'
     | '/admin/webhooks'
     | '/admin/workflows'
+    | '/api/follow-ups'
     | '/api/history'
+    | '/api/models'
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
@@ -482,11 +546,13 @@ export interface FileRouteTypes {
     | '/api/admin/browser'
     | '/api/admin/config'
     | '/api/admin/cron'
+    | '/api/admin/files'
     | '/api/admin/fleet'
     | '/api/admin/ideas'
     | '/api/admin/logs'
     | '/api/admin/memory'
     | '/api/admin/metrics'
+    | '/api/admin/skills'
     | '/api/admin/status'
     | '/api/admin/tokens'
     | '/api/admin/webhooks'
@@ -506,16 +572,20 @@ export interface FileRouteTypes {
     | '/admin/browser'
     | '/admin/config'
     | '/admin/cron'
+    | '/admin/files'
     | '/admin/fleet'
     | '/admin/ideas'
     | '/admin/logs'
     | '/admin/memory'
     | '/admin/metrics'
+    | '/admin/skills'
     | '/admin/status'
     | '/admin/tokens'
     | '/admin/webhooks'
     | '/admin/workflows'
+    | '/api/follow-ups'
     | '/api/history'
+    | '/api/models'
     | '/api/ping'
     | '/api/send'
     | '/api/sessions'
@@ -527,11 +597,13 @@ export interface FileRouteTypes {
     | '/api/admin/browser'
     | '/api/admin/config'
     | '/api/admin/cron'
+    | '/api/admin/files'
     | '/api/admin/fleet'
     | '/api/admin/ideas'
     | '/api/admin/logs'
     | '/api/admin/memory'
     | '/api/admin/metrics'
+    | '/api/admin/skills'
     | '/api/admin/status'
     | '/api/admin/tokens'
     | '/api/admin/webhooks'
@@ -547,7 +619,9 @@ export interface RootRouteChildren {
   ConnectRoute: typeof ConnectRoute
   DeckRoute: typeof DeckRoute
   NewRoute: typeof NewRoute
+  ApiFollowUpsRoute: typeof ApiFollowUpsRoute
   ApiHistoryRoute: typeof ApiHistoryRoute
+  ApiModelsRoute: typeof ApiModelsRoute
   ApiPingRoute: typeof ApiPingRoute
   ApiSendRoute: typeof ApiSendRoute
   ApiSessionsRoute: typeof ApiSessionsRoute
@@ -558,11 +632,13 @@ export interface RootRouteChildren {
   ApiAdminBrowserRoute: typeof ApiAdminBrowserRoute
   ApiAdminConfigRoute: typeof ApiAdminConfigRoute
   ApiAdminCronRoute: typeof ApiAdminCronRoute
+  ApiAdminFilesRoute: typeof ApiAdminFilesRoute
   ApiAdminFleetRoute: typeof ApiAdminFleetRoute
   ApiAdminIdeasRoute: typeof ApiAdminIdeasRouteWithChildren
   ApiAdminLogsRoute: typeof ApiAdminLogsRoute
   ApiAdminMemoryRoute: typeof ApiAdminMemoryRoute
   ApiAdminMetricsRoute: typeof ApiAdminMetricsRoute
+  ApiAdminSkillsRoute: typeof ApiAdminSkillsRoute
   ApiAdminStatusRoute: typeof ApiAdminStatusRoute
   ApiAdminTokensRoute: typeof ApiAdminTokensRoute
   ApiAdminWebhooksRoute: typeof ApiAdminWebhooksRoute
@@ -571,18 +647,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/deck': {
-      id: '/deck'
-      path: '/deck'
-      fullPath: '/deck'
-      preLoaderRoute: typeof DeckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/new': {
       id: '/new'
       path: '/new'
       fullPath: '/new'
       preLoaderRoute: typeof NewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deck': {
+      id: '/deck'
+      path: '/deck'
+      fullPath: '/deck'
+      preLoaderRoute: typeof DeckRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connect': {
@@ -648,11 +724,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/models': {
+      id: '/api/models'
+      path: '/api/models'
+      fullPath: '/api/models'
+      preLoaderRoute: typeof ApiModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/history': {
       id: '/api/history'
       path: '/api/history'
       fullPath: '/api/history'
       preLoaderRoute: typeof ApiHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/follow-ups': {
+      id: '/api/follow-ups'
+      path: '/api/follow-ups'
+      fullPath: '/api/follow-ups'
+      preLoaderRoute: typeof ApiFollowUpsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/workflows': {
@@ -681,6 +771,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/admin/status'
       preLoaderRoute: typeof AdminStatusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/skills': {
+      id: '/admin/skills'
+      path: '/skills'
+      fullPath: '/admin/skills'
+      preLoaderRoute: typeof AdminSkillsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/metrics': {
@@ -716,6 +813,13 @@ declare module '@tanstack/react-router' {
       path: '/fleet'
       fullPath: '/admin/fleet'
       preLoaderRoute: typeof AdminFleetRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/files': {
+      id: '/admin/files'
+      path: '/files'
+      fullPath: '/admin/files'
+      preLoaderRoute: typeof AdminFilesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/cron': {
@@ -781,6 +885,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/skills': {
+      id: '/api/admin/skills'
+      path: '/api/admin/skills'
+      fullPath: '/api/admin/skills'
+      preLoaderRoute: typeof ApiAdminSkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/metrics': {
       id: '/api/admin/metrics'
       path: '/api/admin/metrics'
@@ -814,6 +925,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/fleet'
       fullPath: '/api/admin/fleet'
       preLoaderRoute: typeof ApiAdminFleetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/files': {
+      id: '/api/admin/files'
+      path: '/api/admin/files'
+      fullPath: '/api/admin/files'
+      preLoaderRoute: typeof ApiAdminFilesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/cron': {
@@ -881,11 +999,13 @@ interface AdminRouteChildren {
   AdminBrowserRoute: typeof AdminBrowserRoute
   AdminConfigRoute: typeof AdminConfigRoute
   AdminCronRoute: typeof AdminCronRoute
+  AdminFilesRoute: typeof AdminFilesRoute
   AdminFleetRoute: typeof AdminFleetRoute
   AdminIdeasRoute: typeof AdminIdeasRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminMemoryRoute: typeof AdminMemoryRoute
   AdminMetricsRoute: typeof AdminMetricsRoute
+  AdminSkillsRoute: typeof AdminSkillsRoute
   AdminStatusRoute: typeof AdminStatusRoute
   AdminTokensRoute: typeof AdminTokensRoute
   AdminWebhooksRoute: typeof AdminWebhooksRoute
@@ -899,11 +1019,13 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBrowserRoute: AdminBrowserRoute,
   AdminConfigRoute: AdminConfigRoute,
   AdminCronRoute: AdminCronRoute,
+  AdminFilesRoute: AdminFilesRoute,
   AdminFleetRoute: AdminFleetRoute,
   AdminIdeasRoute: AdminIdeasRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminMemoryRoute: AdminMemoryRoute,
   AdminMetricsRoute: AdminMetricsRoute,
+  AdminSkillsRoute: AdminSkillsRoute,
   AdminStatusRoute: AdminStatusRoute,
   AdminTokensRoute: AdminTokensRoute,
   AdminWebhooksRoute: AdminWebhooksRoute,
@@ -935,7 +1057,9 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectRoute: ConnectRoute,
   DeckRoute: DeckRoute,
   NewRoute: NewRoute,
+  ApiFollowUpsRoute: ApiFollowUpsRoute,
   ApiHistoryRoute: ApiHistoryRoute,
+  ApiModelsRoute: ApiModelsRoute,
   ApiPingRoute: ApiPingRoute,
   ApiSendRoute: ApiSendRoute,
   ApiSessionsRoute: ApiSessionsRoute,
@@ -946,11 +1070,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminBrowserRoute: ApiAdminBrowserRoute,
   ApiAdminConfigRoute: ApiAdminConfigRoute,
   ApiAdminCronRoute: ApiAdminCronRoute,
+  ApiAdminFilesRoute: ApiAdminFilesRoute,
   ApiAdminFleetRoute: ApiAdminFleetRoute,
   ApiAdminIdeasRoute: ApiAdminIdeasRouteWithChildren,
   ApiAdminLogsRoute: ApiAdminLogsRoute,
   ApiAdminMemoryRoute: ApiAdminMemoryRoute,
   ApiAdminMetricsRoute: ApiAdminMetricsRoute,
+  ApiAdminSkillsRoute: ApiAdminSkillsRoute,
   ApiAdminStatusRoute: ApiAdminStatusRoute,
   ApiAdminTokensRoute: ApiAdminTokensRoute,
   ApiAdminWebhooksRoute: ApiAdminWebhooksRoute,
