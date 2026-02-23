@@ -108,8 +108,12 @@ const { columns, mode } = useDeckStore(useShallow((s) => ({ columns: s.columns, 
 - Never font weights bolder than `font-medium`
 
 ### TypeScript
-- `Record<string, string>` makes `??` fallback unnecessary (lint error) — use `Partial<Record<>>` instead
+- `Record<string, T>` makes `!obj[key]` guard unnecessary (lint error) — use `Partial<Record<string, T>>` instead
 - `routeTree.gen.ts` can be manually updated for TypeScript — regenerated on build
+- Array index access (`arr[i]`) is typed as `T` (not `T | undefined`) without `noUncheckedIndexedAccess` — cast to `arr[i] as T | undefined` before null-guarding
+- `gatewayRpc<T>()` returns `T` (non-nullable) — never use `result?.foo`, always `result.foo`
+- Template literals: `"` doesn't need escaping — `\"` inside backticks is a lint error
+- Cast AFTER evaluating, not before: `(val || 'default') as 'a' | 'b'`, not `(val as 'a' | 'b') || 'default'`
 
 ---
 
