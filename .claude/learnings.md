@@ -23,6 +23,25 @@
 - When merging a PR that other PRs depend on, immediately rebase the dependent branches before they get auto-closed
 - TanStack Router's routeTree.gen.ts can be pre-populated for TypeScript, with Vite handling the authoritative regeneration at build time
 
+## 2026-02-22 — Fleet Page Redesign + Gateway fs.* Debugging (PRs #20, #21, #22)
+
+**What was built:**
+- Fleet page redesign: summary header with live stats, KPI cards row, compact model routing pills, soul previews (first 5 lines), last-active timestamps, inline per-card soul viewer, empty state, "Open in Deck" always visible
+- Shared `formatRelativeTime()` and `describeCronSchedule()` utilities in `lib/format.ts`
+- Fleet API enriched with batch soul reads and `last_active` derived from sessions
+
+**What was tricky:**
+- **Gateway `fs.readFile` is broken for operator devices**: The gateway RPC consistently returns "unknown method: fs.readFile" for newly-paired operator devices, regardless of what scopes are configured in the .env. Older/pre-existing device keys got "missing scope: operator.admin" (method existed but was blocked). New devices get "unknown method" — a contradiction that suggests a gateway version or connection-mode issue. Multiple scope combinations were tried; none worked.
+- **CLAUDE.md scope note was wrong**: The existing CLAUDE.md said `operator.read,operator.write` are required, but `gateway.ts` defaults to `['operator.admin']` when `CLAWDBOT_GATEWAY_SCOPES` is unset. The env override was causing the wrong scope to be sent.
+- **Fix**: Bypass the gateway entirely for filesystem reads. Dashboard is co-located on the same VPS as the openclaw workspace, so `node:fs/promises` + `homedir() + '/.openclaw/'` works cleanly.
+- **Debugging trajectory**: ~6 attempts before landing on the direct-fs solution. Should have checked `gateway.ts` getGatewayScopes() earlier and also checked `openclaw devices list` sooner.
+
+**Patterns worth carrying forward:**
+- **Don't use gateway `fs.*` RPCs** — use Node `fs/promises` with `homedir()/.openclaw/` base path
+- **Don't set `CLAWDBOT_GATEWAY_SCOPES` in .env** — the gateway.ts default (`operator.admin`) is correct
+- **`openclaw devices list`** (sourcing nvm first) shows exactly what scopes paired devices have — useful for debugging gateway auth
+- **Delete `.device-keys.json` cautiously** — if an existing device key "works" (even with scope errors), deleting it can make things worse if the new pairing lands in a different gateway mode
+
 ## 2026-02-21 — Skill Routing + Fleet Visibility (PR #17)
 
 **What was built:**
