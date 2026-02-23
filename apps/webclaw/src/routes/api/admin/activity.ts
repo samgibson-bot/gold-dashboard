@@ -4,6 +4,51 @@ import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
 import type { ActivityEvent } from '../../../screens/admin/types'
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function humanizeSessionKey(key: string): string {
+  if (key === 'agent:main:main' || key === 'main') return 'Main'
+  if (key.includes(':ideas')) return 'Ideas'
+
+  // Cron sessions: agent:main:cron:<uuid>
+  if (key.includes(':cron:')) {
+    const tail = key.split(':cron:')[1] ?? ''
+    if (UUID_RE.test(tail)) return 'Cron Task'
+    return tail.length > 0 ? `Cron: ${tail}` : 'Cron Task'
+  }
+
+  // Webchat sessions: agent:main:<uuid>
+  if (key.startsWith('agent:main:')) {
+    const tail = key.slice('agent:main:'.length)
+    if (UUID_RE.test(tail)) return `Chat ${tail.slice(0, 8)}`
+    return tail
+  }
+
+  // Subagent sessions
+  if (key.includes(':subagent:')) {
+    const tail = key.split(':subagent:').pop() ?? ''
+    return tail.length > 0 ? `Subagent: ${tail}` : 'Subagent'
+  }
+
+  return key
+}
+
+function sessionDisplayName(s: Record<string, unknown>): string {
+  const label = typeof s.label === 'string' ? s.label.trim() : ''
+  if (label.length > 0) return label
+
+  const title = typeof s.title === 'string' ? s.title.trim() : ''
+  if (title.length > 0) return title
+
+  const derivedTitle =
+    typeof s.derivedTitle === 'string' ? s.derivedTitle.trim() : ''
+  if (derivedTitle.length > 0) return derivedTitle
+
+  const key = String(s.key ?? s.friendlyId ?? '')
+  return humanizeSessionKey(key)
+}
+
 async function getGatewaySessions(): Promise<Array<ActivityEvent>> {
   try {
     const result = await gatewayRpc<{
@@ -12,12 +57,15 @@ async function getGatewaySessions(): Promise<Array<ActivityEvent>> {
 
     const sessions = result.sessions ?? []
     return sessions.map(function toEvent(s, i) {
+      const name = sessionDisplayName(s)
+      const status = String(s.status ?? 'unknown')
+      const msgCount = String(s.messageCount ?? s.messages ?? 0)
       return {
         id: `gw-${String(s.key ?? i)}`,
         type: 'gateway' as const,
-        agent: String(s.friendlyId ?? s.key ?? 'unknown'),
+        agent: name,
         action: 'session_active',
-        summary: `Session ${String(s.friendlyId ?? s.key ?? '')} — ${String(s.status ?? 'unknown')} (${String(s.messageCount ?? s.messages ?? 0)} messages)`,
+        summary: `${name} — ${status} (${msgCount} messages)`,
         timestamp: String(s.lastActivity ?? new Date().toISOString()),
       }
     })
@@ -111,13 +159,15 @@ async function getSubagentEvents(): Promise<Array<ActivityEvent>> {
         )
       })
       .map(function toEvent(s) {
+        const name = sessionDisplayName(s)
         const status = String(s.status ?? 'unknown')
+        const msgCount = String(s.messageCount ?? s.messages ?? 0)
         return {
           id: `sub-${String(s.key ?? s.friendlyId)}`,
           type: 'subagent' as const,
-          agent: String(s.friendlyId ?? s.key ?? 'unknown'),
+          agent: name,
           action: status === 'active' ? 'subagent_active' : 'subagent_ended',
-          summary: `Sub-agent ${String(s.friendlyId ?? s.key ?? '')} — ${status} (${String(s.messageCount ?? s.messages ?? 0)} messages)`,
+          summary: `${name} — ${status} (${msgCount} messages)`,
           timestamp: String(s.lastActivity ?? new Date().toISOString()),
         }
       })
