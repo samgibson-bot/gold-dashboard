@@ -23,6 +23,24 @@
 - When merging a PR that other PRs depend on, immediately rebase the dependent branches before they get auto-closed
 - TanStack Router's routeTree.gen.ts can be pre-populated for TypeScript, with Vite handling the authoritative regeneration at build time
 
+## 2026-02-22 — Lint Audit: 56 → 0 Errors (PR #23)
+
+**What was built:**
+- Full lint audit across the codebase — resolved all 56 errors (55 errors + 1 warning) across 27 files
+- Parallel 3-agent approach: API routes batch, component/screen batch, and small fixes batch — all ran concurrently
+
+**What was tricky:**
+- **ESLint ??-chain error attribution**: ESLint reports the `no-unnecessary-condition` error at the START of a `??` chain expression, not at the specific problematic `??`. `models[0].id ?? 'default'` was the culprit but the error pointed to line 104 (start of the chain) rather than line 107 where `models[0].id` lived. Took two passes to figure out.
+- **Cast before vs after**: `(val as 'a' | 'b') || 'default'` — the cast makes TypeScript think the LHS is always one of those truthy string literals, so `||` is flagged. Must evaluate first: `(val || 'default') as 'a' | 'b' | 'default'`.
+- **Closure mutation invisible to TypeScript**: `let changed = false` mutated inside a `.filter()` callback is always seen as `false` at the return site. TypeScript doesn't track mutations across closures. Fixed with `next.length !== sessions.length`.
+- **`server-start.js`** not in tsconfig but picked up by ESLint's TypeScript parser — needed an explicit ignore in `eslint.config.js`.
+
+**Patterns worth carrying forward:**
+- For bulk lint fixes across many files, spawn 2-3 parallel agents grouped by category (API routes / components / small fixes)
+- Array index access needs `as T | undefined` cast before null-guarding — without `noUncheckedIndexedAccess`, TypeScript types `arr[i]` as `T` (always defined)
+- `gatewayRpc<T>()` returns `T` (non-nullable) — `result?.foo` is always a lint error; use `result.foo`
+- After a full lint pass, the codebase should stay clean — future sessions can run `pnpm lint` to verify
+
 ## 2026-02-22 — Cron Health Monitoring
 
 **What was built:**
