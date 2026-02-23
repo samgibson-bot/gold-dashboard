@@ -76,8 +76,8 @@ function SkillsPage() {
         body: JSON.stringify({ action: 'create', ...params }),
       })
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error ?? 'Failed to create skill')
+        const errData = await res.json()
+        throw new Error(errData.error ?? 'Failed to create skill')
       }
     },
     onSuccess: function onCreateSuccess() {

@@ -109,8 +109,8 @@ export function ModelSelector({
           size={14}
           strokeWidth={1.8}
         />
-        <span className="hidden md:inline">{selected?.name}</span>
-        <span className="md:hidden">{shortName(selected?.name ?? '')}</span>
+        <span className="hidden md:inline">{selected.name}</span>
+        <span className="md:hidden">{shortName(selected.name)}</span>
       </MenuTrigger>
       <MenuContent side="top" align="start">
         {models.map((model) => (

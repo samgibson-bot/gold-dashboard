@@ -205,7 +205,7 @@ export const Route = createFileRoute('/api/admin/fleet')({
 
               const servers: Array<McpServer> = []
 
-              if (Array.isArray(result?.servers)) {
+              if (Array.isArray(result.servers)) {
                 for (const s of result.servers) {
                   const rawTools = Array.isArray(s.tools) ? s.tools : []
                   const tools: Array<McpTool> = (

@@ -13,7 +13,7 @@ async function getCronPipeline(): Promise<WorkflowRun | null> {
     const result = await gatewayRpc<{ content?: string }>('fs.readFile', {
       path: 'fleet/registry.json',
     })
-    if (!result?.content) return null
+    if (!result.content) return null
 
     const registry = JSON.parse(result.content) as FleetRegistry
     const scheduledAgents = registry.agents.filter(function hasSchedule(a) {
@@ -45,7 +45,7 @@ async function getReviewChains(): Promise<Array<WorkflowRun>> {
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path: '.openclaw/shared-context/agent-outputs' })
 
-    const entries = result?.entries ?? []
+    const entries = result.entries ?? []
     const reviewOutputs = entries.filter(function isReview(e) {
       return e.name.startsWith('review-chain-')
     })
@@ -77,7 +77,7 @@ async function getActiveRoundtables(): Promise<Array<WorkflowRun>> {
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path: '.openclaw/shared-context/roundtable' })
 
-    const entries = result?.entries ?? []
+    const entries = result.entries ?? []
     const rtFiles = entries.filter(function isRtFile(e) {
       return e.type === 'file' && e.name.startsWith('rt-')
     })
@@ -156,7 +156,7 @@ async function getDailySyntheses(): Promise<
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path: '.openclaw/shared-context/roundtable' })
 
-    const entries = result?.entries ?? []
+    const entries = result.entries ?? []
     const syntheses: Array<{ date: string; content: string }> = []
 
     for (const entry of entries.slice(-5)) {
@@ -168,7 +168,7 @@ async function getDailySyntheses(): Promise<
         )
         syntheses.push({
           date: entry.name.replace('daily-synthesis-', '').replace('.md', ''),
-          content: fileResult?.content ?? '',
+          content: fileResult.content ?? '',
         })
       } catch {
         // skip

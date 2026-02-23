@@ -104,8 +104,7 @@ export const Route = createFileRoute('/api/models')({
             config.agents?.defaults?.model?.primary ??
             config.chat?.defaultModel ??
             config.model?.defaultModel ??
-            models[0]?.id ??
-            'default'
+            models[0].id
 
           return json({
             ok: true,

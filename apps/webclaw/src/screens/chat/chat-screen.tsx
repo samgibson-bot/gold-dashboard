@@ -258,7 +258,7 @@ export function ChatScreen({
   const hideUi = shouldRedirectToNew || isRedirecting
 
   useEffect(() => {
-    const latestMessage = historyMessages[historyMessages.length - 1]
+    const latestMessage = historyMessages[historyMessages.length - 1] as (typeof historyMessages)[number] | undefined
     if (!latestMessage || latestMessage.role !== 'assistant') return
     const signature = `${historyMessages.length}:${textFromMessage(latestMessage).slice(-64)}`
     if (signature !== lastAssistantSignature.current) {
@@ -588,7 +588,7 @@ export function ChatScreen({
   })
 
   const historyLoading =
-    (historyQuery.isLoading && !historyQuery.data) || isRedirecting
+    historyQuery.isLoading || isRedirecting
   const showGatewayDown = Boolean(gatewayStatusError)
   const showGatewayNotice =
     showGatewayDown &&

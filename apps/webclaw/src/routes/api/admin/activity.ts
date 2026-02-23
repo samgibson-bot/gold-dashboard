@@ -10,7 +10,7 @@ async function getGatewaySessions(): Promise<Array<ActivityEvent>> {
       sessions?: Array<Record<string, unknown>>
     }>('sessions.list', { limit: 20 })
 
-    const sessions = result?.sessions ?? []
+    const sessions = result.sessions ?? []
     return sessions.map(function toEvent(s, i) {
       return {
         id: `gw-${String(s.key ?? i)}`,
@@ -32,7 +32,7 @@ async function getAgentOutputs(): Promise<Array<ActivityEvent>> {
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path: '.openclaw/shared-context/agent-outputs' })
 
-    const entries = result?.entries ?? []
+    const entries = result.entries ?? []
     return entries
       .filter(function isFile(e) {
         return e.type === 'file' && e.name.endsWith('.md')
@@ -60,7 +60,7 @@ async function getRoundtableEvents(): Promise<Array<ActivityEvent>> {
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path: '.openclaw/shared-context/roundtable' })
 
-    const entries = result?.entries ?? []
+    const entries = result.entries ?? []
     const rtFiles = entries.filter(function isRtFile(e) {
       return e.type === 'file' && e.name.startsWith('rt-')
     })
@@ -96,7 +96,7 @@ async function getSubagentEvents(): Promise<Array<ActivityEvent>> {
       sessions?: Array<Record<string, unknown>>
     }>('sessions.list', { limit: 50 })
 
-    const sessions = result?.sessions ?? []
+    const sessions = result.sessions ?? []
     return sessions
       .filter(function isSubagent(s) {
         const key = String(s.key ?? '')
@@ -132,7 +132,7 @@ async function getFeedbackEvents(): Promise<Array<ActivityEvent>> {
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path: '.openclaw/shared-context/feedback' })
 
-    const entries = result?.entries ?? []
+    const entries = result.entries ?? []
     return entries
       .filter(function isFile(e) {
         return e.type === 'file' && e.name.endsWith('.md')

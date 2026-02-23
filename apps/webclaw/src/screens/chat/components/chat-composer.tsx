@@ -140,12 +140,12 @@ function ChatComposerComponent({
         )
       } else if (e.key === 'Tab') {
         e.preventDefault()
-        const cmd = filteredCommands[selectedCommandIndex]
+        const cmd = filteredCommands[selectedCommandIndex] as (typeof filteredCommands)[number] | undefined
         if (cmd) handleSelectCommand(cmd)
       } else if (e.key === 'Escape') {
         setSlashMenuDismissed(true)
       } else if (e.key === 'Enter' && !e.shiftKey) {
-        const cmd = filteredCommands[selectedCommandIndex]
+        const cmd = filteredCommands[selectedCommandIndex] as (typeof filteredCommands)[number] | undefined
         if (cmd) {
           e.preventDefault()
           e.stopPropagation()

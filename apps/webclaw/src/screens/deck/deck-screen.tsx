@@ -34,7 +34,8 @@ function handleGatewayEvent(
 
     // Extract column ID from sessionKey: "agent:main:<columnId>"
     const parts = (sessionKey ?? '').split(':')
-    const columnId = parts[2] ?? parts[1] ?? null
+    const p = parts as Array<string | undefined>
+    const columnId = p[2] ?? p[1] ?? null
     if (!columnId) return
 
     const col = columns.find(
@@ -193,7 +194,6 @@ export function DeckScreen() {
       }
       eventSourceRefs.current.clear()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns.map((c) => c.id).join(',')])
 
   const handleSend = useCallback(
