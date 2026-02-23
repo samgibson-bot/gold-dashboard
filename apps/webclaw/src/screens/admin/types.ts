@@ -24,6 +24,42 @@ export type Session = {
   historyLength?: number
 }
 
+export type CronJobState = {
+  lastStatus?: 'ok' | 'error'
+  lastError?: string
+  consecutiveErrors?: number
+  lastRunAtMs?: number
+  lastDurationMs?: number
+  nextRunAtMs?: number
+}
+
+export type CronJobDelivery = {
+  deliver?: boolean
+  channel?: string
+  to?: string
+}
+
+export type CronRunEntry = {
+  ts?: string
+  jobId?: string
+  action?: string
+  status?: 'ok' | 'error'
+  summary?: string
+  error?: string
+  runAtMs?: number
+  durationMs?: number
+  nextRunAtMs?: number
+  model?: string
+  provider?: string
+  usage?: {
+    input?: number
+    output?: number
+    total?: number
+  }
+  sessionId?: string
+  sessionKey?: string
+}
+
 export type CronJob = {
   id?: string
   name: string
@@ -47,6 +83,8 @@ export type CronJob = {
   lastRun?: string
   nextRun?: string
   status?: string
+  state?: CronJobState
+  delivery?: CronJobDelivery
 }
 
 export type CronStatus = {

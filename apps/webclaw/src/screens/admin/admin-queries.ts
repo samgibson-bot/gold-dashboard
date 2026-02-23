@@ -21,4 +21,7 @@ export const adminQueryKeys = {
   files: function files(path?: string) {
     return ['admin', 'files', path ?? '.openclaw'] as const
   },
+  cronRuns: function cronRuns(jobId: string) {
+    return ['admin', 'cron', 'runs', jobId] as const
+  },
 } as const

@@ -45,6 +45,19 @@ export function formatRelativeTime(isoString: string): string {
   }
 }
 
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`
+  const sec = ms / 1000
+  if (sec < 60) return `${sec.toFixed(1)}s`
+  const min = Math.floor(sec / 60)
+  const remainSec = Math.round(sec % 60)
+  return remainSec > 0 ? `${min}m ${remainSec}s` : `${min}m`
+}
+
+export function formatRelativeTimeMs(ms: number): string {
+  return formatRelativeTime(new Date(ms).toISOString())
+}
+
 export function describeCronSchedule(cron: string): string {
   const patterns: Partial<Record<string, string>> = {
     '* * * * *': 'Runs every minute',

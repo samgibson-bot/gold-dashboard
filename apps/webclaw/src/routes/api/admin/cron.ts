@@ -20,6 +20,17 @@ export const Route = createFileRoute('/api/admin/cron')({
             string,
             unknown
           >
+          if (body.action === 'runs') {
+            const id = typeof body.id === 'string' ? body.id : ''
+            if (!id) {
+              return json({ ok: false, error: 'id required' }, { status: 400 })
+            }
+            const runs = await gatewayRpc<Record<string, unknown>>(
+              'cron.runs',
+              { id },
+            )
+            return json({ ok: true, runs })
+          }
           const result = await gatewayRpc<Record<string, unknown>>(
             'cron.create',
             body,

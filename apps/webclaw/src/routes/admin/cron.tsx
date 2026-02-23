@@ -1,10 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import type { CronJob } from '@/screens/admin/types'
+import type { CronJob, CronRunEntry } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import {
+  formatDuration,
+  formatRelativeTime,
+  formatRelativeTimeMs,
+} from '@/lib/format'
 
 type CronResponse = {
   ok: boolean
@@ -13,6 +18,12 @@ type CronResponse = {
     jobs?: Array<CronJob>
     running?: boolean
   }
+}
+
+type CronRunsResponse = {
+  ok: boolean
+  error?: string
+  runs?: Array<CronRunEntry>
 }
 
 export const Route = createFileRoute('/admin/cron')({
@@ -24,6 +35,7 @@ function CronPage() {
   const [editJob, setEditJob] = useState<CronJob | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [expandedJob, setExpandedJob] = useState<string | null>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: adminQueryKeys.cron,
@@ -84,6 +96,18 @@ function CronPage() {
 
   const jobs = data?.cron?.jobs ?? []
 
+  // Compute health summary
+  const enabledJobs = jobs.filter(function isEnabled(j) {
+    return j.enabled
+  })
+  const errorJobs = enabledJobs.filter(function hasError(j) {
+    return j.state?.lastStatus === 'error'
+  })
+  const missingDeliveryJobs = enabledJobs.filter(function noDelivery(j) {
+    return j.delivery?.deliver && !j.delivery.to
+  })
+  const hasProblems = errorJobs.length > 0 || missingDeliveryJobs.length > 0
+
   function handleOpenCreate() {
     setEditJob(null)
     setShowForm(true)
@@ -118,6 +142,12 @@ function CronPage() {
     }
   }
 
+  function toggleHistory(jobId: string) {
+    setExpandedJob(function toggle(prev) {
+      return prev === jobId ? null : jobId
+    })
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -126,6 +156,45 @@ function CronPage() {
           New Job
         </Button>
       </div>
+
+      {/* Health Summary Banner */}
+      {!isLoading && hasProblems ? (
+        <div
+          className={cn(
+            'rounded-lg px-4 py-3 text-sm',
+            errorJobs.length > 0
+              ? 'bg-red-50 border border-red-200 text-red-800'
+              : 'bg-amber-50 border border-amber-200 text-amber-800',
+          )}
+        >
+          {errorJobs.length > 0 ? (
+            <p>
+              <span className="font-medium">
+                {errorJobs.length} job{errorJobs.length > 1 ? 's' : ''} failing:
+              </span>{' '}
+              {errorJobs
+                .map(function getName(j) {
+                  return j.name
+                })
+                .join(', ')}
+            </p>
+          ) : null}
+          {missingDeliveryJobs.length > 0 ? (
+            <p>
+              <span className="font-medium">
+                {missingDeliveryJobs.length} job
+                {missingDeliveryJobs.length > 1 ? 's' : ''} with no delivery
+                target:
+              </span>{' '}
+              {missingDeliveryJobs
+                .map(function getName(j) {
+                  return j.name
+                })
+                .join(', ')}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {showForm ? (
         <div className="border border-primary-200 rounded-lg p-4 bg-primary-50">
@@ -255,10 +324,16 @@ function CronPage() {
                   Schedule
                 </th>
                 <th className="px-3 py-2 text-left font-medium text-primary-700">
-                  Status
+                  Health
                 </th>
                 <th className="px-3 py-2 text-left font-medium text-primary-700">
-                  Next Run
+                  Last Run
+                </th>
+                <th className="hidden lg:table-cell px-3 py-2 text-left font-medium text-primary-700">
+                  Duration
+                </th>
+                <th className="hidden lg:table-cell px-3 py-2 text-left font-medium text-primary-700">
+                  Delivery
                 </th>
                 <th className="px-3 py-2 text-right font-medium text-primary-700">
                   Actions
@@ -269,87 +344,335 @@ function CronPage() {
               {jobs.map(function renderJob(job, i) {
                 const schedule =
                   job.scheduleKind === 'cron'
-                    ? (job.cronExpr ?? '—')
+                    ? (job.cronExpr ?? '\u2014')
                     : job.scheduleKind === 'every'
                       ? `${job.everyAmount ?? ''} ${job.everyUnit ?? ''}`
-                      : (job.scheduleAt ?? '—')
+                      : (job.scheduleAt ?? '\u2014')
+
+                const state = job.state
+                const delivery = job.delivery
+                const jobId = job.id ?? String(i)
+                const isExpanded = expandedJob === jobId
 
                 return (
-                  <tr key={job.id ?? i}>
-                    <td className="px-3 py-2 text-primary-900">
-                      <div className="font-medium">{job.name}</div>
-                      {job.description ? (
-                        <div className="text-xs text-primary-500 truncate max-w-[200px]">
-                          {job.description}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2 text-primary-700 tabular-nums">
-                      {schedule}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={cn(
-                          'text-xs px-1.5 py-0.5 rounded',
-                          job.enabled
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-primary-100 text-primary-500',
-                        )}
-                      >
-                        {job.enabled ? 'enabled' : 'disabled'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-primary-500 text-xs tabular-nums">
-                      {job.nextRun
-                        ? new Date(job.nextRun).toLocaleString()
-                        : '—'}
-                    </td>
-                    <td className="px-3 py-2 text-right space-x-2">
-                      <button
-                        onClick={function handleEdit() {
-                          handleOpenEdit(job)
-                        }}
-                        className="text-xs text-primary-600 hover:text-primary-900"
-                      >
-                        Edit
-                      </button>
-                      {deleteConfirm === job.id ? (
-                        <>
-                          <button
-                            onClick={function handleConfirmDelete() {
-                              if (job.id) deleteMutation.mutate(job.id)
-                            }}
-                            className="text-xs text-red-600 hover:text-red-800"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            onClick={function handleCancelDelete() {
-                              setDeleteConfirm(null)
-                            }}
-                            className="text-xs text-primary-500"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={function handleDelete() {
-                            setDeleteConfirm(job.id ?? null)
-                          }}
-                          className="text-xs text-red-500 hover:text-red-700"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                  <JobRow
+                    key={jobId}
+                    job={job}
+                    jobId={jobId}
+                    schedule={schedule}
+                    state={state}
+                    delivery={delivery}
+                    isExpanded={isExpanded}
+                    deleteConfirm={deleteConfirm}
+                    onEdit={handleOpenEdit}
+                    onDelete={function handleDelete() {
+                      setDeleteConfirm(jobId)
+                    }}
+                    onConfirmDelete={function handleConfirmDelete() {
+                      if (job.id) deleteMutation.mutate(job.id)
+                    }}
+                    onCancelDelete={function handleCancelDelete() {
+                      setDeleteConfirm(null)
+                    }}
+                    onToggleHistory={function handleToggle() {
+                      toggleHistory(jobId)
+                    }}
+                  />
                 )
               })}
             </tbody>
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+function JobRow(props: {
+  job: CronJob
+  jobId: string
+  schedule: string
+  state: CronJob['state']
+  delivery: CronJob['delivery']
+  isExpanded: boolean
+  deleteConfirm: string | null
+  onEdit: (job: CronJob) => void
+  onDelete: () => void
+  onConfirmDelete: () => void
+  onCancelDelete: () => void
+  onToggleHistory: () => void
+}) {
+  const {
+    job,
+    jobId,
+    schedule,
+    state,
+    delivery,
+    isExpanded,
+    deleteConfirm,
+    onEdit,
+    onDelete,
+    onConfirmDelete,
+    onCancelDelete,
+    onToggleHistory,
+  } = props
+
+  return (
+    <>
+      <tr>
+        <td className="px-3 py-2 text-primary-900">
+          <div className="font-medium">{job.name}</div>
+          {job.description ? (
+            <div className="text-xs text-primary-500 truncate max-w-[200px]">
+              {job.description}
+            </div>
+          ) : null}
+        </td>
+        <td className="px-3 py-2 text-primary-700 tabular-nums">{schedule}</td>
+        <td className="px-3 py-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span
+              className={cn(
+                'text-xs px-1.5 py-0.5 rounded',
+                job.enabled
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-primary-100 text-primary-500',
+              )}
+            >
+              {job.enabled ? 'enabled' : 'disabled'}
+            </span>
+            {state?.lastStatus ? (
+              <span
+                className={cn(
+                  'text-xs px-1.5 py-0.5 rounded',
+                  state.lastStatus === 'ok'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700',
+                )}
+              >
+                {state.lastStatus}
+              </span>
+            ) : null}
+            {state?.consecutiveErrors && state.consecutiveErrors > 0 ? (
+              <span className="text-xs text-red-600">
+                {state.consecutiveErrors}x
+              </span>
+            ) : null}
+          </div>
+          {state?.lastError ? (
+            <div className="text-xs text-red-600 mt-0.5 truncate max-w-[250px]">
+              {state.lastError}
+            </div>
+          ) : null}
+        </td>
+        <td className="px-3 py-2 text-primary-500 text-xs tabular-nums">
+          {state?.lastRunAtMs
+            ? formatRelativeTimeMs(state.lastRunAtMs)
+            : job.lastRun
+              ? formatRelativeTime(job.lastRun)
+              : '\u2014'}
+        </td>
+        <td className="hidden lg:table-cell px-3 py-2 text-primary-500 text-xs tabular-nums">
+          {state?.lastDurationMs
+            ? formatDuration(state.lastDurationMs)
+            : '\u2014'}
+        </td>
+        <td className="hidden lg:table-cell px-3 py-2">
+          <DeliveryBadge
+            delivery={delivery}
+            enabled={job.enabled}
+            jobDeliver={job.deliver}
+            jobChannel={job.channel}
+            jobTo={job.to}
+          />
+        </td>
+        <td className="px-3 py-2 text-right space-x-2">
+          <button
+            onClick={onToggleHistory}
+            className={cn(
+              'text-xs hover:text-primary-900',
+              isExpanded ? 'text-primary-900 font-medium' : 'text-primary-600',
+            )}
+          >
+            History
+          </button>
+          <button
+            onClick={function handleEdit() {
+              onEdit(job)
+            }}
+            className="text-xs text-primary-600 hover:text-primary-900"
+          >
+            Edit
+          </button>
+          {deleteConfirm === jobId ? (
+            <>
+              <button
+                onClick={onConfirmDelete}
+                className="text-xs text-red-600 hover:text-red-800"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={onCancelDelete}
+                className="text-xs text-primary-500"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onDelete}
+              className="text-xs text-red-500 hover:text-red-700"
+            >
+              Delete
+            </button>
+          )}
+        </td>
+      </tr>
+      {isExpanded && job.id ? (
+        <tr>
+          <td colSpan={7} className="px-3 py-0">
+            <RunHistory jobId={job.id} />
+          </td>
+        </tr>
+      ) : null}
+    </>
+  )
+}
+
+function DeliveryBadge(props: {
+  delivery: CronJob['delivery']
+  enabled: boolean
+  jobDeliver?: boolean
+  jobChannel?: string
+  jobTo?: string
+}) {
+  const { delivery, enabled, jobDeliver, jobChannel, jobTo } = props
+
+  // Use delivery object if available, fall back to flat fields
+  const channel = delivery?.channel ?? jobChannel
+  const to = delivery?.to ?? jobTo
+  const deliver = delivery?.deliver ?? jobDeliver
+
+  if (!channel && !deliver) {
+    return <span className="text-xs text-primary-400">\u2014</span>
+  }
+
+  const hasTarget = Boolean(to)
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {channel ? (
+        <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+          {channel}
+        </span>
+      ) : null}
+      {enabled && deliver && !hasTarget ? (
+        <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+          no target
+        </span>
+      ) : null}
+      {to ? (
+        <span className="text-xs text-primary-500 truncate max-w-[120px]">
+          {to}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+function RunHistory(props: { jobId: string }) {
+  const { jobId } = props
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: adminQueryKeys.cronRuns(jobId),
+    queryFn: async function fetchRuns() {
+      const res = await fetch('/api/admin/cron', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'runs', id: jobId }),
+      })
+      if (!res.ok) throw new Error('Failed to fetch run history')
+      return (await res.json()) as CronRunsResponse
+    },
+  })
+
+  const runs = (data?.runs ?? [])
+
+  if (isLoading) {
+    return (
+      <div className="py-3 text-xs text-primary-500">Loading history...</div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="py-3 text-xs text-red-600">
+        {error instanceof Error ? error.message : 'Failed to load'}
+      </div>
+    )
+  }
+
+  if (runs.length === 0) {
+    return (
+      <div className="py-3 text-xs text-primary-500">
+        No run history available
+      </div>
+    )
+  }
+
+  return (
+    <div className="py-3 space-y-2">
+      <div className="text-xs font-medium text-primary-600 mb-1">
+        Recent Runs
+      </div>
+      {runs.map(function renderRun(run, i) {
+        const runKey = run.ts ?? run.sessionId ?? String(i)
+        return (
+          <div
+            key={runKey}
+            className="flex items-start gap-3 text-xs border-l-2 border-primary-200 pl-3 py-1"
+          >
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded shrink-0',
+                run.status === 'ok'
+                  ? 'bg-green-100 text-green-700'
+                  : run.status === 'error'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-primary-100 text-primary-500',
+              )}
+            >
+              {run.status ?? 'unknown'}
+            </span>
+            <div className="min-w-0 flex-1">
+              {run.summary ? (
+                <div className="text-primary-700 line-clamp-2">
+                  {run.summary}
+                </div>
+              ) : null}
+              {run.error ? (
+                <div className="text-red-600 line-clamp-1 mt-0.5">
+                  {run.error}
+                </div>
+              ) : null}
+              <div className="flex items-center gap-2 mt-0.5 text-primary-400">
+                {run.runAtMs ? (
+                  <span>{formatRelativeTimeMs(run.runAtMs)}</span>
+                ) : run.ts ? (
+                  <span>{formatRelativeTime(run.ts)}</span>
+                ) : null}
+                {run.durationMs ? (
+                  <span>{formatDuration(run.durationMs)}</span>
+                ) : null}
+                {run.model ? (
+                  <span className="truncate max-w-[150px]">{run.model}</span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
