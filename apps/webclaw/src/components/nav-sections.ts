@@ -49,9 +49,17 @@ export const navSections: Array<NavSection> = [
     title: 'Agents',
     items: [
       { to: '/admin/fleet', label: 'Fleet', icon: UserGroupIcon },
-      { to: '/admin/workflows', label: 'Workflows', icon: WorkflowSquare01Icon },
+      {
+        to: '/admin/workflows',
+        label: 'Workflows',
+        icon: WorkflowSquare01Icon,
+      },
       { to: '/admin/memory', label: 'Memory', icon: FolderDetailsIcon },
-      { to: '/admin/approvals', label: 'Approvals', icon: CheckmarkBadge01Icon },
+      {
+        to: '/admin/approvals',
+        label: 'Approvals',
+        icon: CheckmarkBadge01Icon,
+      },
     ],
   },
   {

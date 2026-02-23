@@ -134,6 +134,8 @@ export type FleetAgent = {
   writes: Array<string>
   status?: 'idle' | 'active' | 'spawned'
   soul_content?: string
+  soul_preview?: string
+  last_active?: string | null
 }
 
 export type FleetRegistry = {
