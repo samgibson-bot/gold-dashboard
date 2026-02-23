@@ -12,7 +12,7 @@ import type {
 async function readFleetRegistry(): Promise<FleetRegistry | null> {
   try {
     const result = await gatewayRpc<{ content?: string }>('fs.readFile', {
-      path: 'fleet/registry.json',
+      path: '.openclaw/fleet/registry.json',
     })
     if (!result?.content) return null
     return JSON.parse(result.content) as FleetRegistry
