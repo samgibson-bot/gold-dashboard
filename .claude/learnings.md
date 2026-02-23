@@ -41,6 +41,22 @@
 - `gatewayRpc<T>()` returns `T` (non-nullable) — `result?.foo` is always a lint error; use `result.foo`
 - After a full lint pass, the codebase should stay clean — future sessions can run `pnpm lint` to verify
 
+## 2026-02-22 — Cron History Bug: d.map is not a function
+
+**What was fixed:**
+- Clicking "History" on a cron job threw `d.map is not a function`
+- Root cause: `cron.runs` gateway RPC returns `{ runs: [...] }` (a wrapper object), but the API route was passing the whole object as `runs` in the JSON response. Frontend received `data.runs = { runs: [...] }` — an object, not an array.
+- Fix: extract `result.runs` from the RPC result before returning it, matching how `cron.list` is handled (`data?.cron?.jobs`)
+
+**What was tricky:**
+- Nothing — once the RPC response shape was recognized, fix was one-liner
+
+**Patterns worth carrying forward:**
+- All gateway RPC responses are wrapper objects — always check what shape the RPC returns before passing it to the frontend. `cron.list` → `{ jobs, running }`, `cron.runs` → `{ runs }`
+- Use `result.runs ?? []` as a safe default so empty history doesn't blow up
+
+---
+
 ## 2026-02-22 — Cron Health Monitoring
 
 **What was built:**
