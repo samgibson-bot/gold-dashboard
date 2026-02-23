@@ -4,6 +4,12 @@ import { useState } from 'react'
 import type { CronJob, CronRunEntry } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { Button } from '@/components/ui/button'
+import {
+  TooltipContent,
+  TooltipProvider,
+  TooltipRoot,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import {
   formatDuration,
@@ -431,32 +437,57 @@ function JobRow(props: {
         <td className="px-3 py-2 text-primary-700 tabular-nums">{schedule}</td>
         <td className="px-3 py-2">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span
-              className={cn(
-                'text-xs px-1.5 py-0.5 rounded',
-                job.enabled
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-primary-100 text-primary-500',
-              )}
-            >
-              {job.enabled ? 'enabled' : 'disabled'}
-            </span>
+            <TooltipProvider>
+              <TooltipRoot>
+                <TooltipTrigger
+                  className={cn(
+                    'text-xs px-1.5 py-0.5 rounded',
+                    job.enabled
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-primary-100 text-primary-500',
+                  )}
+                >
+                  {job.enabled ? 'enabled' : 'disabled'}
+                </TooltipTrigger>
+                <TooltipContent>
+                  {job.enabled
+                    ? 'Job is scheduled and will run automatically'
+                    : 'Job is paused and will not run until re-enabled'}
+                </TooltipContent>
+              </TooltipRoot>
+            </TooltipProvider>
             {state?.lastStatus ? (
-              <span
-                className={cn(
-                  'text-xs px-1.5 py-0.5 rounded',
-                  state.lastStatus === 'ok'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700',
-                )}
-              >
-                {state.lastStatus}
-              </span>
+              <TooltipProvider>
+                <TooltipRoot>
+                  <TooltipTrigger
+                    className={cn(
+                      'text-xs px-1.5 py-0.5 rounded',
+                      state.lastStatus === 'ok'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700',
+                    )}
+                  >
+                    {state.lastStatus}
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {state.lastStatus === 'ok'
+                      ? 'Last run completed successfully'
+                      : 'Last run failed — see error message below'}
+                  </TooltipContent>
+                </TooltipRoot>
+              </TooltipProvider>
             ) : null}
             {state?.consecutiveErrors && state.consecutiveErrors > 0 ? (
-              <span className="text-xs text-red-600">
-                {state.consecutiveErrors}x
-              </span>
+              <TooltipProvider>
+                <TooltipRoot>
+                  <TooltipTrigger className="text-xs text-red-600">
+                    {state.consecutiveErrors}x
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`${state.consecutiveErrors} consecutive failure${state.consecutiveErrors > 1 ? 's' : ''} without a successful run`}
+                  </TooltipContent>
+                </TooltipRoot>
+              </TooltipProvider>
             ) : null}
           </div>
           {state?.lastError ? (
