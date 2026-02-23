@@ -23,6 +23,23 @@
 - When merging a PR that other PRs depend on, immediately rebase the dependent branches before they get auto-closed
 - TanStack Router's routeTree.gen.ts can be pre-populated for TypeScript, with Vite handling the authoritative regeneration at build time
 
+## 2026-02-22 — Cron Health Monitoring
+
+**What was built:**
+- Cron page overhaul: health summary banner (red/amber for failing/missing-delivery jobs), enhanced 7-column table with health badges (ok/error + consecutive error count + last error text), last run relative time, duration, delivery channel/target with "no target" warning on enabled jobs
+- Expandable run history per job — fetches `cron.runs` RPC on demand, shows status, summary, model, timestamp, duration
+- API route extended: POST `/api/admin/cron` now dispatches on `action` field — `action: 'runs'` calls `cron.runs`, default falls through to `cron.create` (backward compatible)
+- New types: `CronJobState`, `CronJobDelivery`, `CronRunEntry` in types.ts
+- New format helpers: `formatDuration` (ms → "8.5s"), `formatRelativeTimeMs` (epoch ms → relative)
+
+**What was tricky:**
+- Nothing required multiple attempts. Lint flagged one subtle TypeScript narrowing issue: `a?.b && !a?.c` — after `a?.b` is truthy, TypeScript knows `a` is non-null so `a?.c` becomes `a.c`. The `?.` on the second access is flagged as unnecessary. Quick fix.
+
+**Patterns worth carrying forward:**
+- Gateway `cron.list` response includes rich `state` and `delivery` objects — the dashboard was previously ignoring all of it
+- POST dispatch on `action` field is a clean way to add RPC calls to an existing API route without proliferating endpoints
+- TypeScript narrows optional chain: after `obj?.prop` is truthy in a conditional, the object is non-null in the falsy branch too — second `?.` on same object is lint error
+
 ## 2026-02-22 — Fleet Page Redesign + Gateway fs.* Debugging (PRs #20, #21, #22)
 
 **What was built:**
