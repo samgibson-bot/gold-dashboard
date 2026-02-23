@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { ActivityEvent } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
+import { formatRelativeTime } from '@/lib/format'
 
 type ActivityResponse = {
   ok: boolean
@@ -134,7 +135,7 @@ function ActivityPage() {
                   ) : null}
                 </div>
                 <div className="text-xs text-primary-400 flex-shrink-0 tabular-nums">
-                  {formatTimestamp(event.timestamp)}
+                  {formatRelativeTime(event.timestamp)}
                 </div>
               </div>
             )
@@ -143,23 +144,4 @@ function ActivityPage() {
       )}
     </div>
   )
-}
-
-function formatTimestamp(ts: string): string {
-  try {
-    const date = new Date(ts)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMin = Math.floor(diffMs / 60_000)
-
-    if (diffMin < 1) return 'just now'
-    if (diffMin < 60) return `${diffMin}m ago`
-
-    const diffHr = Math.floor(diffMin / 60)
-    if (diffHr < 24) return `${diffHr}h ago`
-
-    return date.toLocaleDateString()
-  } catch {
-    return ts
-  }
 }

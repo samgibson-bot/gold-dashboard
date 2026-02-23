@@ -32,6 +32,18 @@ async function readSoulContent(soulPath: string): Promise<string | null> {
   }
 }
 
+function extractSoulPreview(content: string | null): string | undefined {
+  if (!content) return undefined
+  const lines = content
+    .split('\n')
+    .filter(function nonEmpty(l) {
+      return l.trim().length > 0
+    })
+    .slice(0, 5)
+  const preview = lines.join('\n')
+  return preview.length > 500 ? preview.slice(0, 500) + '…' : preview
+}
+
 export const Route = createFileRoute('/api/admin/fleet')({
   server: {
     handlers: {
@@ -65,15 +77,37 @@ export const Route = createFileRoute('/api/admin/fleet')({
             return String(s.friendlyId ?? s.key ?? '')
           })
 
-          // Enrich agents with status based on active sessions
+          // Batch-read soul previews in parallel
+          const soulContents = await Promise.all(
+            registry.agents.map(function readSoul(agent) {
+              return readSoulContent(agent.soul)
+            }),
+          )
+
+          // Enrich agents with status, soul preview, and last active
           const agents: Array<FleetAgent> = registry.agents.map(
-            function enrichAgent(agent) {
+            function enrichAgent(agent, idx) {
               const isActive = activeSessionKeys.some(function matchAgent(key) {
                 return key.toLowerCase().includes(agent.id)
               })
+
+              // Find most recent session activity for this agent
+              let lastActive: string | null = null
+              for (const s of sessions) {
+                const key = String(s.friendlyId ?? s.key ?? '').toLowerCase()
+                if (key.includes(agent.id) && s.lastActivity) {
+                  const ts = String(s.lastActivity)
+                  if (!lastActive || ts > lastActive) {
+                    lastActive = ts
+                  }
+                }
+              }
+
               return {
                 ...agent,
                 status: isActive ? ('active' as const) : ('idle' as const),
+                soul_preview: extractSoulPreview(soulContents[idx]),
+                last_active: lastActive,
               }
             },
           )
