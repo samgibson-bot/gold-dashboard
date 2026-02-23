@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
-import { gatewayRpc } from '../../server/gateway'
+import {
+  getOpenRouterApiKey,
+  openRouterComplete,
+} from '../../server/openrouter'
 import { sanitizeError } from '../../server/errors'
 
 const FOLLOW_UP_SYSTEM_PROMPT = `You are a helpful assistant that generates follow-up question suggestions.
@@ -52,6 +55,11 @@ export const Route = createFileRoute('/api/follow-ups')({
             } satisfies FollowUpsResponse)
           }
 
+          const apiKey = await getOpenRouterApiKey()
+          if (!apiKey) {
+            return json({ ok: true, suggestions: [] } satisfies FollowUpsResponse)
+          }
+
           const truncatedResponse = responseText.slice(0, 1500)
           const truncatedContext = contextSummary.slice(0, 500)
 
@@ -59,7 +67,7 @@ export const Route = createFileRoute('/api/follow-ups')({
             ? `Context: ${truncatedContext}\n\nAssistant's response:\n${truncatedResponse}`
             : `Assistant's response:\n${truncatedResponse}`
 
-          const result = await gatewayRpc<{ text?: string }>('chat.complete', {
+          const text = await openRouterComplete(apiKey, {
             messages: [
               { role: 'system', content: FOLLOW_UP_SYSTEM_PROMPT },
               { role: 'user', content: userContent },
@@ -68,8 +76,7 @@ export const Route = createFileRoute('/api/follow-ups')({
             temperature: 0.7,
           })
 
-          const text = typeof result.text === 'string' ? result.text : ''
-          const suggestions = parseFollowUps(text)
+          const suggestions = text ? parseFollowUps(text) : []
 
           return json({
             ok: true,

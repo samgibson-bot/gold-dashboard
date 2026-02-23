@@ -42,6 +42,8 @@ import {
 import { useChatMeasurements } from './hooks/use-chat-measurements'
 import { useChatHistory } from './hooks/use-chat-history'
 import { useChatSessions } from './hooks/use-chat-sessions'
+import { useRenameSession } from './hooks/use-rename-session'
+import { useSmartTitle } from './hooks/use-smart-title'
 import type { AttachmentFile } from '@/components/attachment-button'
 import type { ChatComposerHelpers } from './components/chat-composer'
 import type { HistoryResponse } from './types'
@@ -87,6 +89,7 @@ export function ChatScreen({
   const lastAssistantSignature = useRef('')
   const refreshHistoryRef = useRef<() => void>(() => {})
   const pendingStartRef = useRef(false)
+  const titleGeneratedRef = useRef(new Set<string>())
   const {
     sessionsQuery,
     sessions,
@@ -114,6 +117,9 @@ export function ChatScreen({
     sessionsReady: sessionsQuery.isSuccess,
     queryClient,
   })
+
+  const { renameSession } = useRenameSession()
+  const { generateTitle } = useSmartTitle()
 
   const { exportConversation } = useExport({
     currentFriendlyId: activeFriendlyId,
@@ -271,6 +277,39 @@ export function ChatScreen({
       }, 4000)
     }
   }, [historyMessages, streamFinish])
+
+  useEffect(() => {
+    if (isNewChat || isRedirecting) return
+    const sessionKey = forcedSessionKey || resolvedSessionKey || activeSessionKey
+    if (!sessionKey) return
+    // Skip if the session already has a user-set label
+    if (activeSession?.label) return
+    // Only trigger on first exchange: exactly 1 user message + at least 1 assistant message
+    const userMessages = historyMessages.filter((m) => m.role === 'user')
+    const assistantMessages = historyMessages.filter((m) => m.role === 'assistant')
+    if (userMessages.length !== 1 || assistantMessages.length === 0) return
+    if (titleGeneratedRef.current.has(sessionKey)) return
+    titleGeneratedRef.current.add(sessionKey)
+    const firstUserMessage = userMessages[0] as (typeof historyMessages)[number] | undefined
+    const firstUserText = firstUserMessage ? textFromMessage(firstUserMessage).trim() : ''
+    if (!firstUserText) return
+    void (async () => {
+      const title = await generateTitle(firstUserText)
+      if (title) {
+        await renameSession(sessionKey, title)
+      }
+    })()
+  }, [
+    activeSession?.label,
+    activeSessionKey,
+    forcedSessionKey,
+    generateTitle,
+    historyMessages,
+    isNewChat,
+    isRedirecting,
+    renameSession,
+    resolvedSessionKey,
+  ])
 
   useEffect(() => {
     const resetKey = isNewChat ? 'new' : activeFriendlyId
