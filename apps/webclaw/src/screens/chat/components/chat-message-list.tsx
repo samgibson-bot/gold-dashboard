@@ -82,7 +82,7 @@ function ChatMessageListComponent({
 
   const lastAssistantText = useMemo(() => {
     if (typeof lastAssistantIndex !== 'number') return ''
-    const msg = displayMessages[lastAssistantIndex]
+    const msg = displayMessages[lastAssistantIndex] as (typeof displayMessages)[number] | undefined
     if (!msg || msg.role === 'user') return ''
     return textFromMessage(msg)
   }, [displayMessages, lastAssistantIndex])
@@ -224,7 +224,7 @@ function ChatMessageListComponent({
             )
           })
         )}
-        {showFollowUps && onSuggestionClick ? (
+        {showFollowUps ? (
           <FollowUpSuggestions
             responseText={lastAssistantText}
             onSuggestionClick={onSuggestionClick}

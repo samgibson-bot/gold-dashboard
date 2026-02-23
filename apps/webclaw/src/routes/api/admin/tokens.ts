@@ -84,13 +84,13 @@ export const Route = createFileRoute('/api/admin/tokens')({
             fetchOpenRouterPricing(),
           ])
 
-          const sessions = sessionsData?.sessions ?? []
+          const sessions = sessionsData.sessions ?? []
 
           let totalInput = 0
           let totalOutput = 0
           let totalTokens = 0
           let totalCost = 0
-          const byModel: Record<
+          const byModel: Partial<Record<
             string,
             {
               input: number
@@ -100,7 +100,7 @@ export const Route = createFileRoute('/api/admin/tokens')({
               inputCost: number
               outputCost: number
             }
-          > = {}
+          >> = {}
           const bySession: Array<{
             key: string
             model: string

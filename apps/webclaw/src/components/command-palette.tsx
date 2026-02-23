@@ -277,7 +277,7 @@ export function CommandPalette() {
         )
       } else if (e.key === 'Enter') {
         e.preventDefault()
-        const action = filteredActions[selectedIndex]
+        const action = filteredActions[selectedIndex] as (typeof filteredActions)[number] | undefined
         if (action) {
           action.action()
           setSearch('')

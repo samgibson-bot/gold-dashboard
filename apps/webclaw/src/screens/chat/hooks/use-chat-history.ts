@@ -78,7 +78,7 @@ export function useChatHistory({
     const messages = Array.isArray(historyQuery.data?.messages)
       ? historyQuery.data.messages
       : []
-    const last = messages[messages.length - 1]
+    const last = messages[messages.length - 1] as typeof messages[number] | undefined
     const lastId =
       last && typeof (last as { id?: string }).id === 'string'
         ? (last as { id?: string }).id

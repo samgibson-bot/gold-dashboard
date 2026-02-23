@@ -12,7 +12,7 @@ async function readWebhooks(): Promise<Array<WebhookConfig>> {
     const result = await gatewayRpc<{ content?: string }>('fs.readFile', {
       path: WEBHOOKS_PATH,
     })
-    if (!result?.content) return []
+    if (!result.content) return []
     const data = JSON.parse(result.content)
     return Array.isArray(data.webhooks) ? data.webhooks : []
   } catch {

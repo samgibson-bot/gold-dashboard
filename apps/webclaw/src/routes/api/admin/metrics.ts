@@ -31,19 +31,16 @@ export const Route = createFileRoute('/api/admin/metrics')({
           }
 
           // Build token cost history from usage data
-          const tokenHistory = Array.isArray(
-            (tokensResult as Record<string, unknown>)?.history,
-          )
-            ? (
-                (tokensResult as Record<string, unknown>).history as Array<
-                  Record<string, unknown>
-                >
-              ).map(function mapPoint(h) {
-                return {
-                  date: String(h.date ?? ''),
-                  value: Number(h.cost ?? h.tokens ?? 0),
-                }
-              })
+          const tokensRecord = tokensResult
+          const tokenHistory = Array.isArray(tokensRecord?.history)
+            ? (tokensRecord.history as Array<Record<string, unknown>>).map(
+                function mapPoint(h) {
+                  return {
+                    date: String(h.date ?? ''),
+                    value: Number(h.cost ?? h.tokens ?? 0),
+                  }
+                },
+              )
             : []
 
           // Build fleet utilization from KPIs

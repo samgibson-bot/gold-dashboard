@@ -95,7 +95,7 @@ function isCanvasSupported(): boolean {
   if (typeof document === 'undefined') return false
   try {
     const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext && canvas.getContext('2d'))
+    return Boolean(canvas.getContext('2d'))
   } catch {
     return false
   }

@@ -429,7 +429,7 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
         ) : null}
 
         {/* Related Issues */}
-        <RelatedIssueLinks content={file.content ?? ''} />
+        <RelatedIssueLinks content={file.content} />
 
         {/* Markdown content */}
         <DialogDescription className="sr-only">

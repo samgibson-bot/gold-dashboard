@@ -258,7 +258,7 @@ function RoundtableSteps({ steps }: { steps: Array<WorkflowStep> }) {
   // Steps order: scholar(R1), engineer(R1), muse(R1), scholar(R2), engineer(R2), muse(R2), synthesis
   const round1 = steps.slice(0, 3)
   const round2 = steps.slice(3, 6)
-  const synthesis = steps[6]
+  const synthesis = steps[6] as WorkflowStep | undefined
 
   return (
     <div className="space-y-3">

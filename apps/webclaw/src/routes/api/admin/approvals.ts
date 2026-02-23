@@ -10,7 +10,7 @@ async function listApprovals(): Promise<Array<ApprovalItem>> {
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path: '.openclaw/shared-context/feedback' })
 
-    const entries = result?.entries ?? []
+    const entries = result.entries ?? []
     const approvals: Array<ApprovalItem> = []
 
     for (const entry of entries) {
@@ -21,7 +21,7 @@ async function listApprovals(): Promise<Array<ApprovalItem>> {
           'fs.readFile',
           { path: `.openclaw/shared-context/feedback/${entry.name}` },
         )
-        const content = fileResult?.content ?? ''
+        const content = fileResult.content ?? ''
 
         // Parse YAML frontmatter
         const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
@@ -43,7 +43,7 @@ async function listApprovals(): Promise<Array<ApprovalItem>> {
           agent: getField('agent') || undefined,
           task: getField('task') || undefined,
           status:
-            (getField('decision') as 'approved' | 'rejected') || 'pending',
+            (getField('decision') || 'pending') as 'approved' | 'rejected' | 'pending',
           created: getField('date') || (entry.modified ?? ''),
           reviewer: getField('reviewer') || undefined,
           comment: body || undefined,

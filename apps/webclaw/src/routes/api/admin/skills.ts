@@ -8,7 +8,7 @@ async function readFile(path: string): Promise<string | null> {
     const result = await gatewayRpc<{ content?: string }>('fs.readFile', {
       path,
     })
-    return result?.content ?? null
+    return result.content ?? null
   } catch {
     return null
   }
@@ -21,7 +21,7 @@ async function listDir(
     const result = await gatewayRpc<{
       entries?: Array<{ name: string; type: string; modified?: string }>
     }>('fs.listDir', { path })
-    return result?.entries ?? []
+    return result.entries ?? []
   } catch {
     return []
   }

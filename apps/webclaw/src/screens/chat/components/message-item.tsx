@@ -146,7 +146,7 @@ function imagesFromMessage(msg: GatewayMessage): Array<ImagePart> {
     if (
       part.type === 'image' &&
       'source' in part &&
-      typeof (part as ImagePart).source?.data === 'string'
+      typeof (part as ImagePart).source.data === 'string'
     ) {
       images.push(part as ImagePart)
     }
@@ -170,7 +170,7 @@ function documentsFromMessage(msg: GatewayMessage): Array<DocumentPart> {
     if (
       part.type === 'document' &&
       'source' in part &&
-      typeof (part as DocumentPart).source?.media_type === 'string'
+      typeof (part as DocumentPart).source.media_type === 'string'
     ) {
       docs.push(part as DocumentPart)
     }
