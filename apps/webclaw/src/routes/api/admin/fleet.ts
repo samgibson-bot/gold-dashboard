@@ -1,5 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
+import { readFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { join, isAbsolute } from 'node:path'
 import { gatewayRpc } from '../../../server/gateway'
 import { sanitizeError } from '../../../server/errors'
 import type {
@@ -9,13 +12,22 @@ import type {
   McpTool,
 } from '../../../screens/admin/types'
 
+const OPENCLAW_DIR = join(homedir(), '.openclaw')
+
+function resolveOpenclawPath(p: string): string {
+  if (isAbsolute(p)) return p
+  // Strip leading .openclaw/ prefix if present (soul paths may or may not have it)
+  const stripped = p.startsWith('.openclaw/') ? p.slice('.openclaw/'.length) : p
+  return join(OPENCLAW_DIR, stripped)
+}
+
 async function readFleetRegistry(): Promise<FleetRegistry | null> {
   try {
-    const result = await gatewayRpc<{ content?: string }>('fs.readFile', {
-      path: '.openclaw/fleet/registry.json',
-    })
-    if (!result?.content) return null
-    return JSON.parse(result.content) as FleetRegistry
+    const content = await readFile(
+      join(OPENCLAW_DIR, 'fleet', 'registry.json'),
+      'utf8',
+    )
+    return JSON.parse(content) as FleetRegistry
   } catch {
     return null
   }
@@ -23,10 +35,7 @@ async function readFleetRegistry(): Promise<FleetRegistry | null> {
 
 async function readSoulContent(soulPath: string): Promise<string | null> {
   try {
-    const result = await gatewayRpc<{ content?: string }>('fs.readFile', {
-      path: soulPath,
-    })
-    return result?.content ?? null
+    return await readFile(resolveOpenclawPath(soulPath), 'utf8')
   } catch {
     return null
   }
