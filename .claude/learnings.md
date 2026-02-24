@@ -93,6 +93,34 @@
 - **`openclaw devices list`** (sourcing nvm first) shows exactly what scopes paired devices have — useful for debugging gateway auth
 - **Delete `.device-keys.json` cautiously** — if an existing device key "works" (even with scope errors), deleting it can make things worse if the new pairing lands in a different gateway mode
 
+## 2026-02-23 — Humanize Activity Feed Session Names (PR #26)
+
+**What was built:**
+- Activity feed (`/admin/activity`) now shows human-readable session names instead of raw session keys
+- `sessionDisplayName()` checks `label` → `title` → `derivedTitle` (from smart titles PR #25) before falling back to `humanizeSessionKey()`
+- Fallback mapping: `agent:main:main` → "Main", `:cron:UUID` → "Cron Task", `:ideas` → "Ideas", `agent:main:UUID` → "Chat 7a2b7d84"
+
+**What was tricky:**
+- Nothing — straightforward single-file fix. The activity API was simply not using the label/title fields that smart titles already populate.
+
+**Patterns worth carrying forward:**
+- When gateway `sessions.list` returns session objects, check `label`/`title`/`derivedTitle` before using `friendlyId`/`key` — those fields are set by smart titles and manual renames
+
+## 2026-02-23 — Metrics: Usage by Call + Sortable Headers
+
+**What was built:**
+- New "Usage by Call" table on `/admin/metrics` showing per-day-per-model activity rows from OpenRouter's `/api/v1/activity` endpoint, filtered by the selected time range
+- Sortable column headers on both "Usage by Model" and "Usage by Call" tables — click to toggle asc/desc, ↑/↓/↕ indicators
+- `SortTh` helper component for reusable sortable `<th>` elements
+
+**What was tricky:**
+- Placed `filteredActivity` (which consumed `cutoffStr`) before `cutoffStr` was defined — TypeScript wouldn't have caught this at authoring time since the variable was just a `const` defined later in the same function. Required an extra edit to hoist the range/cutoff/cutoffStr block upward.
+- `import type React from 'react'` must come AFTER regular imports from the same/other packages per this project's `import/order` ESLint rule — type imports go last.
+
+**Patterns worth carrying forward:**
+- When computing derived data that depends on a filter variable, define the filter variable first, even if it was previously at the bottom of the setup block
+- OpenRouter `/api/v1/activity` returns day+model granularity aggregates, not individual API calls — "Usage by Call" is slightly misleading but it's the finest available granularity
+
 ## 2026-02-21 — Skill Routing + Fleet Visibility (PR #17)
 
 **What was built:**
