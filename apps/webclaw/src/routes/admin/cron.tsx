@@ -222,7 +222,7 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Schedule Kind</span>
                 <select
                   name="scheduleKind"
-                  defaultValue={editJob?.scheduleKind ?? 'every'}
+                  defaultValue={editJob?.schedule?.kind ?? editJob?.scheduleKind ?? 'every'}
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 >
                   <option value="every">Every</option>
@@ -244,7 +244,7 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Every Amount</span>
                 <input
                   name="everyAmount"
-                  defaultValue={editJob?.everyAmount ?? ''}
+                  defaultValue={String(editJob?.schedule?.amount ?? editJob?.everyAmount ?? '')}
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 />
               </label>
@@ -252,7 +252,7 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Every Unit</span>
                 <input
                   name="everyUnit"
-                  defaultValue={editJob?.everyUnit ?? ''}
+                  defaultValue={String(editJob?.schedule?.unit ?? editJob?.everyUnit ?? '')}
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 />
               </label>
@@ -260,7 +260,7 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Cron Expr</span>
                 <input
                   name="cronExpr"
-                  defaultValue={editJob?.cronExpr ?? ''}
+                  defaultValue={editJob?.schedule?.expr ?? editJob?.cronExpr ?? ''}
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 />
               </label>
@@ -348,12 +348,17 @@ function CronPage() {
             </thead>
             <tbody className="divide-y divide-primary-100">
               {jobs.map(function renderJob(job, i) {
+                const scheduleKind =
+                  job.schedule?.kind ?? job.scheduleKind
                 const schedule =
-                  job.scheduleKind === 'cron'
-                    ? (job.cronExpr ?? '\u2014')
-                    : job.scheduleKind === 'every'
-                      ? `${job.everyAmount ?? ''} ${job.everyUnit ?? ''}`
-                      : (job.scheduleAt ?? '\u2014')
+                  scheduleKind === 'cron'
+                    ? (job.schedule?.expr ?? job.cronExpr ?? '\u2014')
+                    : scheduleKind === 'every'
+                      ? (
+                          `${job.schedule?.amount ?? job.everyAmount ?? ''} ${job.schedule?.unit ?? job.everyUnit ?? ''}`.trim() ||
+                          '\u2014'
+                        )
+                      : (job.schedule?.at ?? job.scheduleAt ?? '\u2014')
 
                 const state = job.state
                 const delivery = job.delivery
