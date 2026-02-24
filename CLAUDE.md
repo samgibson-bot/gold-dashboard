@@ -163,6 +163,15 @@ apps/webclaw/src/
 - Base path: `homedir() + '/.openclaw/'`
 - Fleet: `routes/api/admin/fleet.ts` uses this pattern — copy it for any new file reads
 
+### Gateway RPC Response Shapes — Verify Before Coding
+- **Do NOT assume flat field names** from gateway RPCs — the actual response may use nested objects
+- Example: `cron.list` returns `schedule: { kind, expr, tz, amount, unit }`, NOT flat `scheduleKind`/`cronExpr`
+- **Always SSH + curl the real API** when building a new feature against a gateway RPC:
+  ```bash
+  ssh claw@100.77.85.46 "curl -s http://localhost:3000/api/admin/<endpoint>" | head -c 2000
+  ```
+- Then update both the TypeScript type AND the field access to match the real shape
+
 ### Ideas System
 - All submissions use AI analysis — no static path
 - Flow: Submit → OpenClaw `ideas` session → research → GitHub issue + roadmap
