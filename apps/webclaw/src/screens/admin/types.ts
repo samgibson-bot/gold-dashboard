@@ -60,13 +60,25 @@ export type CronRunEntry = {
   sessionKey?: string
 }
 
+export type CronJobSchedule = {
+  kind?: 'every' | 'cron' | 'once'
+  expr?: string
+  tz?: string
+  amount?: string | number
+  unit?: string
+  at?: string
+}
+
 export type CronJob = {
   id?: string
   name: string
   description?: string
   agentId?: string
   enabled: boolean
-  scheduleKind: 'every' | 'cron' | 'once'
+  // Nested schedule object (gateway format)
+  schedule?: CronJobSchedule
+  // Flat fields (form/legacy format)
+  scheduleKind?: 'every' | 'cron' | 'once'
   scheduleAt?: string
   everyAmount?: string
   everyUnit?: string
