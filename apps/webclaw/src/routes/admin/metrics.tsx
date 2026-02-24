@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import type React from 'react'
 import type { MetricPoint } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { cn } from '@/lib/utils'
@@ -37,13 +38,29 @@ type ModelUsage = {
   provider_name: string
 }
 
+type ActivityItem = {
+  date: string
+  model: string
+  provider_name: string
+  usage: number
+  requests: number
+  prompt_tokens: number
+  completion_tokens: number
+  reasoning_tokens: number
+}
+
 type TokensResponse = {
   ok: boolean
   error?: string
   balance: OpenRouterBalance | null
   byModel: Record<string, ModelUsage>
   costByDay: Array<{ date: string; value: number }>
+  activity: Array<ActivityItem>
 }
+
+type SortDir = 'asc' | 'desc'
+type ModelSortCol = 'model' | 'requests' | 'input' | 'output' | 'cost'
+type CallSortCol = 'date' | 'model' | 'requests' | 'input' | 'output' | 'cost'
 
 const TIME_RANGES = [
   { value: '24h', label: '24h' },
@@ -76,6 +93,8 @@ export const Route = createFileRoute('/admin/metrics')({
 
 function MetricsPage() {
   const [range, setRange] = useState('7d')
+  const [modelSort, setModelSort] = useState<{ col: ModelSortCol; dir: SortDir }>({ col: 'cost', dir: 'desc' })
+  const [callSort, setCallSort] = useState<{ col: CallSortCol; dir: SortDir }>({ col: 'date', dir: 'desc' })
 
   const metricsQuery = useQuery({
     queryKey: adminQueryKeys.metrics(range),
@@ -127,11 +146,56 @@ function MetricsPage() {
   const byModel = tokensQuery.data?.byModel ?? {}
   const allCostByDay = tokensQuery.data?.costByDay ?? []
 
-  const modelEntries = Object.entries(byModel).sort(
-    (a, b) => b[1].usage - a[1].usage,
-  )
+  const rangedays =
+    range === '24h' ? 1 : range === '7d' ? 7 : range === '30d' ? 30 : 30
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - rangedays)
+  const cutoffStr = cutoff.toISOString().slice(0, 10)
+  const costByDay = allCostByDay.filter(function filterDay(d) {
+    return d.date >= cutoffStr
+  })
 
-  const pieData = modelEntries
+  const rawModelEntries = Object.entries(byModel)
+
+  function handleModelSort(col: ModelSortCol) {
+    setModelSort((prev) =>
+      prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' },
+    )
+  }
+
+  function handleCallSort(col: CallSortCol) {
+    setCallSort((prev) =>
+      prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' },
+    )
+  }
+
+  const modelEntries = [...rawModelEntries].sort((a, b) => {
+    const [am, au] = a
+    const [bm, bu] = b
+    let cmp = 0
+    if (modelSort.col === 'model') cmp = am.localeCompare(bm)
+    else if (modelSort.col === 'requests') cmp = au.requests - bu.requests
+    else if (modelSort.col === 'input') cmp = au.prompt_tokens - bu.prompt_tokens
+    else if (modelSort.col === 'output') cmp = au.completion_tokens - bu.completion_tokens
+    else cmp = au.usage - bu.usage
+    return modelSort.dir === 'asc' ? cmp : -cmp
+  })
+
+  const allActivity = tokensQuery.data?.activity ?? []
+  const filteredActivity = allActivity.filter((item) => item.date >= cutoffStr)
+
+  const sortedActivity = [...filteredActivity].sort((a, b) => {
+    let cmp = 0
+    if (callSort.col === 'date') cmp = a.date.localeCompare(b.date)
+    else if (callSort.col === 'model') cmp = a.model.localeCompare(b.model)
+    else if (callSort.col === 'requests') cmp = a.requests - b.requests
+    else if (callSort.col === 'input') cmp = a.prompt_tokens - b.prompt_tokens
+    else if (callSort.col === 'output') cmp = a.completion_tokens - b.completion_tokens
+    else cmp = a.usage - b.usage
+    return callSort.dir === 'asc' ? cmp : -cmp
+  })
+
+  const pieData = rawModelEntries
     .filter(([, u]) => u.usage > 0)
     .map(([model, u]) => ({
       name: model,
@@ -147,15 +211,6 @@ function MetricsPage() {
     (s, m) => s + m.requests,
     0,
   )
-
-  const rangedays =
-    range === '24h' ? 1 : range === '7d' ? 7 : range === '30d' ? 30 : 30
-  const cutoff = new Date()
-  cutoff.setDate(cutoff.getDate() - rangedays)
-  const cutoffStr = cutoff.toISOString().slice(0, 10)
-  const costByDay = allCostByDay.filter(function filterDay(d) {
-    return d.date >= cutoffStr
-  })
 
   return (
     <div className="p-6 space-y-6">
@@ -317,21 +372,11 @@ function MetricsPage() {
             <table className="w-full text-sm">
               <thead className="bg-primary-50 border-b border-primary-200">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-primary-700">
-                    Model
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Requests
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Input
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Output
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Cost
-                  </th>
+                  <SortTh align="left" active={modelSort.col === 'model'} dir={modelSort.dir} onClick={function () { handleModelSort('model') }}>Model</SortTh>
+                  <SortTh align="right" active={modelSort.col === 'requests'} dir={modelSort.dir} onClick={function () { handleModelSort('requests') }}>Requests</SortTh>
+                  <SortTh align="right" active={modelSort.col === 'input'} dir={modelSort.dir} onClick={function () { handleModelSort('input') }}>Input</SortTh>
+                  <SortTh align="right" active={modelSort.col === 'output'} dir={modelSort.dir} onClick={function () { handleModelSort('output') }}>Output</SortTh>
+                  <SortTh align="right" active={modelSort.col === 'cost'} dir={modelSort.dir} onClick={function () { handleModelSort('cost') }}>Cost</SortTh>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary-100">
@@ -359,6 +404,53 @@ function MetricsPage() {
           </div>
         ) : (
           <EmptySection message="No model usage data available yet" />
+        )}
+      </div>
+
+      {/* Usage by Call */}
+      <div>
+        <h2 className="text-sm font-medium text-primary-900 mb-3">
+          Usage by Call
+        </h2>
+        {sortedActivity.length > 0 ? (
+          <div className="border border-primary-200 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-primary-50 border-b border-primary-200">
+                <tr>
+                  <SortTh align="left" active={callSort.col === 'date'} dir={callSort.dir} onClick={function () { handleCallSort('date') }}>Date</SortTh>
+                  <SortTh align="left" active={callSort.col === 'model'} dir={callSort.dir} onClick={function () { handleCallSort('model') }}>Model</SortTh>
+                  <SortTh align="right" active={callSort.col === 'requests'} dir={callSort.dir} onClick={function () { handleCallSort('requests') }}>Requests</SortTh>
+                  <SortTh align="right" active={callSort.col === 'input'} dir={callSort.dir} onClick={function () { handleCallSort('input') }}>Input</SortTh>
+                  <SortTh align="right" active={callSort.col === 'output'} dir={callSort.dir} onClick={function () { handleCallSort('output') }}>Output</SortTh>
+                  <SortTh align="right" active={callSort.col === 'cost'} dir={callSort.dir} onClick={function () { handleCallSort('cost') }}>Cost</SortTh>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-primary-100">
+                {sortedActivity.map(function renderCall(item, i) {
+                  return (
+                    <tr key={`${item.date}-${item.model}-${i}`}>
+                      <td className="px-3 py-2 text-primary-500 tabular-nums">{item.date}</td>
+                      <td className="px-3 py-2 text-primary-900">{item.model}</td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {item.requests.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {item.prompt_tokens.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {item.completion_tokens.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums font-medium">
+                        {formatCost(item.usage)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptySection message="No activity data for this period" />
         )}
       </div>
 
@@ -396,6 +488,38 @@ function MetricsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+function SortTh(props: {
+  children: React.ReactNode
+  align: 'left' | 'right'
+  active: boolean
+  dir: SortDir
+  onClick: () => void
+}) {
+  return (
+    <th
+      className={cn(
+        'px-3 py-2 font-medium text-primary-700 cursor-pointer select-none hover:text-primary-900 transition-colors',
+        props.align === 'right' ? 'text-right' : 'text-left',
+      )}
+      onClick={props.onClick}
+    >
+      <span className="inline-flex items-center gap-1">
+        {props.align === 'right' && (
+          <span className={cn('text-[10px]', props.active ? 'text-primary-700' : 'text-primary-300')}>
+            {props.active ? (props.dir === 'asc' ? '↑' : '↓') : '↕'}
+          </span>
+        )}
+        {props.children}
+        {props.align === 'left' && (
+          <span className={cn('text-[10px]', props.active ? 'text-primary-700' : 'text-primary-300')}>
+            {props.active ? (props.dir === 'asc' ? '↑' : '↓') : '↕'}
+          </span>
+        )}
+      </span>
+    </th>
   )
 }
 
