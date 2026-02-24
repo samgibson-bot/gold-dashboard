@@ -19,37 +19,30 @@ type MetricsResponse = {
   tokens?: Record<string, unknown>
 }
 
-type TokenStats = {
-  totalInput: number
-  totalOutput: number
-  totalTokens: number
-  totalCost: number
-  sessionCount: number
-  byModel: Record<
-    string,
-    {
-      input: number
-      output: number
-      total: number
-      cost: number
-      inputCost: number
-      outputCost: number
-    }
-  >
-  bySession: Array<{
-    key: string
-    model: string
-    input: number
-    output: number
-    total: number
-    cost: number
-  }>
+type OpenRouterBalance = {
+  usage: number
+  usage_daily: number
+  usage_weekly: number
+  usage_monthly: number
+  limit: number | null
+  limit_remaining: number | null
+}
+
+type ModelUsage = {
+  usage: number
+  requests: number
+  prompt_tokens: number
+  completion_tokens: number
+  reasoning_tokens: number
+  provider_name: string
 }
 
 type TokensResponse = {
   ok: boolean
   error?: string
-  stats?: TokenStats
+  balance: OpenRouterBalance | null
+  byModel: Record<string, ModelUsage>
+  costByDay: Array<{ date: string; value: number }>
 }
 
 const TIME_RANGES = [
@@ -76,11 +69,6 @@ function formatCost(cost: number): string {
   return `$${cost.toFixed(4)}`
 }
 
-function formatNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
-  return String(n)
-}
 
 export const Route = createFileRoute('/admin/metrics')({
   component: MetricsPage,
@@ -135,18 +123,39 @@ function MetricsPage() {
     string,
     Record<string, unknown>
   > | null
-  const stats = tokensQuery.data?.stats
+  const balance = tokensQuery.data?.balance
+  const byModel = tokensQuery.data?.byModel ?? {}
+  const allCostByDay = tokensQuery.data?.costByDay ?? []
 
-  const modelEntries = stats
-    ? Object.entries(stats.byModel).sort((a, b) => b[1].cost - a[1].cost)
-    : []
+  const modelEntries = Object.entries(byModel).sort(
+    (a, b) => b[1].usage - a[1].usage,
+  )
 
   const pieData = modelEntries
-    .filter(([, usage]) => usage.cost > 0)
-    .map(([model, usage]) => ({
+    .filter(([, u]) => u.usage > 0)
+    .map(([model, u]) => ({
       name: model,
-      value: usage.cost,
+      value: u.usage,
     }))
+
+  const totalCost = Object.values(byModel).reduce((s, m) => s + m.usage, 0)
+  const totalTokens = Object.values(byModel).reduce(
+    (s, m) => s + m.prompt_tokens + m.completion_tokens + m.reasoning_tokens,
+    0,
+  )
+  const totalRequests = Object.values(byModel).reduce(
+    (s, m) => s + m.requests,
+    0,
+  )
+
+  const rangedays =
+    range === '24h' ? 1 : range === '7d' ? 7 : range === '30d' ? 30 : 30
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - rangedays)
+  const cutoffStr = cutoff.toISOString().slice(0, 10)
+  const costByDay = allCostByDay.filter(function filterDay(d) {
+    return d.date >= cutoffStr
+  })
 
   return (
     <div className="p-6 space-y-6">
@@ -217,24 +226,24 @@ function MetricsPage() {
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <PlaceholderCard
-            label="Total Cost"
-            value={stats ? formatCost(stats.totalCost) : null}
+            label="Total Cost (30d)"
+            value={tokensQuery.data ? formatCost(totalCost) : null}
+          />
+          <PlaceholderCard
+            label="Today"
+            value={balance ? formatCost(balance.usage_daily) : null}
+          />
+          <PlaceholderCard
+            label="This Month"
+            value={balance ? formatCost(balance.usage_monthly) : null}
           />
           <PlaceholderCard
             label="Total Tokens"
-            value={stats ? stats.totalTokens.toLocaleString() : null}
+            value={tokensQuery.data ? totalTokens.toLocaleString() : null}
           />
           <PlaceholderCard
-            label="Input Tokens"
-            value={stats ? stats.totalInput.toLocaleString() : null}
-          />
-          <PlaceholderCard
-            label="Output Tokens"
-            value={stats ? stats.totalOutput.toLocaleString() : null}
-          />
-          <PlaceholderCard
-            label="Sessions"
-            value={stats ? String(stats.sessionCount) : null}
+            label="Requests"
+            value={tokensQuery.data ? totalRequests.toLocaleString() : null}
           />
         </div>
       </div>
@@ -289,9 +298,9 @@ function MetricsPage() {
         <h2 className="text-sm font-medium text-primary-900 mb-3">
           Cost Trend
         </h2>
-        {metrics?.token_costs && metrics.token_costs.length > 0 ? (
+        {costByDay.length > 0 ? (
           <div className="rounded-lg border border-primary-200 bg-surface p-4">
-            <SimpleBarChart data={metrics.token_costs} />
+            <SimpleBarChart data={costByDay} />
           </div>
         ) : (
           <EmptySection message="No cost trend data available yet" />
@@ -312,13 +321,13 @@ function MetricsPage() {
                     Model
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Requests
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
                     Input
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-primary-700">
                     Output
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Total
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-primary-700">
                     Cost
@@ -326,21 +335,21 @@ function MetricsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary-100">
-                {modelEntries.map(function renderModel([model, usage]) {
+                {modelEntries.map(function renderModel([model, u]) {
                   return (
                     <tr key={model}>
                       <td className="px-3 py-2 text-primary-900">{model}</td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {usage.input.toLocaleString()}
+                        {u.requests.toLocaleString()}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {usage.output.toLocaleString()}
+                        {u.prompt_tokens.toLocaleString()}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {usage.total.toLocaleString()}
+                        {u.completion_tokens.toLocaleString()}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums font-medium">
-                        {formatCost(usage.cost)}
+                        {formatCost(u.usage)}
                       </td>
                     </tr>
                   )
@@ -350,69 +359,6 @@ function MetricsPage() {
           </div>
         ) : (
           <EmptySection message="No model usage data available yet" />
-        )}
-      </div>
-
-      {/* By Session Table */}
-      <div>
-        <h2 className="text-sm font-medium text-primary-900 mb-3">
-          Usage by Session
-        </h2>
-        {stats && stats.bySession.length > 0 ? (
-          <div className="border border-primary-200 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-primary-50 border-b border-primary-200">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium text-primary-700">
-                    Session
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-primary-700">
-                    Model
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Input
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Output
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Total
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Cost
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-primary-100">
-                {stats.bySession.map(function renderSession(entry) {
-                  return (
-                    <tr key={entry.key}>
-                      <td className="px-3 py-2 text-primary-900 truncate max-w-[200px]">
-                        {entry.key}
-                      </td>
-                      <td className="px-3 py-2 text-primary-700 truncate max-w-[150px]">
-                        {entry.model}
-                      </td>
-                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {entry.input.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {entry.output.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {entry.total.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums font-medium">
-                        {formatCost(entry.cost)}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <EmptySection message="No session usage data available yet" />
         )}
       </div>
 
