@@ -12,7 +12,9 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import {
+  formatCronSchedule,
   formatDuration,
+  formatEverySchedule,
   formatRelativeTime,
   formatRelativeTimeMs,
 } from '@/lib/format'
@@ -352,11 +354,14 @@ function CronPage() {
                   job.schedule?.kind ?? job.scheduleKind
                 const schedule =
                   scheduleKind === 'cron'
-                    ? (job.schedule?.expr ?? job.cronExpr ?? '\u2014')
+                    ? formatCronSchedule(
+                        job.schedule?.expr ?? job.cronExpr ?? '',
+                        job.schedule?.tz ?? job.cronTz ?? 'UTC',
+                      )
                     : scheduleKind === 'every'
-                      ? (
-                          `${job.schedule?.amount ?? job.everyAmount ?? ''} ${job.schedule?.unit ?? job.everyUnit ?? ''}`.trim() ||
-                          '\u2014'
+                      ? formatEverySchedule(
+                          job.schedule?.amount ?? job.everyAmount,
+                          job.schedule?.unit ?? job.everyUnit,
                         )
                       : (job.schedule?.at ?? job.scheduleAt ?? '\u2014')
 
