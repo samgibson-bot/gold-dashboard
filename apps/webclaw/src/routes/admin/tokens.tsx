@@ -4,54 +4,68 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { StatusCard } from '@/components/ui/status-card'
 
-type TokenStats = {
-  totalInput: number
-  totalOutput: number
-  totalTokens: number
-  totalCost: number
-  sessionCount: number
-  byModel: Record<
-    string,
-    {
-      input: number
-      output: number
-      total: number
-      cost: number
-      inputCost: number
-      outputCost: number
-    }
-  >
-  bySession: Array<{
-    key: string
-    model: string
-    input: number
-    output: number
-    total: number
-    cost: number
-  }>
+type OpenRouterBalance = {
+  label: string
+  limit: number | null
+  limit_reset: string | null
+  limit_remaining: number | null
+  usage: number
+  usage_daily: number
+  usage_weekly: number
+  usage_monthly: number
+  is_free_tier: boolean
 }
 
-type TokensResponse = {
+type ModelUsage = {
+  usage: number
+  requests: number
+  prompt_tokens: number
+  completion_tokens: number
+  reasoning_tokens: number
+  provider_name: string
+}
+
+type ActivityItem = {
+  date: string
+  model: string
+  provider_name: string
+  usage: number
+  requests: number
+  prompt_tokens: number
+  completion_tokens: number
+  reasoning_tokens: number
+}
+
+type OpenRouterUsageResponse = {
   ok: boolean
   error?: string
-  stats?: TokenStats
+  balance: OpenRouterBalance | null
+  byModel: Record<string, ModelUsage>
+  costByDay: Array<{ date: string; value: number }>
+  activity: Array<ActivityItem>
 }
 
 const CHART_COLORS = [
-  '#2563eb', // blue-600
-  '#7c3aed', // violet-600
-  '#db2777', // pink-600
-  '#ea580c', // orange-600
-  '#16a34a', // green-600
-  '#0891b2', // cyan-600
-  '#4f46e5', // indigo-600
-  '#9333ea', // purple-600
+  '#2563eb',
+  '#7c3aed',
+  '#db2777',
+  '#ea580c',
+  '#16a34a',
+  '#0891b2',
+  '#4f46e5',
+  '#9333ea',
 ]
 
 function formatCost(cost: number): string {
   if (cost === 0) return '$0.00'
   if (cost < 0.01) return `$${cost.toFixed(6)}`
   return `$${cost.toFixed(4)}`
+}
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+  return String(n)
 }
 
 export const Route = createFileRoute('/admin/tokens')({
@@ -64,7 +78,7 @@ function TokensPage() {
     queryFn: async function fetchTokens() {
       const res = await fetch('/api/admin/tokens')
       if (!res.ok) throw new Error('Failed to fetch token usage')
-      return (await res.json()) as TokensResponse
+      return (await res.json()) as OpenRouterUsageResponse
     },
     refetchInterval: 60_000,
   })
@@ -87,27 +101,36 @@ function TokensPage() {
     )
   }
 
-  const stats = data?.stats
-
-  if (!stats) {
+  if (!data?.ok) {
     return (
       <div className="p-6">
-        <div className="text-sm text-primary-500">No usage data available.</div>
+        <div className="text-sm text-primary-500">
+          {data?.error ?? 'No usage data available. Add OPENROUTER_API_KEY and OPENROUTER_MANAGEMENT_KEY to your environment.'}
+        </div>
       </div>
     )
   }
 
-  const modelEntries = Object.entries(stats.byModel).sort(
-    (a, b) => b[1].cost - a[1].cost,
+  const { balance, byModel, costByDay, activity } = data
+
+  const modelEntries = Object.entries(byModel).sort(
+    (a, b) => b[1].usage - a[1].usage,
   )
 
-  // Prepare pie chart data
   const pieData = modelEntries
-    .filter(([, usage]) => usage.cost > 0)
-    .map(([model, usage]) => ({
-      name: model,
-      value: usage.cost,
-    }))
+    .filter(([, u]) => u.usage > 0)
+    .map(([model, u]) => ({ name: model, value: u.usage }))
+
+  const recentActivity = [...activity]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 14)
+
+  const budgetValue =
+    balance?.limit_remaining != null
+      ? `${formatCost(balance.limit_remaining)} left`
+      : balance?.limit == null && balance != null
+        ? 'Unlimited'
+        : null
 
   return (
     <div className="p-6 space-y-6">
@@ -115,23 +138,40 @@ function TokensPage() {
         Token Usage & Costs
       </h1>
 
+      {/* Balance summary */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatusCard label="Total Cost" value={formatCost(stats.totalCost)} />
         <StatusCard
-          label="Total Tokens"
-          value={stats.totalTokens.toLocaleString()}
+          label="Today"
+          value={balance ? formatCost(balance.usage_daily) : null}
         />
         <StatusCard
-          label="Input Tokens"
-          value={stats.totalInput.toLocaleString()}
+          label="This Week"
+          value={balance ? formatCost(balance.usage_weekly) : null}
         />
         <StatusCard
-          label="Output Tokens"
-          value={stats.totalOutput.toLocaleString()}
+          label="This Month"
+          value={balance ? formatCost(balance.usage_monthly) : null}
         />
-        <StatusCard label="Sessions" value={String(stats.sessionCount)} />
+        <StatusCard
+          label="All-time"
+          value={balance ? formatCost(balance.usage) : null}
+        />
+        <StatusCard label="Budget" value={budgetValue} />
       </div>
 
+      {/* 30-day cost trend */}
+      {costByDay.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-primary-900 mb-3">
+            30-day Cost Trend
+          </h2>
+          <div className="rounded-lg border border-primary-200 bg-surface p-4">
+            <SimpleBarChart data={costByDay} />
+          </div>
+        </div>
+      )}
+
+      {/* Pie chart */}
       {pieData.length > 0 && (
         <div className="border border-primary-200 rounded-lg p-4">
           <h2 className="text-sm font-medium text-primary-900 mb-3">
@@ -172,7 +212,8 @@ function TokensPage() {
         </div>
       )}
 
-      {modelEntries.length > 0 ? (
+      {/* By model table */}
+      {modelEntries.length > 0 && (
         <div>
           <h2 className="text-sm font-medium text-primary-900 mb-3">
             By Model
@@ -184,6 +225,12 @@ function TokensPage() {
                   <th className="px-3 py-2 text-left font-medium text-primary-700">
                     Model
                   </th>
+                  <th className="px-3 py-2 text-left font-medium text-primary-700">
+                    Provider
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium text-primary-700">
+                    Requests
+                  </th>
                   <th className="px-3 py-2 text-right font-medium text-primary-700">
                     Input
                   </th>
@@ -191,29 +238,31 @@ function TokensPage() {
                     Output
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Total
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
                     Cost
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary-100">
-                {modelEntries.map(function renderModel([model, usage]) {
+                {modelEntries.map(function renderModel([model, u]) {
                   return (
                     <tr key={model}>
-                      <td className="px-3 py-2 text-primary-900">{model}</td>
-                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {usage.input.toLocaleString()}
+                      <td className="px-3 py-2 text-primary-900 truncate max-w-[180px]">
+                        {model}
+                      </td>
+                      <td className="px-3 py-2 text-primary-500 truncate max-w-[100px]">
+                        {u.provider_name}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {usage.output.toLocaleString()}
+                        {u.requests.toLocaleString()}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {usage.total.toLocaleString()}
+                        {formatNumber(u.prompt_tokens)}
+                      </td>
+                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
+                        {formatNumber(u.completion_tokens)}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums font-medium">
-                        {formatCost(usage.cost)}
+                        {formatCost(u.usage)}
                       </td>
                     </tr>
                   )
@@ -222,31 +271,29 @@ function TokensPage() {
             </table>
           </div>
         </div>
-      ) : null}
+      )}
 
-      {stats.bySession.length > 0 ? (
+      {/* Daily activity */}
+      {recentActivity.length > 0 && (
         <div>
           <h2 className="text-sm font-medium text-primary-900 mb-3">
-            By Session
+            Daily Activity
           </h2>
           <div className="border border-primary-200 rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-primary-50 border-b border-primary-200">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium text-primary-700">
-                    Session
+                    Date
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-primary-700">
                     Model
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Input
+                  <th className="px-3 py-2 text-left font-medium text-primary-700">
+                    Provider
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Output
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-primary-700">
-                    Total
+                    Requests
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-primary-700">
                     Cost
@@ -254,26 +301,23 @@ function TokensPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary-100">
-                {stats.bySession.map(function renderSession(entry) {
+                {recentActivity.map(function renderRow(row, i) {
                   return (
-                    <tr key={entry.key}>
-                      <td className="px-3 py-2 text-primary-900 truncate max-w-[200px]">
-                        {entry.key}
+                    <tr key={`${row.date}-${row.model}-${i}`}>
+                      <td className="px-3 py-2 text-primary-700 tabular-nums">
+                        {row.date}
                       </td>
-                      <td className="px-3 py-2 text-primary-700 truncate max-w-[150px]">
-                        {entry.model}
+                      <td className="px-3 py-2 text-primary-900 truncate max-w-[180px]">
+                        {row.model}
                       </td>
-                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {entry.input.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {entry.output.toLocaleString()}
+                      <td className="px-3 py-2 text-primary-500 truncate max-w-[100px]">
+                        {row.provider_name}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
-                        {entry.total.toLocaleString()}
+                        {row.requests.toLocaleString()}
                       </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums font-medium">
-                        {formatCost(entry.cost)}
+                        {formatCost(row.usage)}
                       </td>
                     </tr>
                   )
@@ -282,7 +326,39 @@ function TokensPage() {
             </table>
           </div>
         </div>
-      ) : null}
+      )}
+    </div>
+  )
+}
+
+function SimpleBarChart(props: { data: Array<{ date: string; value: number }> }) {
+  const max = Math.max(
+    ...props.data.map(function getVal(d) {
+      return d.value
+    }),
+    1,
+  )
+
+  return (
+    <div className="flex items-end gap-1 h-32">
+      {props.data.map(function renderBar(point, i) {
+        const height = (point.value / max) * 100
+        return (
+          <div
+            key={`${point.date}-${i}`}
+            className="flex-1 flex flex-col items-center gap-1"
+          >
+            <div
+              className="w-full bg-blue-400 rounded-t min-h-[2px]"
+              style={{ height: `${height}%` }}
+              title={`${point.date}: ${formatCost(point.value)}`}
+            />
+            <div className="text-[8px] text-primary-400 truncate w-full text-center">
+              {point.date.slice(-5)}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
