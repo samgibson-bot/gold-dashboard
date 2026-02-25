@@ -73,6 +73,7 @@ export type CronJob = {
   id?: string
   name: string
   description?: string
+  payload?: { kind?: string; message?: string; text?: string }
   agentId?: string
   enabled: boolean
   // Nested schedule object (gateway format)

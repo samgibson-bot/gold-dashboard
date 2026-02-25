@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CronJob, CronRunEntry } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { Button } from '@/components/ui/button'
@@ -44,6 +44,16 @@ function CronPage() {
   const [showForm, setShowForm] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [expandedJob, setExpandedJob] = useState<string | null>(null)
+  const [descValue, setDescValue] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const payloadRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(
+    function resetFormState() {
+      setDescValue(editJob?.description ?? '')
+    },
+    [editJob, showForm],
+  )
 
   const { data, isLoading, error } = useQuery({
     queryKey: adminQueryKeys.cron,
@@ -150,6 +160,25 @@ function CronPage() {
     }
   }
 
+  async function handleGenerateDescription() {
+    const payload = (payloadRef.current?.value ?? '').trim()
+    if (!payload) return
+    setIsGenerating(true)
+    try {
+      const res = await fetch('/api/admin/cron', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'describe', payload }),
+      })
+      const result = (await res.json()) as { ok: boolean; description?: string }
+      if (result.ok && result.description) {
+        setDescValue(result.description)
+      }
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   function toggleHistory(jobId: string) {
     setExpandedJob(function toggle(prev) {
       return prev === jobId ? null : jobId
@@ -233,14 +262,27 @@ function CronPage() {
                 </select>
               </label>
             </div>
-            <label className="block">
-              <span className="text-xs text-primary-600">Description</span>
+            <div className="block">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-primary-600">Description</span>
+                <button
+                  type="button"
+                  onClick={handleGenerateDescription}
+                  disabled={isGenerating}
+                  className="text-xs text-primary-500 hover:text-primary-800 disabled:opacity-40"
+                >
+                  {isGenerating ? 'Generating…' : 'Generate from payload'}
+                </button>
+              </div>
               <input
                 name="description"
-                defaultValue={editJob?.description ?? ''}
-                className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
+                value={descValue}
+                onChange={function onDescChange(e) {
+                  setDescValue(e.target.value)
+                }}
+                className="block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
               />
-            </label>
+            </div>
             <div className="grid grid-cols-3 gap-3">
               <label className="block">
                 <span className="text-xs text-primary-600">Every Amount</span>
@@ -278,8 +320,14 @@ function CronPage() {
             <label className="block">
               <span className="text-xs text-primary-600">Payload</span>
               <textarea
+                ref={payloadRef}
                 name="payloadText"
-                defaultValue={editJob?.payloadText ?? ''}
+                defaultValue={
+                  editJob?.payloadText ??
+                  editJob?.payload?.message ??
+                  editJob?.payload?.text ??
+                  ''
+                }
                 rows={2}
                 className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface font-mono"
               />
@@ -436,10 +484,25 @@ function JobRow(props: {
   return (
     <>
       <tr>
-        <td className="px-3 py-2 text-primary-900">
-          <div className="font-medium">{job.name}</div>
+        <td className="px-3 py-2 text-primary-900 max-w-[260px]">
+          <TooltipProvider>
+            <TooltipRoot>
+              <TooltipTrigger className="font-medium text-left">
+                {job.name}
+              </TooltipTrigger>
+              {(job.payload?.message ?? job.payload?.text ?? job.payloadText) ? (
+                <TooltipContent
+                  side="right"
+                  className="max-w-xs whitespace-normal text-left leading-relaxed"
+                >
+                  {(job.payload?.message ?? job.payload?.text ?? job.payloadText ?? '').slice(0, 300)}
+                  {(job.payload?.message ?? job.payload?.text ?? job.payloadText ?? '').length > 300 ? '…' : ''}
+                </TooltipContent>
+              ) : null}
+            </TooltipRoot>
+          </TooltipProvider>
           {job.description ? (
-            <div className="text-xs text-primary-500 truncate max-w-[200px]">
+            <div className="text-xs text-primary-500 line-clamp-2 mt-0.5">
               {job.description}
             </div>
           ) : null}
