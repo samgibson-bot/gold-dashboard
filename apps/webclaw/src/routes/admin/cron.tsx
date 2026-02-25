@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CronJob, CronRunEntry } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 import { Button } from '@/components/ui/button'
@@ -32,6 +32,23 @@ type CronRunsResponse = {
   ok: boolean
   error?: string
   runs?: Array<CronRunEntry>
+}
+
+type SortCol = 'name' | 'schedule' | 'health' | 'lastRun' | 'duration'
+
+function getScheduleStr(job: CronJob): string {
+  const kind = job.schedule?.kind ?? job.scheduleKind
+  if (kind === 'cron')
+    return formatCronSchedule(
+      job.schedule?.expr ?? job.cronExpr ?? '',
+      job.schedule?.tz ?? job.cronTz ?? 'UTC',
+    )
+  if (kind === 'every')
+    return formatEverySchedule(
+      job.schedule?.amount ?? job.everyAmount,
+      job.schedule?.unit ?? job.everyUnit,
+    )
+  return job.schedule?.at ?? job.scheduleAt ?? '—'
 }
 
 export const Route = createFileRoute('/admin/cron')({
@@ -112,7 +129,48 @@ function CronPage() {
     },
   })
 
+  const [sortCol, setSortCol] = useState<SortCol>('lastRun')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  function handleSort(col: SortCol) {
+    if (sortCol === col) {
+      setSortDir(function toggle(d) {
+        return d === 'asc' ? 'desc' : 'asc'
+      })
+    } else {
+      setSortCol(col)
+      setSortDir('asc')
+    }
+  }
+
   const jobs = data?.cron?.jobs ?? []
+
+  const sortedJobs = useMemo(
+    function sortJobs() {
+      const arr = [...jobs]
+      arr.sort(function compare(a, b) {
+        let cmp = 0
+        if (sortCol === 'name') {
+          cmp = a.name.localeCompare(b.name)
+        } else if (sortCol === 'schedule') {
+          cmp = getScheduleStr(a).localeCompare(getScheduleStr(b))
+        } else if (sortCol === 'health') {
+          if (a.enabled !== b.enabled) cmp = a.enabled ? -1 : 1
+          else
+            cmp = (a.state?.lastStatus ?? '').localeCompare(
+              b.state?.lastStatus ?? '',
+            )
+        } else if (sortCol === 'lastRun') {
+          cmp = (a.state?.lastRunAtMs ?? 0) - (b.state?.lastRunAtMs ?? 0)
+        } else {
+          cmp = (a.state?.lastDurationMs ?? 0) - (b.state?.lastDurationMs ?? 0)
+        }
+        return sortDir === 'asc' ? cmp : -cmp
+      })
+      return arr
+    },
+    [jobs, sortCol, sortDir],
+  )
 
   // Compute health summary
   const enabledJobs = jobs.filter(function isEnabled(j) {
@@ -373,45 +431,69 @@ function CronPage() {
           <table className="w-full text-sm">
             <thead className="bg-primary-50 border-b border-primary-200">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-primary-700">
-                  Name
+                {(
+                  [
+                    ['name', 'Name', ''],
+                    ['schedule', 'Schedule', ''],
+                    ['health', 'Health', ''],
+                    ['lastRun', 'Last Run', ''],
+                  ] as Array<[SortCol, string, string]>
+                ).map(function renderTh([col, label]) {
+                  const active = sortCol === col
+                  return (
+                    <th key={col} className="px-3 py-2 text-left">
+                      <button
+                        type="button"
+                        onClick={function () {
+                          handleSort(col)
+                        }}
+                        className={cn(
+                          'inline-flex items-center gap-1 font-medium text-xs uppercase tracking-wide hover:text-primary-950',
+                          active ? 'text-primary-950' : 'text-primary-500',
+                        )}
+                      >
+                        {label}
+                        <span className="text-[10px]">
+                          {active ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                        </span>
+                      </button>
+                    </th>
+                  )
+                })}
+                <th className="hidden lg:table-cell px-3 py-2 text-left">
+                  <button
+                    type="button"
+                    onClick={function () {
+                      handleSort('duration')
+                    }}
+                    className={cn(
+                      'inline-flex items-center gap-1 font-medium text-xs uppercase tracking-wide hover:text-primary-950',
+                      sortCol === 'duration'
+                        ? 'text-primary-950'
+                        : 'text-primary-500',
+                    )}
+                  >
+                    Duration
+                    <span className="text-[10px]">
+                      {sortCol === 'duration'
+                        ? sortDir === 'asc'
+                          ? '↑'
+                          : '↓'
+                        : '↕'}
+                    </span>
+                  </button>
                 </th>
-                <th className="px-3 py-2 text-left font-medium text-primary-700">
-                  Schedule
-                </th>
-                <th className="px-3 py-2 text-left font-medium text-primary-700">
-                  Health
-                </th>
-                <th className="px-3 py-2 text-left font-medium text-primary-700">
-                  Last Run
-                </th>
-                <th className="hidden lg:table-cell px-3 py-2 text-left font-medium text-primary-700">
-                  Duration
-                </th>
-                <th className="hidden lg:table-cell px-3 py-2 text-left font-medium text-primary-700">
+                <th className="hidden lg:table-cell px-3 py-2 text-left font-medium text-xs uppercase tracking-wide text-primary-500">
                   Delivery
                 </th>
-                <th className="px-3 py-2 text-right font-medium text-primary-700">
+                <th className="px-3 py-2 text-right font-medium text-xs uppercase tracking-wide text-primary-500">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-primary-100">
-              {jobs.map(function renderJob(job, i) {
-                const scheduleKind =
-                  job.schedule?.kind ?? job.scheduleKind
-                const schedule =
-                  scheduleKind === 'cron'
-                    ? formatCronSchedule(
-                        job.schedule?.expr ?? job.cronExpr ?? '',
-                        job.schedule?.tz ?? job.cronTz ?? 'UTC',
-                      )
-                    : scheduleKind === 'every'
-                      ? formatEverySchedule(
-                          job.schedule?.amount ?? job.everyAmount,
-                          job.schedule?.unit ?? job.everyUnit,
-                        )
-                      : (job.schedule?.at ?? job.scheduleAt ?? '\u2014')
+              {sortedJobs.map(function renderJob(job, i) {
+                const schedule = getScheduleStr(job)
 
                 const state = job.state
                 const delivery = job.delivery
