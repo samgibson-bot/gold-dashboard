@@ -49,11 +49,12 @@ export const Route = createFileRoute('/api/admin/cron')({
               )
             }
             const raw = await openRouterComplete(apiKey, {
+              model: 'google/gemini-2.0-flash-lite',
               messages: [
                 { role: 'system', content: DESCRIBE_SYSTEM_PROMPT },
                 { role: 'user', content: payload },
               ],
-              maxTokens: 80,
+              maxTokens: 60,
               temperature: 0.3,
             })
             const description = raw

@@ -24,6 +24,7 @@ type OpenRouterOptions = {
   maxTokens: number
   temperature?: number
   timeoutMs?: number
+  model?: string
 }
 
 /**
@@ -41,7 +42,7 @@ export async function openRouterComplete(
       authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: OPENROUTER_MODEL,
+      model: opts.model ?? OPENROUTER_MODEL,
       messages: opts.messages,
       max_tokens: opts.maxTokens,
       temperature: opts.temperature ?? 0.5,
