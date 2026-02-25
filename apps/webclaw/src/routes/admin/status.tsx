@@ -246,8 +246,15 @@ function StatusPage() {
                 {sessions.map(function renderSession(session, i) {
                   return (
                     <tr key={String(session.key ?? i)}>
-                      <td className="px-3 py-2 text-primary-900 truncate max-w-[200px] tabular-nums">
-                        {String(session.friendlyId ?? session.key ?? '—')}
+                      <td className="px-3 py-2 text-primary-900 truncate max-w-[200px]">
+                        {String(
+                          session.label ??
+                            session.title ??
+                            session.derivedTitle ??
+                            session.friendlyId ??
+                            session.key ??
+                            '—',
+                        )}
                       </td>
                       <td className="px-3 py-2 text-primary-700">
                         {String(session.status ?? '—')}

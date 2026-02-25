@@ -169,6 +169,7 @@ export const Route = createFileRoute('/api/admin/status')({
             gatewayRpc<Record<string, unknown>>('status').catch(() => null),
             gatewayRpc<{ sessions?: Array<unknown> }>('sessions.list', {
               limit: 100,
+              includeDerivedTitles: true,
             }).catch(() => null),
           ])
 
