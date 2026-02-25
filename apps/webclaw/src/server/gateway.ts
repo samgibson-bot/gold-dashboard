@@ -295,6 +295,7 @@ function getGatewayScopes(): Array<string> {
 async function buildConnectParams(
   token: string,
   password: string,
+  nonce?: string,
 ): Promise<ConnectParams> {
   const clientId = 'gateway-client'
   const clientMode = 'ui'
@@ -323,8 +324,9 @@ async function buildConnectParams(
   try {
     const identity = await getDeviceIdentity()
     const signedAt = Date.now()
-    const payload = [
-      'v1',
+    const version = nonce ? 'v2' : 'v1'
+    const payloadParts = [
+      version,
       identity.deviceId,
       clientId,
       clientMode,
@@ -332,7 +334,9 @@ async function buildConnectParams(
       scopes.join(','),
       String(signedAt),
       token || '',
-    ].join('|')
+    ]
+    if (nonce) payloadParts.push(nonce)
+    const payload = payloadParts.join('|')
     const signature = signPayload(identity.privateKey, payload)
 
     params.device = {
@@ -340,6 +344,7 @@ async function buildConnectParams(
       publicKey: identity.publicKeyRawBase64Url,
       signature,
       signedAt,
+      nonce: nonce || undefined,
     }
   } catch (err) {
     console.warn(
@@ -349,6 +354,32 @@ async function buildConnectParams(
   }
 
   return params
+}
+
+function waitForConnectChallenge(ws: WebSocket, timeoutMs = 10_000): Promise<string> {
+  return new Promise<string>((resolve) => {
+    const timer = setTimeout(() => {
+      ws.removeEventListener('message', onMessage)
+      resolve('')
+    }, timeoutMs)
+
+    function onMessage(evt: MessageEvent) {
+      try {
+        const data = typeof evt.data === 'string' ? evt.data : ''
+        const parsed = JSON.parse(data) as GatewayFrame
+        if (parsed.type === 'event' && parsed.event === 'connect.challenge') {
+          clearTimeout(timer)
+          ws.removeEventListener('message', onMessage)
+          const nonce = (parsed.payload as Record<string, unknown>).nonce
+          resolve(typeof nonce === 'string' ? nonce : '')
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+
+    ws.addEventListener('message', onMessage)
+  })
 }
 
 function createGatewayWaiter(): GatewayWaiter {
@@ -484,6 +515,7 @@ async function getConnection(): Promise<{
   connectionPromise = (async () => {
     const ws = new WebSocket(url)
     const waiter = createGatewayWaiter()
+    const challengePromise = waitForConnectChallenge(ws)
 
     ws.addEventListener('message', waiter.handleMessage)
     ws.addEventListener('close', (evt) => {
@@ -499,9 +531,10 @@ async function getConnection(): Promise<{
     })
 
     await wsOpen(ws)
+    const nonce = await challengePromise
 
     const connectId = randomUUID()
-    const connectParams = await buildConnectParams(token, password)
+    const connectParams = await buildConnectParams(token, password, nonce)
     const connectReq: GatewayFrame = {
       type: 'req',
       id: connectId,
@@ -525,9 +558,11 @@ async function getConnection(): Promise<{
 
 async function connectGateway(ws: WebSocket): Promise<void> {
   const { token, password } = getGatewayConfig()
+  const challengePromise = waitForConnectChallenge(ws)
   await wsOpen(ws)
+  const nonce = await challengePromise
   const connectId = randomUUID()
-  const connectParams = await buildConnectParams(token, password)
+  const connectParams = await buildConnectParams(token, password, nonce)
   const connectReq: GatewayFrame = {
     type: 'req',
     id: connectId,
@@ -544,6 +579,7 @@ async function connectGateway(ws: WebSocket): Promise<void> {
 function createGatewayClient(): GatewayClient {
   const { url, token, password } = getGatewayConfig()
   const ws = new WebSocket(url)
+  const challengePromise = waitForConnectChallenge(ws)
   let closed = false
   let connected = false
   let onEvent: ((event: GatewayEventFrame) => void) | undefined
@@ -610,8 +646,9 @@ function createGatewayClient(): GatewayClient {
   async function connect() {
     if (connected || closed) return
     await wsOpen(ws)
+    const nonce = await challengePromise
     const connectId = randomUUID()
-    const connectParams = await buildConnectParams(token, password)
+    const connectParams = await buildConnectParams(token, password, nonce)
     const connectReq: GatewayFrame = {
       type: 'req',
       id: connectId,
