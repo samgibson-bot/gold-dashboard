@@ -126,7 +126,7 @@ git push origin main
 
 - **Dashboard repo**: `~/openclaw/openclaw-dashboard/`
 - **Docker compose**: `~/openclaw/docker-compose.yml`
-- **Production URL**: `http://100.77.85.46:3000`
+- **Production URL**: `https://nm-vps.tail9452d2.ts.net`
 - **GitHub**: `git@github.com:samgibson-bot/gold-dashboard.git`
 
 ## Important Notes
