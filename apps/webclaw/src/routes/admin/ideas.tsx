@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { IdeaFile } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
@@ -21,292 +21,152 @@ type IdeasResponse = {
   ideas?: Array<IdeaFile>
 }
 
-const IDEA_STATUSES = [
-  'seed',
-  'elaborating',
-  'reviewing',
-  'validated',
-  'building',
-  'completed',
-  'archived',
-] as const
-
-const STATUS_COLORS: Record<string, string> = {
-  seed: 'bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200',
-  elaborating: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
-  reviewing:
-    'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200',
-  validated:
-    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
-  building:
-    'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200',
-  completed:
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200',
-  archived:
-    'bg-primary-100 text-primary-400 dark:bg-primary-800 dark:text-primary-400',
-  unknown:
-    'bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400',
-}
-
-const COLUMN_CONFIG: Array<{
-  status: string
-  title: string
-  color: string
-}> = [
-  { status: 'seed', title: 'Seed', color: 'bg-primary-100 border-primary-300' },
-  {
-    status: 'elaborating',
-    title: 'Elaborating',
-    color: 'bg-blue-50 border-blue-300',
-  },
-  {
-    status: 'reviewing',
-    title: 'Reviewing',
-    color: 'bg-amber-50 border-amber-300',
-  },
-  {
-    status: 'validated',
-    title: 'Validated',
-    color: 'bg-green-50 border-green-300',
-  },
-  {
-    status: 'building',
-    title: 'Building',
-    color: 'bg-purple-50 border-purple-300',
-  },
-  {
-    status: 'completed',
-    title: 'Completed',
-    color: 'bg-emerald-50 border-emerald-300',
-  },
-]
-
-const SUGGESTED_TAGS = [
-  'automation',
-  'agents',
-  'infrastructure',
-  'research',
-  'product',
-  'tooling',
-  'ai',
-  'web',
-  'mobile',
-  'data',
-]
+const TAG_TYPES = ['product', 'infrastructure', 'research', 'automation'] as const
+const TAG_DOMAINS = ['personal', 'finance', 'health', 'social', 'business'] as const
+const ALL_TAGS = [...TAG_TYPES, ...TAG_DOMAINS] as const
+type IdeaTag = (typeof ALL_TAGS)[number]
 
 export const Route = createFileRoute('/admin/ideas')({
   component: IdeasPage,
 })
 
+function IdeaRow({ idea, onClick }: { idea: IdeaFile; onClick: () => void }) {
+  const domainTags = idea.tags.filter((t): t is IdeaTag =>
+    TAG_DOMAINS.includes(t as IdeaTag),
+  )
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-primary-50 dark:hover:bg-primary-800 transition-colors group"
+    >
+      <span className="flex-1 text-sm text-primary-900 dark:text-primary-100 truncate text-pretty">
+        {idea.title}
+      </span>
+      <span className="flex items-center gap-1 shrink-0">
+        {domainTags.map((tag) => (
+          <span
+            key={tag}
+            className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400"
+          >
+            {tag}
+          </span>
+        ))}
+      </span>
+      <span className="text-xs text-primary-400 tabular-nums shrink-0">
+        #{idea.issueNumber}
+      </span>
+      <span className="text-xs text-primary-400 tabular-nums shrink-0">
+        {new Date(idea.created).toLocaleDateString()}
+      </span>
+    </button>
+  )
+}
+
 function IdeasPage() {
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-
-  const queryClient = useQueryClient()
-
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: adminQueryKeys.ideas,
     queryFn: async function fetchIdeas() {
       const res = await fetch('/api/admin/ideas')
-      if (!res.ok) throw new Error('Failed to fetch ideas')
-      return (await res.json()) as IdeasResponse
+      const json = await res.json()
+      if (!json.ok) throw new Error('Failed to fetch ideas')
+      return json.ideas as Array<IdeaFile>
     },
     refetchInterval: 60_000,
   })
 
-  const ideas = data?.ideas ?? []
-  const selectedFile = ideas.find(function findSelected(f) {
-    return f.issueNumber === selectedId
-  })
+  const [selected, setSelected] = useState<IdeaFile | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
-  // Group ideas by status for kanban columns
-  const columns = COLUMN_CONFIG.map(function createColumn(config) {
-    return {
-      ...config,
-      ideas: ideas.filter(function filterByStatus(idea) {
-        return idea.status === config.status
-      }),
-    }
-  })
+  const ideas = data ?? []
+
+  const grouped = TAG_TYPES.reduce<Partial<Record<string, Array<IdeaFile>>>>(
+    function buildGroups(acc, type) {
+      acc[type] = ideas.filter((idea) => idea.tags.includes(type))
+      return acc
+    },
+    {},
+  )
+  const ungrouped = ideas.filter(
+    (idea) => !TAG_TYPES.some((t) => idea.tags.includes(t)),
+  )
 
   return (
-    <div className="flex flex-col h-full p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-medium text-primary-950 dark:text-primary-50">
+          <h1 className="text-lg font-medium text-primary-900 dark:text-primary-100 text-balance">
             Ideas
           </h1>
-          {!isLoading && !error && (
-            <p className="text-sm text-primary-600 dark:text-primary-400 mt-1">
-              {ideas.length} total ideas across {columns.length} stages
-            </p>
-          )}
+          <p className="text-sm text-primary-500 tabular-nums">
+            {ideas.length} open
+          </p>
         </div>
-        <DialogRoot open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger
-            render={
-              <Button size="sm">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  className="mr-1"
-                >
-                  <path
-                    d="M7 1v12M1 7h12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                New Idea
-              </Button>
-            }
-          />
-          <CreateIdeaDialog
-            onClose={function handleClose() {
-              setDialogOpen(false)
-            }}
-            onCreated={function handleCreated() {
-              setDialogOpen(false)
-              queryClient.invalidateQueries({ queryKey: adminQueryKeys.ideas })
-            }}
-          />
-        </DialogRoot>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetch()}
+            className="text-xs px-2.5 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-800 text-primary-600 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-700 transition-colors"
+          >
+            Refresh
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="text-xs px-2.5 py-1.5 rounded-lg bg-primary-900 dark:bg-primary-100 text-primary-50 dark:text-primary-900 hover:opacity-90 transition-opacity"
+          >
+            New Idea
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="text-sm text-primary-500">Loading ideas...</div>
-      ) : error ? (
-        <div className="text-sm text-red-600 dark:text-red-400">
-          {error instanceof Error ? error.message : 'Failed to load'}
-        </div>
-      ) : ideas.length === 0 ? (
-        <div className="text-sm text-primary-500">No ideas found</div>
-      ) : (
-        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
-          <div
-            className="flex gap-4 h-full pb-4"
-            style={{ minWidth: 'max-content' }}
-          >
-            {columns.map(function renderColumn(column) {
-              return (
-                <div
-                  key={column.status}
-                  className="flex flex-col w-[320px] flex-shrink-0"
-                >
-                  {/* Column Header */}
-                  <div
-                    className={cn(
-                      'rounded-t-lg border-t border-x p-3',
-                      column.color,
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-sm text-primary-900 dark:text-primary-100">
-                        {column.title}
-                      </h3>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white dark:bg-primary-800 text-primary-600 dark:text-primary-300">
-                        {column.ideas.length}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Column Content */}
-                  <div
-                    className={cn(
-                      'flex-1 overflow-y-auto border-x border-b rounded-b-lg p-2 space-y-2 bg-primary-50 dark:bg-primary-900/50',
-                      column.color,
-                    )}
-                  >
-                    {column.ideas.length === 0 ? (
-                      <div className="text-center py-8 text-sm text-primary-400">
-                        No ideas
-                      </div>
-                    ) : (
-                      column.ideas.map(function renderCard(idea) {
-                        return (
-                          <button
-                            key={idea.issueNumber}
-                            type="button"
-                            onClick={function handleCardClick() {
-                              setSelectedId(idea.issueNumber)
-                            }}
-                            className="w-full text-left bg-white dark:bg-primary-900 border border-primary-200 dark:border-primary-700 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer group"
-                          >
-                            <h4 className="font-medium text-sm text-primary-900 dark:text-primary-100 mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                              {idea.title}
-                            </h4>
-
-                            {/* Metadata */}
-                            <div className="flex flex-wrap gap-1.5 mb-2">
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300 font-medium">
-                                #{idea.issueNumber}
-                              </span>
-                              {idea.prNumber ? (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 font-medium">
-                                  PR #{idea.prNumber}
-                                </span>
-                              ) : null}
-                            </div>
-
-                            {/* Tags */}
-                            {idea.tags.length > 0 ? (
-                              <div className="flex gap-1 flex-wrap">
-                                {idea.tags
-                                  .slice(0, 3)
-                                  .map(function renderTag(tag) {
-                                    return (
-                                      <span
-                                        key={tag}
-                                        className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
-                                      >
-                                        {tag}
-                                      </span>
-                                    )
-                                  })}
-                                {idea.tags.length > 3 ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400">
-                                    +{idea.tags.length - 3}
-                                  </span>
-                                ) : null}
-                              </div>
-                            ) : null}
-
-                            {/* Created date */}
-                            {idea.created ? (
-                              <div className="mt-2 pt-2 border-t border-primary-100 dark:border-primary-800">
-                                <span className="text-[10px] text-primary-500 dark:text-primary-400">
-                                  {new Date(idea.created).toLocaleDateString()}
-                                </span>
-                              </div>
-                            ) : null}
-                          </button>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+      {isLoading && (
+        <p className="text-sm text-primary-500">Loading...</p>
+      )}
+      {error && (
+        <p className="text-sm text-red-500">Failed to load ideas</p>
       )}
 
-      {/* Detail Modal */}
-      <DialogRoot
-        open={selectedId !== null}
-        onOpenChange={function handleDetailClose(open) {
-          if (!open) setSelectedId(null)
-        }}
-      >
-        <DialogContent className="w-[min(800px,92vw)] max-h-[85vh] overflow-hidden flex flex-col">
-          {selectedFile ? <IdeaDetail file={selectedFile} /> : null}
-        </DialogContent>
-      </DialogRoot>
+      {TAG_TYPES.map(function renderTypeGroup(type) {
+        const group = grouped[type] ?? []
+        if (group.length === 0) return null
+        return (
+          <section key={type}>
+            <h2 className="text-xs font-medium text-primary-400 uppercase tracking-wide mb-2">
+              {type}
+            </h2>
+            <div className="space-y-0.5">
+              {group.map((idea) => (
+                <IdeaRow
+                  key={idea.issueNumber}
+                  idea={idea}
+                  onClick={() => setSelected(idea)}
+                />
+              ))}
+            </div>
+          </section>
+        )
+      })}
+
+      {ungrouped.length > 0 && (
+        <section>
+          <h2 className="text-xs font-medium text-primary-400 uppercase tracking-wide mb-2">
+            Other
+          </h2>
+          <div className="space-y-0.5">
+            {ungrouped.map((idea) => (
+              <IdeaRow
+                key={idea.issueNumber}
+                idea={idea}
+                onClick={() => setSelected(idea)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {selected && (
+        <IdeaDetail file={selected} onClose={() => setSelected(null)} />
+      )}
+      {showCreate && <CreateIdeaDialog onClose={() => setShowCreate(false)} />}
     </div>
   )
 }
@@ -314,30 +174,6 @@ function IdeasPage() {
 // ---------- Idea Detail (Modal Content) ----------
 
 function IdeaDetail({ file }: { file: IdeaFile }) {
-  const queryClient = useQueryClient()
-
-  const statusMutation = useMutation({
-    mutationFn: async function changeStatus(newStatus: string) {
-      const res = await fetch('/api/admin/ideas/status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          issueNumber: file.issueNumber,
-          status: newStatus,
-        }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: 'Request failed' }))
-        throw new Error(
-          (data as { error?: string }).error ?? 'Failed to update status',
-        )
-      }
-    },
-    onSuccess: function onStatusSuccess() {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.ideas })
-    },
-  })
-
   return (
     <div className="flex flex-col h-full max-h-[85vh]">
       <div className="p-5 flex-1 overflow-auto">
@@ -372,43 +208,6 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
         {file.created ? (
           <div className="text-xs text-primary-400 mb-3">
             {new Date(file.created).toLocaleDateString()}
-          </div>
-        ) : null}
-
-        {/* Status pills */}
-        <div className="flex items-center gap-1 mb-4 flex-wrap">
-          {IDEA_STATUSES.map(function renderStatusPill(s) {
-            const isCurrent = file.status === s
-            const isUpdating = statusMutation.isPending
-            return (
-              <button
-                key={s}
-                disabled={isCurrent || isUpdating}
-                onClick={function handleStatusChange() {
-                  statusMutation.mutate(s)
-                }}
-                className={cn(
-                  'text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors',
-                  isCurrent
-                    ? cn(
-                        STATUS_COLORS[s] ?? STATUS_COLORS.unknown,
-                        'ring-1 ring-primary-400 dark:ring-primary-500',
-                      )
-                    : 'bg-primary-50 text-primary-400 dark:bg-primary-800 dark:text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-700 cursor-pointer',
-                  isUpdating && !isCurrent && 'opacity-50 cursor-wait',
-                )}
-              >
-                {s}
-              </button>
-            )
-          })}
-        </div>
-
-        {statusMutation.isError ? (
-          <div className="text-xs text-red-600 dark:text-red-400 mb-3">
-            {statusMutation.error instanceof Error
-              ? statusMutation.error.message
-              : 'Failed to update status'}
           </div>
         ) : null}
 
@@ -448,7 +247,6 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
       <IdeaChatInput
         ideaTitle={file.title}
         ideaNumber={file.issueNumber}
-        ideaStatus={file.status}
       />
     </div>
   )
@@ -459,11 +257,9 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
 function IdeaChatInput({
   ideaTitle,
   ideaNumber,
-  ideaStatus,
 }: {
   ideaTitle: string
   ideaNumber: number
-  ideaStatus: string
 }) {
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
@@ -477,7 +273,6 @@ function IdeaChatInput({
           message: msg,
           ideaTitle,
           ideaNumber,
-          ideaStatus,
         }),
       })
       if (!res.ok) {
@@ -616,8 +411,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
   const [activeTab, setActiveTab] = useState<'idea' | 'project'>('idea')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tagInput, setTagInput] = useState('')
-  const [tags, setTags] = useState<Array<string>>([])
+  const [selectedTags, setSelectedTags] = useState<Array<IdeaTag>>([])
 
   // Source state (idea tab only)
   const [sourceUrls, setSourceUrls] = useState<Array<string>>([])
@@ -633,8 +427,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     setActiveTab('idea')
     setTitle('')
     setDescription('')
-    setTagInput('')
-    setTags([])
+    setSelectedTags([])
     setSourceUrls([])
     setScreenshotData('')
     setScreenshotName('')
@@ -659,7 +452,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
             activeTab === 'idea' ? screenshotData || undefined : undefined,
           context: description,
           title,
-          tags,
+          tags: selectedTags,
         }),
       })
       const data = (await res.json()) as SubmitResponse
@@ -711,37 +504,10 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     })
   }
 
-  function addTag(tag: string) {
-    const cleaned = tag
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '')
-    if (cleaned && !tags.includes(cleaned)) {
-      setTags(function appendTag(prev) {
-        return [...prev, cleaned]
-      })
-    }
-    setTagInput('')
-  }
-
-  function removeTag(tag: string) {
-    setTags(function filterTag(prev) {
-      return prev.filter(function notTag(t) {
-        return t !== tag
-      })
-    })
-  }
-
-  function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      addTag(tagInput)
-    }
-    if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
-      setTags(function removeLast(prev) {
-        return prev.slice(0, -1)
-      })
-    }
+  function toggleTag(tag: IdeaTag) {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    )
   }
 
   const canSubmit = description.trim().length > 0
@@ -922,58 +688,50 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           </div>
 
           {/* Tags */}
-          <div>
-            <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
-              Tags
-            </label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {tags.map(function renderTag(tag) {
-                return (
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs font-medium text-primary-500 uppercase tracking-wide mb-2">
+                Type
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                {TAG_TYPES.map((tag) => (
                   <button
                     key={tag}
                     type="button"
-                    onClick={function handleRemove() {
-                      removeTag(tag)
-                    }}
-                    className="text-[11px] px-2 py-0.5 rounded-full bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-300 transition-colors"
-                    disabled={isPending}
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      'text-xs px-2.5 py-1 rounded-full border transition-colors',
+                      selectedTags.includes(tag)
+                        ? 'bg-primary-900 text-primary-50 border-primary-900 dark:bg-primary-100 dark:text-primary-900 dark:border-primary-100'
+                        : 'bg-transparent text-primary-500 border-primary-200 dark:border-primary-700 hover:border-primary-400 dark:hover:border-primary-500',
+                    )}
                   >
-                    {tag} ×
+                    {tag}
                   </button>
-                )
-              })}
+                ))}
+              </div>
             </div>
-            <input
-              type="text"
-              value={tagInput}
-              onChange={function handleTagInput(e) {
-                setTagInput(e.target.value)
-              }}
-              onKeyDown={handleTagKeyDown}
-              placeholder="Type a tag and press Enter"
-              className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
-              disabled={isPending}
-            />
-            <div className="flex flex-wrap gap-1 mt-2">
-              {SUGGESTED_TAGS.filter(function notAdded(t) {
-                return !tags.includes(t)
-              })
-                .slice(0, 8)
-                .map(function renderSuggestion(tag) {
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={function handleAdd() {
-                        addTag(tag)
-                      }}
-                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400 hover:bg-primary-200 hover:text-primary-700 dark:hover:bg-primary-700 dark:hover:text-primary-200 transition-colors"
-                      disabled={isPending}
-                    >
-                      + {tag}
-                    </button>
-                  )
-                })}
+            <div>
+              <p className="text-xs font-medium text-primary-500 uppercase tracking-wide mb-2">
+                Domain
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                {TAG_DOMAINS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      'text-xs px-2.5 py-1 rounded-full border transition-colors',
+                      selectedTags.includes(tag)
+                        ? 'bg-primary-900 text-primary-50 border-primary-900 dark:bg-primary-100 dark:text-primary-900 dark:border-primary-100'
+                        : 'bg-transparent text-primary-500 border-primary-200 dark:border-primary-700 hover:border-primary-400 dark:hover:border-primary-500',
+                    )}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

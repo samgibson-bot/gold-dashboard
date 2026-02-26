@@ -22,8 +22,6 @@ export const Route = createFileRoute('/api/admin/ideas/chat')({
             typeof body.ideaTitle === 'string' ? body.ideaTitle.trim() : ''
           const ideaNumber =
             typeof body.ideaNumber === 'number' ? body.ideaNumber : 0
-          const ideaStatus =
-            typeof body.ideaStatus === 'string' ? body.ideaStatus.trim() : ''
 
           if (!message) {
             return json(
@@ -39,7 +37,7 @@ export const Route = createFileRoute('/api/admin/ideas/chat')({
             )
           }
 
-          const contextualMessage = `Re: "${ideaTitle}"${ideaNumber ? ` (issue #${ideaNumber})` : ''}${ideaStatus ? ` (status: ${ideaStatus})` : ''}\n\n${message}`
+          const contextualMessage = `Re: "${ideaTitle}"${ideaNumber ? ` (issue #${ideaNumber})` : ''}\n\n${message}`
 
           const res = await gatewayRpc<{ runId: string }>('chat.send', {
             sessionKey: 'ideas',

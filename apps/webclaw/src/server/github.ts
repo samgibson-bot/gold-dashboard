@@ -40,7 +40,6 @@ type GitHubIssue = {
 export type IdeaFromGitHub = {
   issueNumber: number
   title: string
-  status: string
   tags: Array<string>
   content: string
   created: string
@@ -48,16 +47,6 @@ export type IdeaFromGitHub = {
   prNumber?: number
   prUrl?: string
 }
-
-const STATUS_LABELS = [
-  'seed',
-  'elaborating',
-  'reviewing',
-  'validated',
-  'building',
-  'completed',
-  'archived',
-]
 
 // ---------- List ideas ----------
 
@@ -73,18 +62,13 @@ export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
     const labelNames = issue.labels.map(function getName(l) {
       return l.name
     })
-    const status =
-      labelNames.find(function isStatus(l) {
-        return STATUS_LABELS.includes(l)
-      }) ?? 'seed'
     const tags = labelNames.filter(function isTag(l) {
-      return l !== 'idea' && !STATUS_LABELS.includes(l)
+      return l !== 'idea'
     })
 
     return {
       issueNumber: issue.number,
       title: issue.title,
-      status,
       tags,
       content: issue.body ?? '',
       created: issue.created_at,
@@ -135,7 +119,7 @@ export async function createIdea(
     '---',
     '*Created via Gold Dashboard*',
   ].join('\n')
-  const labels = ['idea', 'seed', ...input.tags.slice(0, 5)]
+  const labels = ['idea', ...input.tags.slice(0, 5)]
 
   const res = await fetch(`${API_BASE}/repos/${OWNER}/${REPO}/issues`, {
     method: 'POST',
@@ -329,54 +313,3 @@ export async function getFleetRepos(): Promise<Array<string>> {
   }
 }
 
-// ---------- Update idea status (label swap) ----------
-
-export async function updateIdeaStatus(
-  issueNumber: number,
-  newStatus: string,
-): Promise<void> {
-  // Get current labels
-  const getRes = await fetch(
-    `${API_BASE}/repos/${OWNER}/${REPO}/issues/${issueNumber}`,
-    { headers: headers() },
-  )
-  if (!getRes.ok) {
-    throw new Error(
-      `GitHub API error fetching issue #${issueNumber}: ${getRes.status}`,
-    )
-  }
-  const issue = (await getRes.json()) as GitHubIssue
-
-  // Remove old status labels, add new one
-  const currentLabels = issue.labels.map(function getName(l) {
-    return l.name
-  })
-  const newLabels = currentLabels
-    .filter(function removeOldStatus(l) {
-      return !STATUS_LABELS.includes(l)
-    })
-    .concat(newStatus)
-
-  // Ensure 'idea' label is present
-  if (!newLabels.includes('idea')) {
-    newLabels.push('idea')
-  }
-
-  const updateRes = await fetch(
-    `${API_BASE}/repos/${OWNER}/${REPO}/issues/${issueNumber}`,
-    {
-      method: 'PATCH',
-      headers: headers(),
-      body: JSON.stringify({ labels: newLabels }),
-    },
-  )
-
-  if (!updateRes.ok) {
-    const errBody = await updateRes.text().catch(function fallback() {
-      return ''
-    })
-    throw new Error(
-      `GitHub API error updating issue #${issueNumber}: ${updateRes.status} ${errBody}`,
-    )
-  }
-}
