@@ -151,7 +151,9 @@ apps/webclaw/src/
 - Skills: full CRUD via `gatewayRpc('fs.listDir'/'fs.readFile'/'fs.writeFile')` on `.openclaw/skills/`
 
 ### Gateway / Auth
-- `CLAWDBOT_GATEWAY_URL=ws://127.0.0.1:18789` → `isLocalClient=true` → auto-approved device pairing
+- `CLAWDBOT_GATEWAY_URL=ws://127.0.0.1:18789` → `isLocalClient=true` → auto-approved device pairing (no nonce)
+- **Non-local (remote/Tailscale) clients:** gateway sends a `connect.challenge` event on WebSocket open containing a nonce — the client must sign the device auth payload with this nonce (v2 auth protocol) before the connection is authenticated. Implemented via `waitForConnectChallenge()` in `server/gateway.ts`.
+- If gatewayRpc calls fail silently (empty arrays, no error) against a remote URL, the nonce challenge is likely not being handled.
 - Device keys: `dist/.device-keys.json` (gitignored via `dist/`)
 - Default scopes when `CLAWDBOT_GATEWAY_SCOPES` is unset: `['operator.admin']` (see `server/gateway.ts:292`)
 - **Do NOT set `CLAWDBOT_GATEWAY_SCOPES` in `.env`** — the default is correct; overriding it causes scope issues
@@ -166,6 +168,9 @@ apps/webclaw/src/
 ### Gateway RPC Response Shapes — Verify Before Coding
 - **Do NOT assume flat field names** from gateway RPCs — the actual response may use nested objects
 - Example: `cron.list` returns `schedule: { kind, expr, tz, amount, unit }`, NOT flat `scheduleKind`/`cronExpr`
+- **Cron RPC formats:**
+  - Create: `cron.add` (NOT `cron.create` — that method does not exist)
+  - Update: `cron.update` requires `{ jobId, patch }` — NOT flat fields
 - **Always SSH + curl the real API** when building a new feature against a gateway RPC:
   ```bash
   ssh claw@100.77.85.46 "curl -s http://localhost:3000/api/admin/<endpoint>" | head -c 2000

@@ -121,6 +121,32 @@
 - When computing derived data that depends on a filter variable, define the filter variable first, even if it was previously at the bottom of the setup block
 - OpenRouter `/api/v1/activity` returns day+model granularity aggregates, not individual API calls — "Usage by Call" is slightly misleading but it's the finest available granularity
 
+## 2026-02-25 — Gateway Nonce Fix, Cron Descriptions, Tailscale URLs, Session Titles
+
+**What was built:**
+- Smart session titles on `/admin/status` — display priority `label → title → derivedTitle → friendlyId → key`, added `includeDerivedTitles` to sessions.list RPC call
+- Tailscale serve URL migration: `ws://127.0.0.1:18789` → `wss://nm-vps.tail9452d2.ts.net:18789` and `http://100.77.85.46:3000` → `https://nm-vps.tail9452d2.ts.net` across `connect.tsx`, `.env.example`, `README.md`, `scripts/README.md`
+- Gateway nonce challenge-response: implemented `waitForConnectChallenge()` and v2 device auth payload signing in all three connection paths (`getConnection`, `connectGateway`, `createGatewayClient`)
+- Cron description feature: controlled description input, "Generate from payload" button via OpenRouter, payload hover tooltip (first 300 chars), description as `line-clamp-2` subtitle; bulk-generated descriptions for 7 existing jobs
+- Fixed two cron API bugs: `cron.create` → `cron.add`, PATCH format corrected to `{ jobId, patch }`
+- Sortable cron table headers: Name, Schedule, Health, Last Run, Duration — defaults to Last Run desc, with `getScheduleStr()` helper
+- `openRouterComplete` model override: added optional `model` param
+
+**What was tricky:**
+- **Gateway nonce protocol (the hardest bug)**: After switching to Tailscale serve URLs, all gatewayRpc calls started returning empty results with no error thrown. Root cause: the gateway now sends a `connect.challenge` WebSocket event immediately on connection for non-local clients, containing a nonce that must be included in the device auth payload (v2 auth). The old code sent auth immediately without waiting for the challenge. Symptoms were silent — no exception, just 0 results everywhere. Diagnosed by reading gateway source on the VPS (`~/openclaw/src/gateway/`), finding the `connect.challenge` event emission and the nonce-signing requirement.
+- **`cron.create` vs `cron.add`**: The gateway method is `cron.add`. Calling `cron.create` silently returned no error (gatewayRpc swallows unknown method errors) — job never appeared.
+- **`cron.update` flat vs nested**: Sending flat fields to `cron.update` silently did nothing. The correct format is `{ jobId, patch: { field: value } }`.
+- **`gemini-2.0-flash-lite` model ID**: OpenRouter requires the `-001` suffix — `google/gemini-2.0-flash-lite-001`. Without it, the API returns a 404/model-not-found error.
+- **`openRouterComplete` reads API key from config file**: The server-side helper reads the OpenRouter key from `~/.openclaw/openclaw.json`, not from `process.env`. This means the key is available on the VPS even without a `.env` file.
+
+**Patterns worth carrying forward:**
+- **Silent failures from gateway = check nonce first**: If gatewayRpc calls return empty/wrong data against a non-localhost URL, the connect.challenge nonce protocol is the most likely culprit. Local (`127.0.0.1`) connections skip the nonce; remote connections require it.
+- **Always trace gateway RPC method names from source**: `cron.create` felt natural but doesn't exist. SSH to VPS and grep `~/openclaw/src/` for the actual method names before writing code.
+- **`cron.update` shape**: Always check the gateway source for update RPCs — they often use a `{ id, patch }` or `{ jobId, patch }` wrapper rather than accepting flat fields.
+- **OpenRouter model IDs**: Check the exact model string from the OpenRouter docs/model list. Minor variations (missing `-001` suffix) cause silent 404s that are hard to diagnose.
+
+---
+
 ## 2026-02-21 — Skill Routing + Fleet Visibility (PR #17)
 
 **What was built:**

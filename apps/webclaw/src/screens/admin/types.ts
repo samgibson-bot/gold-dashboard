@@ -165,7 +165,6 @@ export type UsageStats = {
 export type IdeaFile = {
   issueNumber: number
   title: string
-  status: string
   tags: Array<string>
   content: string
   created: string
