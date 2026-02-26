@@ -30,215 +30,143 @@ export const Route = createFileRoute('/admin/ideas')({
   component: IdeasPage,
 })
 
+function IdeaRow({ idea, onClick }: { idea: IdeaFile; onClick: () => void }) {
+  const domainTags = idea.tags.filter((t): t is IdeaTag =>
+    TAG_DOMAINS.includes(t as IdeaTag),
+  )
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-primary-50 dark:hover:bg-primary-800 transition-colors group"
+    >
+      <span className="flex-1 text-sm text-primary-900 dark:text-primary-100 truncate text-pretty">
+        {idea.title}
+      </span>
+      <span className="flex items-center gap-1 shrink-0">
+        {domainTags.map((tag) => (
+          <span
+            key={tag}
+            className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400"
+          >
+            {tag}
+          </span>
+        ))}
+      </span>
+      <span className="text-xs text-primary-400 tabular-nums shrink-0">
+        #{idea.issueNumber}
+      </span>
+      <span className="text-xs text-primary-400 tabular-nums shrink-0">
+        {new Date(idea.created).toLocaleDateString()}
+      </span>
+    </button>
+  )
+}
+
 function IdeasPage() {
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-
-  const queryClient = useQueryClient()
-
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: adminQueryKeys.ideas,
     queryFn: async function fetchIdeas() {
       const res = await fetch('/api/admin/ideas')
-      if (!res.ok) throw new Error('Failed to fetch ideas')
-      return (await res.json()) as IdeasResponse
+      const json = await res.json()
+      if (!json.ok) throw new Error('Failed to fetch ideas')
+      return json.ideas as Array<IdeaFile>
     },
     refetchInterval: 60_000,
   })
 
-  const ideas = data?.ideas ?? []
-  const selectedFile = ideas.find(function findSelected(f) {
-    return f.issueNumber === selectedId
-  })
+  const [selected, setSelected] = useState<IdeaFile | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
-  // Group ideas by status for kanban columns
-  const columns = COLUMN_CONFIG.map(function createColumn(config) {
-    return {
-      ...config,
-      ideas: ideas.filter(function filterByStatus(idea) {
-        return idea.status === config.status
-      }),
-    }
-  })
+  const ideas = data ?? []
+
+  const grouped = TAG_TYPES.reduce<Partial<Record<string, Array<IdeaFile>>>>(
+    function buildGroups(acc, type) {
+      acc[type] = ideas.filter((idea) => idea.tags.includes(type))
+      return acc
+    },
+    {},
+  )
+  const ungrouped = ideas.filter(
+    (idea) => !TAG_TYPES.some((t) => idea.tags.includes(t)),
+  )
 
   return (
-    <div className="flex flex-col h-full p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-medium text-primary-950 dark:text-primary-50">
+          <h1 className="text-lg font-medium text-primary-900 dark:text-primary-100 text-balance">
             Ideas
           </h1>
-          {!isLoading && !error && (
-            <p className="text-sm text-primary-600 dark:text-primary-400 mt-1">
-              {ideas.length} total ideas across {columns.length} stages
-            </p>
-          )}
+          <p className="text-sm text-primary-500 tabular-nums">
+            {ideas.length} open
+          </p>
         </div>
-        <DialogRoot open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger
-            render={
-              <Button size="sm">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  className="mr-1"
-                >
-                  <path
-                    d="M7 1v12M1 7h12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                New Idea
-              </Button>
-            }
-          />
-          <CreateIdeaDialog
-            onClose={function handleClose() {
-              setDialogOpen(false)
-            }}
-            onCreated={function handleCreated() {
-              setDialogOpen(false)
-              queryClient.invalidateQueries({ queryKey: adminQueryKeys.ideas })
-            }}
-          />
-        </DialogRoot>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetch()}
+            className="text-xs px-2.5 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-800 text-primary-600 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-700 transition-colors"
+          >
+            Refresh
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="text-xs px-2.5 py-1.5 rounded-lg bg-primary-900 dark:bg-primary-100 text-primary-50 dark:text-primary-900 hover:opacity-90 transition-opacity"
+          >
+            New Idea
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="text-sm text-primary-500">Loading ideas...</div>
-      ) : error ? (
-        <div className="text-sm text-red-600 dark:text-red-400">
-          {error instanceof Error ? error.message : 'Failed to load'}
-        </div>
-      ) : ideas.length === 0 ? (
-        <div className="text-sm text-primary-500">No ideas found</div>
-      ) : (
-        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
-          <div
-            className="flex gap-4 h-full pb-4"
-            style={{ minWidth: 'max-content' }}
-          >
-            {columns.map(function renderColumn(column) {
-              return (
-                <div
-                  key={column.status}
-                  className="flex flex-col w-[320px] flex-shrink-0"
-                >
-                  {/* Column Header */}
-                  <div
-                    className={cn(
-                      'rounded-t-lg border-t border-x p-3',
-                      column.color,
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-sm text-primary-900 dark:text-primary-100">
-                        {column.title}
-                      </h3>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white dark:bg-primary-800 text-primary-600 dark:text-primary-300">
-                        {column.ideas.length}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Column Content */}
-                  <div
-                    className={cn(
-                      'flex-1 overflow-y-auto border-x border-b rounded-b-lg p-2 space-y-2 bg-primary-50 dark:bg-primary-900/50',
-                      column.color,
-                    )}
-                  >
-                    {column.ideas.length === 0 ? (
-                      <div className="text-center py-8 text-sm text-primary-400">
-                        No ideas
-                      </div>
-                    ) : (
-                      column.ideas.map(function renderCard(idea) {
-                        return (
-                          <button
-                            key={idea.issueNumber}
-                            type="button"
-                            onClick={function handleCardClick() {
-                              setSelectedId(idea.issueNumber)
-                            }}
-                            className="w-full text-left bg-white dark:bg-primary-900 border border-primary-200 dark:border-primary-700 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer group"
-                          >
-                            <h4 className="font-medium text-sm text-primary-900 dark:text-primary-100 mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                              {idea.title}
-                            </h4>
-
-                            {/* Metadata */}
-                            <div className="flex flex-wrap gap-1.5 mb-2">
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-300 font-medium">
-                                #{idea.issueNumber}
-                              </span>
-                              {idea.prNumber ? (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 font-medium">
-                                  PR #{idea.prNumber}
-                                </span>
-                              ) : null}
-                            </div>
-
-                            {/* Tags */}
-                            {idea.tags.length > 0 ? (
-                              <div className="flex gap-1 flex-wrap">
-                                {idea.tags
-                                  .slice(0, 3)
-                                  .map(function renderTag(tag) {
-                                    return (
-                                      <span
-                                        key={tag}
-                                        className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
-                                      >
-                                        {tag}
-                                      </span>
-                                    )
-                                  })}
-                                {idea.tags.length > 3 ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400">
-                                    +{idea.tags.length - 3}
-                                  </span>
-                                ) : null}
-                              </div>
-                            ) : null}
-
-                            {/* Created date */}
-                            {idea.created ? (
-                              <div className="mt-2 pt-2 border-t border-primary-100 dark:border-primary-800">
-                                <span className="text-[10px] text-primary-500 dark:text-primary-400">
-                                  {new Date(idea.created).toLocaleDateString()}
-                                </span>
-                              </div>
-                            ) : null}
-                          </button>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+      {isLoading && (
+        <p className="text-sm text-primary-500">Loading...</p>
+      )}
+      {error && (
+        <p className="text-sm text-red-500">Failed to load ideas</p>
       )}
 
-      {/* Detail Modal */}
-      <DialogRoot
-        open={selectedId !== null}
-        onOpenChange={function handleDetailClose(open) {
-          if (!open) setSelectedId(null)
-        }}
-      >
-        <DialogContent className="w-[min(800px,92vw)] max-h-[85vh] overflow-hidden flex flex-col">
-          {selectedFile ? <IdeaDetail file={selectedFile} /> : null}
-        </DialogContent>
-      </DialogRoot>
+      {TAG_TYPES.map(function renderTypeGroup(type) {
+        const group = grouped[type] ?? []
+        if (group.length === 0) return null
+        return (
+          <section key={type}>
+            <h2 className="text-xs font-medium text-primary-400 uppercase tracking-wide mb-2">
+              {type}
+            </h2>
+            <div className="space-y-0.5">
+              {group.map((idea) => (
+                <IdeaRow
+                  key={idea.issueNumber}
+                  idea={idea}
+                  onClick={() => setSelected(idea)}
+                />
+              ))}
+            </div>
+          </section>
+        )
+      })}
+
+      {ungrouped.length > 0 && (
+        <section>
+          <h2 className="text-xs font-medium text-primary-400 uppercase tracking-wide mb-2">
+            Other
+          </h2>
+          <div className="space-y-0.5">
+            {ungrouped.map((idea) => (
+              <IdeaRow
+                key={idea.issueNumber}
+                idea={idea}
+                onClick={() => setSelected(idea)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {selected && (
+        <IdeaDetail file={selected} onClose={() => setSelected(null)} />
+      )}
+      {showCreate && <CreateIdeaDialog onClose={() => setShowCreate(false)} />}
     </div>
   )
 }
