@@ -411,8 +411,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
   const [activeTab, setActiveTab] = useState<'idea' | 'project'>('idea')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tagInput, setTagInput] = useState('')
-  const [tags, setTags] = useState<Array<string>>([])
+  const [selectedTags, setSelectedTags] = useState<Array<IdeaTag>>([])
 
   // Source state (idea tab only)
   const [sourceUrls, setSourceUrls] = useState<Array<string>>([])
@@ -428,8 +427,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     setActiveTab('idea')
     setTitle('')
     setDescription('')
-    setTagInput('')
-    setTags([])
+    setSelectedTags([])
     setSourceUrls([])
     setScreenshotData('')
     setScreenshotName('')
@@ -454,7 +452,7 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
             activeTab === 'idea' ? screenshotData || undefined : undefined,
           context: description,
           title,
-          tags,
+          tags: selectedTags,
         }),
       })
       const data = (await res.json()) as SubmitResponse
@@ -506,37 +504,10 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
     })
   }
 
-  function addTag(tag: string) {
-    const cleaned = tag
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '')
-    if (cleaned && !tags.includes(cleaned)) {
-      setTags(function appendTag(prev) {
-        return [...prev, cleaned]
-      })
-    }
-    setTagInput('')
-  }
-
-  function removeTag(tag: string) {
-    setTags(function filterTag(prev) {
-      return prev.filter(function notTag(t) {
-        return t !== tag
-      })
-    })
-  }
-
-  function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      addTag(tagInput)
-    }
-    if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
-      setTags(function removeLast(prev) {
-        return prev.slice(0, -1)
-      })
-    }
+  function toggleTag(tag: IdeaTag) {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    )
   }
 
   const canSubmit = description.trim().length > 0
@@ -717,58 +688,50 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           </div>
 
           {/* Tags */}
-          <div>
-            <label className="block text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">
-              Tags
-            </label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {tags.map(function renderTag(tag) {
-                return (
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs font-medium text-primary-500 uppercase tracking-wide mb-2">
+                Type
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                {TAG_TYPES.map((tag) => (
                   <button
                     key={tag}
                     type="button"
-                    onClick={function handleRemove() {
-                      removeTag(tag)
-                    }}
-                    className="text-[11px] px-2 py-0.5 rounded-full bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-300 transition-colors"
-                    disabled={isPending}
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      'text-xs px-2.5 py-1 rounded-full border transition-colors',
+                      selectedTags.includes(tag)
+                        ? 'bg-primary-900 text-primary-50 border-primary-900 dark:bg-primary-100 dark:text-primary-900 dark:border-primary-100'
+                        : 'bg-transparent text-primary-500 border-primary-200 dark:border-primary-700 hover:border-primary-400 dark:hover:border-primary-500',
+                    )}
                   >
-                    {tag} ×
+                    {tag}
                   </button>
-                )
-              })}
+                ))}
+              </div>
             </div>
-            <input
-              type="text"
-              value={tagInput}
-              onChange={function handleTagInput(e) {
-                setTagInput(e.target.value)
-              }}
-              onKeyDown={handleTagKeyDown}
-              placeholder="Type a tag and press Enter"
-              className="w-full px-3 py-1.5 text-sm border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-950 dark:focus:ring-primary-400 focus:ring-offset-1"
-              disabled={isPending}
-            />
-            <div className="flex flex-wrap gap-1 mt-2">
-              {SUGGESTED_TAGS.filter(function notAdded(t) {
-                return !tags.includes(t)
-              })
-                .slice(0, 8)
-                .map(function renderSuggestion(tag) {
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={function handleAdd() {
-                        addTag(tag)
-                      }}
-                      className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400 hover:bg-primary-200 hover:text-primary-700 dark:hover:bg-primary-700 dark:hover:text-primary-200 transition-colors"
-                      disabled={isPending}
-                    >
-                      + {tag}
-                    </button>
-                  )
-                })}
+            <div>
+              <p className="text-xs font-medium text-primary-500 uppercase tracking-wide mb-2">
+                Domain
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                {TAG_DOMAINS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      'text-xs px-2.5 py-1 rounded-full border transition-colors',
+                      selectedTags.includes(tag)
+                        ? 'bg-primary-900 text-primary-50 border-primary-900 dark:bg-primary-100 dark:text-primary-900 dark:border-primary-100'
+                        : 'bg-transparent text-primary-500 border-primary-200 dark:border-primary-700 hover:border-primary-400 dark:hover:border-primary-500',
+                    )}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
