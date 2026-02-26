@@ -21,78 +21,10 @@ type IdeasResponse = {
   ideas?: Array<IdeaFile>
 }
 
-const IDEA_STATUSES = [
-  'seed',
-  'elaborating',
-  'reviewing',
-  'validated',
-  'building',
-  'completed',
-  'archived',
-] as const
-
-const STATUS_COLORS: Record<string, string> = {
-  seed: 'bg-primary-200 text-primary-700 dark:bg-primary-700 dark:text-primary-200',
-  elaborating: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
-  reviewing:
-    'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200',
-  validated:
-    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
-  building:
-    'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200',
-  completed:
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200',
-  archived:
-    'bg-primary-100 text-primary-400 dark:bg-primary-800 dark:text-primary-400',
-  unknown:
-    'bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400',
-}
-
-const COLUMN_CONFIG: Array<{
-  status: string
-  title: string
-  color: string
-}> = [
-  { status: 'seed', title: 'Seed', color: 'bg-primary-100 border-primary-300' },
-  {
-    status: 'elaborating',
-    title: 'Elaborating',
-    color: 'bg-blue-50 border-blue-300',
-  },
-  {
-    status: 'reviewing',
-    title: 'Reviewing',
-    color: 'bg-amber-50 border-amber-300',
-  },
-  {
-    status: 'validated',
-    title: 'Validated',
-    color: 'bg-green-50 border-green-300',
-  },
-  {
-    status: 'building',
-    title: 'Building',
-    color: 'bg-purple-50 border-purple-300',
-  },
-  {
-    status: 'completed',
-    title: 'Completed',
-    color: 'bg-emerald-50 border-emerald-300',
-  },
-]
-
-const SUGGESTED_TAGS = [
-  'automation',
-  'agents',
-  'infrastructure',
-  'research',
-  'product',
-  'tooling',
-  'ai',
-  'web',
-  'mobile',
-  'data',
-]
+const TAG_TYPES = ['product', 'infrastructure', 'research', 'automation'] as const
+const TAG_DOMAINS = ['personal', 'finance', 'health', 'social', 'business'] as const
+const ALL_TAGS = [...TAG_TYPES, ...TAG_DOMAINS] as const
+type IdeaTag = (typeof ALL_TAGS)[number]
 
 export const Route = createFileRoute('/admin/ideas')({
   component: IdeasPage,
