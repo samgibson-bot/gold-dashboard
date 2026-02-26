@@ -47,16 +47,16 @@ function IdeaRow({ idea, onClick }: { idea: IdeaFile; onClick: () => void }) {
         {domainTags.map((tag) => (
           <span
             key={tag}
-            className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-500 dark:bg-primary-800 dark:text-primary-400"
+            className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-700 dark:text-primary-300"
           >
             {tag}
           </span>
         ))}
       </span>
-      <span className="text-xs text-primary-400 tabular-nums shrink-0">
+      <span className="text-xs text-primary-400 dark:text-primary-300 tabular-nums shrink-0">
         #{idea.issueNumber}
       </span>
-      <span className="text-xs text-primary-400 tabular-nums shrink-0">
+      <span className="text-xs text-primary-400 dark:text-primary-300 tabular-nums shrink-0">
         {new Date(idea.created).toLocaleDateString()}
       </span>
     </button>
@@ -130,7 +130,7 @@ function IdeasPage() {
         if (group.length === 0) return null
         return (
           <section key={type}>
-            <h2 className="text-xs font-medium text-primary-400 uppercase tracking-wide mb-2">
+            <h2 className="text-xs font-medium text-primary-500 dark:text-primary-400 uppercase tracking-wide mb-2">
               {type}
             </h2>
             <div className="space-y-0.5">
