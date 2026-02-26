@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { IdeaFile } from '@/screens/admin/types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
@@ -174,30 +174,6 @@ function IdeasPage() {
 // ---------- Idea Detail (Modal Content) ----------
 
 function IdeaDetail({ file }: { file: IdeaFile }) {
-  const queryClient = useQueryClient()
-
-  const statusMutation = useMutation({
-    mutationFn: async function changeStatus(newStatus: string) {
-      const res = await fetch('/api/admin/ideas/status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          issueNumber: file.issueNumber,
-          status: newStatus,
-        }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: 'Request failed' }))
-        throw new Error(
-          (data as { error?: string }).error ?? 'Failed to update status',
-        )
-      }
-    },
-    onSuccess: function onStatusSuccess() {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.ideas })
-    },
-  })
-
   return (
     <div className="flex flex-col h-full max-h-[85vh]">
       <div className="p-5 flex-1 overflow-auto">
@@ -232,43 +208,6 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
         {file.created ? (
           <div className="text-xs text-primary-400 mb-3">
             {new Date(file.created).toLocaleDateString()}
-          </div>
-        ) : null}
-
-        {/* Status pills */}
-        <div className="flex items-center gap-1 mb-4 flex-wrap">
-          {IDEA_STATUSES.map(function renderStatusPill(s) {
-            const isCurrent = file.status === s
-            const isUpdating = statusMutation.isPending
-            return (
-              <button
-                key={s}
-                disabled={isCurrent || isUpdating}
-                onClick={function handleStatusChange() {
-                  statusMutation.mutate(s)
-                }}
-                className={cn(
-                  'text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors',
-                  isCurrent
-                    ? cn(
-                        STATUS_COLORS[s] ?? STATUS_COLORS.unknown,
-                        'ring-1 ring-primary-400 dark:ring-primary-500',
-                      )
-                    : 'bg-primary-50 text-primary-400 dark:bg-primary-800 dark:text-primary-500 hover:bg-primary-100 dark:hover:bg-primary-700 cursor-pointer',
-                  isUpdating && !isCurrent && 'opacity-50 cursor-wait',
-                )}
-              >
-                {s}
-              </button>
-            )
-          })}
-        </div>
-
-        {statusMutation.isError ? (
-          <div className="text-xs text-red-600 dark:text-red-400 mb-3">
-            {statusMutation.error instanceof Error
-              ? statusMutation.error.message
-              : 'Failed to update status'}
           </div>
         ) : null}
 
@@ -308,7 +247,6 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
       <IdeaChatInput
         ideaTitle={file.title}
         ideaNumber={file.issueNumber}
-        ideaStatus={file.status}
       />
     </div>
   )
@@ -319,11 +257,9 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
 function IdeaChatInput({
   ideaTitle,
   ideaNumber,
-  ideaStatus,
 }: {
   ideaTitle: string
   ideaNumber: number
-  ideaStatus: string
 }) {
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
@@ -337,7 +273,6 @@ function IdeaChatInput({
           message: msg,
           ideaTitle,
           ideaNumber,
-          ideaStatus,
         }),
       })
       if (!res.ok) {
