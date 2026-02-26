@@ -506,11 +506,7 @@ Replace with:
 status: open (active) | closed (done or archived)
 ```
 
-**Step 5: Commit workspace changes on VPS**
-
-```bash
-ssh claw@100.77.85.46 "cd ~/.openclaw/workspace && git add -A && git commit -m 'chore: remove idea-lifecycle, update to open/closed status + fixed tag taxonomy'"
-```
+> The `workspace-backup` cron (daily, midnight Pacific) will automatically commit and push these changes. No manual git commit needed.
 
 ---
 
@@ -556,11 +552,7 @@ ssh claw@100.77.85.46 "chmod +x ~/.openclaw/workspace/scripts/weekly-synergy-aud
 ssh claw@100.77.85.46 "bash -n ~/.openclaw/workspace/scripts/weekly-synergy-audit.sh && echo 'syntax ok'"
 ```
 
-**Step 4: Commit the updated script on VPS**
-
-```bash
-ssh claw@100.77.85.46 "cd ~/.openclaw/workspace && git add scripts/weekly-synergy-audit.sh && git commit -m 'feat: synergy audit — rolling issue + targeted comments, max 2/run'"
-```
+> The `workspace-backup` cron will commit and push this automatically. No manual git commit needed.
 
 ---
 
