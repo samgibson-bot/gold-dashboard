@@ -147,6 +147,30 @@
 
 ---
 
+## 2026-02-26 — Ideas System Simplification (PR #31)
+
+**What was built:**
+- Replaced 7-stage status pipeline with open/closed only — dropped `IdeaFile.status`, `STATUS_LABELS`, `updateIdeaStatus()`, `ideas.status.ts` route
+- Fixed two-tier tag taxonomy (Type: product/infrastructure/research/automation, Domain: personal/finance/health/social/business) replacing free-form input with button groups
+- Replaced kanban view with grouped list by type tag (`IdeasPage` + `IdeaRow`)
+- Deleted `idea-lifecycle` cron (OODA check-ins on stale ideas) — VPS script removed, cron job deleted
+- Rewrote `weekly-synergy-audit.sh` — rolling pinned issue with weekly comments, max 2 targeted comments/run, tag-aware grouping
+- Updated 4 OpenClaw workspace knowledge files (TOOLS.md, SOUL.md, MEMORY.md, gold-ideas/README.md)
+- Deleted GitHub Projects V2 kanban board
+
+**What was tricky:**
+- **Inverted primary palette in dark mode**: First dark mode contrast fix made things *worse* — adding `dark:text-primary-300` set text to oklch(0.3) ≈ dark gray on dark background. The palette redefines CSS variables in `.dark` scope so `primary-50`=near-black, `primary-950`=near-white. The correct fix is to drop `dark:` overrides entirely and pick scale values that auto-adapt via CSS variables.
+- **`openclaw rpc cron.delete` doesn't exist**: Subagent tried this first, got command not found. Had to directly edit `~/.openclaw/cron/jobs.json` with Python.
+- **GitHub Projects V2 requires `project` scope**: Token lacked it; ran `gh auth refresh -s project` on the VPS (where `samgibson-bot` is authenticated). Also: `gh` is at `~/bin/gh` on VPS, not in PATH.
+- **Design docs committed to main before branching**: Squash merge caused rebase conflict when syncing local main after PR merge. Should commit plans/docs on the feature branch.
+
+**Patterns worth carrying forward:**
+- **Inverted palette = no dark: overrides needed** — `text-primary-900` adapts automatically. Only add `dark:` for genuinely different interactive states.
+- **Brainstorm first, even for "simplification" tasks** — exploring the actual cron scripts via SSH revealed behavior that changed the design (idea-lifecycle was doing more than expected)
+- **VPS workspace files**: edit directly via SSH, workspace-backup cron commits nightly. No manual git commit needed.
+
+---
+
 ## 2026-02-21 — Skill Routing + Fleet Visibility (PR #17)
 
 **What was built:**
