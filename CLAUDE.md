@@ -53,6 +53,7 @@ git push
 ## Branch Hygiene
 
 - Always branch from main: `git checkout -b feat/issue-N-description`
+- **Commit docs/plans to the feature branch**, not to main before branching — squash merges cause rebase conflicts if main has commits the feature branch doesn't include
 - PR naming: `gh pr create --title "feat: [Issue #N] Description"`
 - **Always create a PR immediately after pushing** — do not wait to be asked
 - Auto-delete on merge is enabled — after merge: `git branch -D feat/branch-name`
