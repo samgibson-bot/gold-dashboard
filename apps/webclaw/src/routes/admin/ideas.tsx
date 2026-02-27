@@ -38,25 +38,25 @@ function IdeaRow({ idea, onClick }: { idea: IdeaFile; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-primary-50 dark:hover:bg-primary-800 transition-colors group"
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-primary-200 transition-colors group"
     >
-      <span className="flex-1 text-sm text-primary-900 dark:text-primary-100 truncate text-pretty">
+      <span className="flex-1 text-sm text-primary-900 truncate text-pretty">
         {idea.title}
       </span>
       <span className="flex items-center gap-1 shrink-0">
         {domainTags.map((tag) => (
           <span
             key={tag}
-            className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-700 dark:text-primary-300"
+            className="text-[10px] px-1.5 py-0.5 rounded bg-primary-200 text-primary-700"
           >
             {tag}
           </span>
         ))}
       </span>
-      <span className="text-xs text-primary-400 dark:text-primary-300 tabular-nums shrink-0">
+      <span className="text-xs text-primary-600 tabular-nums shrink-0">
         #{idea.issueNumber}
       </span>
-      <span className="text-xs text-primary-400 dark:text-primary-300 tabular-nums shrink-0">
+      <span className="text-xs text-primary-600 tabular-nums shrink-0">
         {new Date(idea.created).toLocaleDateString()}
       </span>
     </button>
@@ -130,7 +130,7 @@ function IdeasPage() {
         if (group.length === 0) return null
         return (
           <section key={type}>
-            <h2 className="text-xs font-medium text-primary-500 dark:text-primary-400 uppercase tracking-wide mb-2">
+            <h2 className="text-xs font-medium text-primary-600 uppercase tracking-wide mb-2">
               {type}
             </h2>
             <div className="space-y-0.5">
