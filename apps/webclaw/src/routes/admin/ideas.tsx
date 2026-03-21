@@ -570,11 +570,33 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           </button>
         </div>
 
-        <DialogDescription className="mt-2">
-          {activeTab === 'idea'
-            ? 'OpenClaw will analyze your submission, research sources, generate integration pathways, and create a detailed GitHub Issue.'
-            : 'Record a personal build project. OpenClaw will write a product brief and create a GitHub Issue — no synergy analysis, no lifecycle automation.'}
+        <DialogDescription className="sr-only">
+          Choose between submitting an idea for research or recording a build project
         </DialogDescription>
+        <div className="mt-2 text-sm text-primary-600 space-y-1">
+          {activeTab === 'idea' ? (
+            <>
+              <p className="text-pretty">
+                OpenClaw will research your sources, search for related ideas,
+                generate integration pathways, and create a GitHub issue with
+                full analysis.
+              </p>
+              <p className="text-xs text-primary-400">
+                Created as draft — you review and publish.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-pretty">
+                Record a build project. OpenClaw writes a short product brief
+                and creates a GitHub issue — no research or synergy analysis.
+              </p>
+              <p className="text-xs text-primary-400">
+                Created as draft — you review and publish.
+              </p>
+            </>
+          )}
+        </div>
 
         <div className="mt-4 space-y-4">
           {/* Title */}
