@@ -163,10 +163,31 @@ function IdeasPage() {
         </section>
       )}
 
-      {selected && (
-        <IdeaDetail file={selected} onClose={() => setSelected(null)} />
-      )}
-      {showCreate && <CreateIdeaDialog onClose={() => setShowCreate(false)} />}
+      <DialogRoot
+        open={!!selected}
+        onOpenChange={function onDetailChange(open) {
+          if (!open) setSelected(null)
+        }}
+      >
+        {selected && <IdeaDetail file={selected} />}
+      </DialogRoot>
+
+      <DialogRoot
+        open={showCreate}
+        onOpenChange={function onCreateChange(open) {
+          if (!open) setShowCreate(false)
+        }}
+      >
+        {showCreate && (
+          <CreateIdeaDialog
+            onClose={() => setShowCreate(false)}
+            onCreated={() => {
+              setShowCreate(false)
+              refetch()
+            }}
+          />
+        )}
+      </DialogRoot>
     </div>
   )
 }
