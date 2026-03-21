@@ -43,6 +43,11 @@ function IdeaRow({ idea, onClick }: { idea: IdeaFile; onClick: () => void }) {
       <span className="flex-1 text-sm text-primary-900 truncate text-pretty">
         {idea.title}
       </span>
+      {idea.needsReview ? (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 shrink-0">
+          Draft
+        </span>
+      ) : null}
       <span className="flex items-center gap-1 shrink-0">
         {domainTags.map((tag) => (
           <span
