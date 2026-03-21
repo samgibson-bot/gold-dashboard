@@ -311,7 +311,9 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Schedule Kind</span>
                 <select
                   name="scheduleKind"
-                  defaultValue={editJob?.schedule?.kind ?? editJob?.scheduleKind ?? 'every'}
+                  defaultValue={
+                    editJob?.schedule?.kind ?? editJob?.scheduleKind ?? 'every'
+                  }
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 >
                   <option value="every">Every</option>
@@ -346,7 +348,9 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Every Amount</span>
                 <input
                   name="everyAmount"
-                  defaultValue={String(editJob?.schedule?.amount ?? editJob?.everyAmount ?? '')}
+                  defaultValue={String(
+                    editJob?.schedule?.amount ?? editJob?.everyAmount ?? '',
+                  )}
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 />
               </label>
@@ -354,7 +358,9 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Every Unit</span>
                 <input
                   name="everyUnit"
-                  defaultValue={String(editJob?.schedule?.unit ?? editJob?.everyUnit ?? '')}
+                  defaultValue={String(
+                    editJob?.schedule?.unit ?? editJob?.everyUnit ?? '',
+                  )}
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 />
               </label>
@@ -362,7 +368,9 @@ function CronPage() {
                 <span className="text-xs text-primary-600">Cron Expr</span>
                 <input
                   name="cronExpr"
-                  defaultValue={editJob?.schedule?.expr ?? editJob?.cronExpr ?? ''}
+                  defaultValue={
+                    editJob?.schedule?.expr ?? editJob?.cronExpr ?? ''
+                  }
                   className="mt-1 block w-full text-sm border border-primary-200 rounded-md px-2 py-1 bg-surface"
                 />
               </label>
@@ -572,13 +580,27 @@ function JobRow(props: {
               <TooltipTrigger className="font-medium text-left">
                 {job.name}
               </TooltipTrigger>
-              {(job.payload?.message ?? job.payload?.text ?? job.payloadText) ? (
+              {(job.payload?.message ??
+              job.payload?.text ??
+              job.payloadText) ? (
                 <TooltipContent
                   side="right"
                   className="max-w-xs whitespace-normal text-left leading-relaxed"
                 >
-                  {(job.payload?.message ?? job.payload?.text ?? job.payloadText ?? '').slice(0, 300)}
-                  {(job.payload?.message ?? job.payload?.text ?? job.payloadText ?? '').length > 300 ? '…' : ''}
+                  {(
+                    job.payload?.message ??
+                    job.payload?.text ??
+                    job.payloadText ??
+                    ''
+                  ).slice(0, 300)}
+                  {(
+                    job.payload?.message ??
+                    job.payload?.text ??
+                    job.payloadText ??
+                    ''
+                  ).length > 300
+                    ? '…'
+                    : ''}
                 </TooltipContent>
               ) : null}
             </TooltipRoot>
@@ -783,7 +805,7 @@ function RunHistory(props: { jobId: string }) {
     },
   })
 
-  const runs = (data?.runs ?? [])
+  const runs = data?.runs ?? []
 
   if (isLoading) {
     return (

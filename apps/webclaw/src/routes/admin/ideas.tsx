@@ -21,8 +21,19 @@ type IdeasResponse = {
   ideas?: Array<IdeaFile>
 }
 
-const TAG_TYPES = ['product', 'infrastructure', 'research', 'automation'] as const
-const TAG_DOMAINS = ['personal', 'finance', 'health', 'social', 'business'] as const
+const TAG_TYPES = [
+  'product',
+  'infrastructure',
+  'research',
+  'automation',
+] as const
+const TAG_DOMAINS = [
+  'personal',
+  'finance',
+  'health',
+  'social',
+  'business',
+] as const
 const ALL_TAGS = [...TAG_TYPES, ...TAG_DOMAINS] as const
 type IdeaTag = (typeof ALL_TAGS)[number]
 
@@ -43,6 +54,11 @@ function IdeaRow({ idea, onClick }: { idea: IdeaFile; onClick: () => void }) {
       <span className="flex-1 text-sm text-primary-900 truncate text-pretty">
         {idea.title}
       </span>
+      {idea.needsReview ? (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 shrink-0">
+          Draft
+        </span>
+      ) : null}
       <span className="flex items-center gap-1 shrink-0">
         {domainTags.map((tag) => (
           <span
@@ -118,12 +134,8 @@ function IdeasPage() {
         </div>
       </div>
 
-      {isLoading && (
-        <p className="text-sm text-primary-500">Loading...</p>
-      )}
-      {error && (
-        <p className="text-sm text-red-500">Failed to load ideas</p>
-      )}
+      {isLoading && <p className="text-sm text-primary-500">Loading...</p>}
+      {error && <p className="text-sm text-red-500">Failed to load ideas</p>}
 
       {TAG_TYPES.map(function renderTypeGroup(type) {
         const group = grouped[type] ?? []
@@ -169,7 +181,15 @@ function IdeasPage() {
           if (!open) setSelected(null)
         }}
       >
-        {selected && <IdeaDetail file={selected} />}
+        {selected && (
+          <IdeaDetail
+            file={selected}
+            onPublished={function handlePublished() {
+              setSelected(null)
+              refetch()
+            }}
+          />
+        )}
       </DialogRoot>
 
       <DialogRoot
@@ -194,10 +214,59 @@ function IdeasPage() {
 
 // ---------- Idea Detail (Modal Content) ----------
 
-function IdeaDetail({ file }: { file: IdeaFile }) {
+function IdeaDetail({
+  file,
+  onPublished,
+}: {
+  file: IdeaFile
+  onPublished?: () => void
+}) {
+  const publishMutation = useMutation({
+    mutationFn: async function publishIdea() {
+      const res = await fetch('/api/admin/ideas/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issueNumber: file.issueNumber }),
+      })
+      const data = (await res.json()) as { ok: boolean; error?: string }
+      if (!data.ok) throw new Error(data.error ?? 'Failed to publish')
+    },
+    onSuccess: function handlePublished() {
+      onPublished?.()
+    },
+  })
+
   return (
     <div className="flex flex-col h-full max-h-[85vh]">
       <div className="p-5 flex-1 overflow-auto">
+        {/* Draft banner */}
+        {file.needsReview ? (
+          <div className="flex items-center justify-between gap-3 mb-4 p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <span className="text-xs text-amber-700 dark:text-amber-300">
+              Draft — review before publishing
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={`${file.issueUrl}/edit`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
+              >
+                Edit on GitHub
+              </a>
+              <button
+                onClick={function handlePublish() {
+                  publishMutation.mutate()
+                }}
+                disabled={publishMutation.isPending}
+                className="text-[11px] px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-50"
+              >
+                {publishMutation.isPending ? 'Publishing...' : 'Publish'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
           <DialogTitle className="text-sm font-medium pr-3">
@@ -265,10 +334,7 @@ function IdeaDetail({ file }: { file: IdeaFile }) {
       </div>
 
       {/* Chat input */}
-      <IdeaChatInput
-        ideaTitle={file.title}
-        ideaNumber={file.issueNumber}
-      />
+      <IdeaChatInput ideaTitle={file.title} ideaNumber={file.issueNumber} />
     </div>
   )
 }
@@ -570,11 +636,34 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
           </button>
         </div>
 
-        <DialogDescription className="mt-2">
-          {activeTab === 'idea'
-            ? 'OpenClaw will analyze your submission, research sources, generate integration pathways, and create a detailed GitHub Issue.'
-            : 'Record a personal build project. OpenClaw will write a product brief and create a GitHub Issue — no synergy analysis, no lifecycle automation.'}
+        <DialogDescription className="sr-only">
+          Choose between submitting an idea for research or recording a build
+          project
         </DialogDescription>
+        <div className="mt-2 text-sm text-primary-600 space-y-1">
+          {activeTab === 'idea' ? (
+            <>
+              <p className="text-pretty">
+                OpenClaw will research your sources, search for related ideas,
+                generate integration pathways, and create a GitHub issue with
+                full analysis.
+              </p>
+              <p className="text-xs text-primary-400">
+                Created as draft — you review and publish.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-pretty">
+                Record a build project. OpenClaw writes a short product brief
+                and creates a GitHub issue — no research or synergy analysis.
+              </p>
+              <p className="text-xs text-primary-400">
+                Created as draft — you review and publish.
+              </p>
+            </>
+          )}
+        </div>
 
         <div className="mt-4 space-y-4">
           {/* Title */}

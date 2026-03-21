@@ -81,7 +81,11 @@ export function describeCronSchedule(cron: string): string {
 // Convert a cron fixed time (hour/minute in sourceTz) to a local Date object.
 // Uses a one-step correction: create a naive UTC date, see what sourceTz shows,
 // then shift by the difference. Accurate for all normal TZ offsets.
-function cronTimeToLocalDate(hour: number, minute: number, sourceTz: string): Date {
+function cronTimeToLocalDate(
+  hour: number,
+  minute: number,
+  sourceTz: string,
+): Date {
   const now = new Date()
   const naiveMs = Date.UTC(
     now.getUTCFullYear(),
@@ -98,10 +102,14 @@ function cronTimeToLocalDate(hour: number, minute: number, sourceTz: string): Da
     minute: '2-digit',
     hour12: false,
   }).formatToParts(naiveDate)
-  const showsHour = parseInt(tzParts.find((p) => p.type === 'hour')?.value ?? '0')
-  const showsMin = parseInt(tzParts.find((p) => p.type === 'minute')?.value ?? '0')
+  const showsHour = parseInt(
+    tzParts.find((p) => p.type === 'hour')?.value ?? '0',
+  )
+  const showsMin = parseInt(
+    tzParts.find((p) => p.type === 'minute')?.value ?? '0',
+  )
   // Normalize diff to ±720 minutes to handle day-boundary rollovers
-  let diffMins = (hour * 60 + minute) - (showsHour * 60 + showsMin)
+  let diffMins = hour * 60 + minute - (showsHour * 60 + showsMin)
   diffMins = ((diffMins % 1440) + 1440) % 1440
   if (diffMins > 720) diffMins -= 1440
   return new Date(naiveMs + diffMins * 60_000)

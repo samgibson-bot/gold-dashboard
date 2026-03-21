@@ -356,7 +356,10 @@ async function buildConnectParams(
   return params
 }
 
-function waitForConnectChallenge(ws: WebSocket, timeoutMs = 10_000): Promise<string> {
+function waitForConnectChallenge(
+  ws: WebSocket,
+  timeoutMs = 10_000,
+): Promise<string> {
   return new Promise<string>((resolve) => {
     const timer = setTimeout(() => {
       ws.removeEventListener('message', onMessage)

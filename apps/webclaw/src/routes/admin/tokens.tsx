@@ -105,7 +105,8 @@ function TokensPage() {
     return (
       <div className="p-6">
         <div className="text-sm text-primary-500">
-          {data?.error ?? 'No usage data available. Add OPENROUTER_API_KEY and OPENROUTER_MANAGEMENT_KEY to your environment.'}
+          {data?.error ??
+            'No usage data available. Add OPENROUTER_API_KEY and OPENROUTER_MANAGEMENT_KEY to your environment.'}
         </div>
       </div>
     )
@@ -331,7 +332,9 @@ function TokensPage() {
   )
 }
 
-function SimpleBarChart(props: { data: Array<{ date: string; value: number }> }) {
+function SimpleBarChart(props: {
+  data: Array<{ date: string; value: number }>
+}) {
   const max = Math.max(
     ...props.data.map(function getVal(d) {
       return d.value

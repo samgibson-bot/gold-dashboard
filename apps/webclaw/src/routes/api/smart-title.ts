@@ -32,7 +32,10 @@ export const Route = createFileRoute('/api/smart-title')({
             typeof body.message === 'string' ? body.message.slice(0, 500) : ''
           if (!message.trim()) {
             return json(
-              { ok: false, error: 'message required' } satisfies SmartTitleResponse,
+              {
+                ok: false,
+                error: 'message required',
+              } satisfies SmartTitleResponse,
               { status: 400 },
             )
           }
@@ -63,13 +66,19 @@ export const Route = createFileRoute('/api/smart-title')({
             : ''
 
           if (!title) {
-            return json({ ok: false, error: 'empty response' } satisfies SmartTitleResponse)
+            return json({
+              ok: false,
+              error: 'empty response',
+            } satisfies SmartTitleResponse)
           }
 
           return json({ ok: true, title } satisfies SmartTitleResponse)
         } catch (err) {
           return json(
-            { ok: false, error: sanitizeError(err) } satisfies SmartTitleResponse,
+            {
+              ok: false,
+              error: sanitizeError(err),
+            } satisfies SmartTitleResponse,
             { status: 500 },
           )
         }

@@ -42,8 +42,10 @@ async function listApprovals(): Promise<Array<ApprovalItem>> {
           description: body || 'No description',
           agent: getField('agent') || undefined,
           task: getField('task') || undefined,
-          status:
-            (getField('decision') || 'pending') as 'approved' | 'rejected' | 'pending',
+          status: (getField('decision') || 'pending') as
+            | 'approved'
+            | 'rejected'
+            | 'pending',
           created: getField('date') || (entry.modified ?? ''),
           reviewer: getField('reviewer') || undefined,
           comment: body || undefined,

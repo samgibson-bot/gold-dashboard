@@ -264,7 +264,9 @@ export function ChatScreen({
   const hideUi = shouldRedirectToNew || isRedirecting
 
   useEffect(() => {
-    const latestMessage = historyMessages[historyMessages.length - 1] as (typeof historyMessages)[number] | undefined
+    const latestMessage = historyMessages[historyMessages.length - 1] as
+      | (typeof historyMessages)[number]
+      | undefined
     if (!latestMessage || latestMessage.role !== 'assistant') return
     const signature = `${historyMessages.length}:${textFromMessage(latestMessage).slice(-64)}`
     if (signature !== lastAssistantSignature.current) {
@@ -280,18 +282,25 @@ export function ChatScreen({
 
   useEffect(() => {
     if (isNewChat || isRedirecting) return
-    const sessionKey = forcedSessionKey || resolvedSessionKey || activeSessionKey
+    const sessionKey =
+      forcedSessionKey || resolvedSessionKey || activeSessionKey
     if (!sessionKey) return
     // Skip if the session already has a user-set label
     if (activeSession?.label) return
     // Only trigger on first exchange: exactly 1 user message + at least 1 assistant message
     const userMessages = historyMessages.filter((m) => m.role === 'user')
-    const assistantMessages = historyMessages.filter((m) => m.role === 'assistant')
+    const assistantMessages = historyMessages.filter(
+      (m) => m.role === 'assistant',
+    )
     if (userMessages.length !== 1 || assistantMessages.length === 0) return
     if (titleGeneratedRef.current.has(sessionKey)) return
     titleGeneratedRef.current.add(sessionKey)
-    const firstUserMessage = userMessages[0] as (typeof historyMessages)[number] | undefined
-    const firstUserText = firstUserMessage ? textFromMessage(firstUserMessage).trim() : ''
+    const firstUserMessage = userMessages[0] as
+      | (typeof historyMessages)[number]
+      | undefined
+    const firstUserText = firstUserMessage
+      ? textFromMessage(firstUserMessage).trim()
+      : ''
     if (!firstUserText) return
     void (async () => {
       const title = await generateTitle(firstUserText)
@@ -626,8 +635,7 @@ export function ChatScreen({
     onNewChat: startNewChat,
   })
 
-  const historyLoading =
-    historyQuery.isLoading || isRedirecting
+  const historyLoading = historyQuery.isLoading || isRedirecting
   const showGatewayDown = Boolean(gatewayStatusError)
   const showGatewayNotice =
     showGatewayDown &&
