@@ -174,7 +174,15 @@ function IdeasPage() {
           if (!open) setSelected(null)
         }}
       >
-        {selected && <IdeaDetail file={selected} />}
+        {selected && (
+          <IdeaDetail
+            file={selected}
+            onPublished={function handlePublished() {
+              setSelected(null)
+              refetch()
+            }}
+          />
+        )}
       </DialogRoot>
 
       <DialogRoot
@@ -199,10 +207,59 @@ function IdeasPage() {
 
 // ---------- Idea Detail (Modal Content) ----------
 
-function IdeaDetail({ file }: { file: IdeaFile }) {
+function IdeaDetail({
+  file,
+  onPublished,
+}: {
+  file: IdeaFile
+  onPublished?: () => void
+}) {
+  const publishMutation = useMutation({
+    mutationFn: async function publishIdea() {
+      const res = await fetch('/api/admin/ideas/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issueNumber: file.issueNumber }),
+      })
+      const data = (await res.json()) as { ok: boolean; error?: string }
+      if (!data.ok) throw new Error(data.error ?? 'Failed to publish')
+    },
+    onSuccess: function handlePublished() {
+      onPublished?.()
+    },
+  })
+
   return (
     <div className="flex flex-col h-full max-h-[85vh]">
       <div className="p-5 flex-1 overflow-auto">
+        {/* Draft banner */}
+        {file.needsReview ? (
+          <div className="flex items-center justify-between gap-3 mb-4 p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <span className="text-xs text-amber-700 dark:text-amber-300">
+              Draft — review before publishing
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={`${file.issueUrl}/edit`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
+              >
+                Edit on GitHub
+              </a>
+              <button
+                onClick={function handlePublish() {
+                  publishMutation.mutate()
+                }}
+                disabled={publishMutation.isPending}
+                className="text-[11px] px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-50"
+              >
+                {publishMutation.isPending ? 'Publishing...' : 'Publish'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
           <DialogTitle className="text-sm font-medium pr-3">
