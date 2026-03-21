@@ -44,6 +44,7 @@ export type IdeaFromGitHub = {
   content: string
   created: string
   issueUrl: string
+  needsReview: boolean
   prNumber?: number
   prUrl?: string
 }
@@ -51,19 +52,38 @@ export type IdeaFromGitHub = {
 // ---------- List ideas ----------
 
 export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
-  const res = await fetch(
-    `${API_BASE}/repos/${OWNER}/${REPO}/issues?labels=idea&state=all&per_page=100`,
-    { headers: headers() },
-  )
-  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`)
-  const issues = (await res.json()) as Array<GitHubIssue>
+  const [ideaRes, reviewRes] = await Promise.all([
+    fetch(
+      `${API_BASE}/repos/${OWNER}/${REPO}/issues?labels=idea&state=all&per_page=100`,
+      { headers: headers() },
+    ),
+    fetch(
+      `${API_BASE}/repos/${OWNER}/${REPO}/issues?labels=needs-review&state=all&per_page=100`,
+      { headers: headers() },
+    ),
+  ])
+  if (!ideaRes.ok) throw new Error(`GitHub API error: ${ideaRes.status}`)
+  if (!reviewRes.ok) throw new Error(`GitHub API error: ${reviewRes.status}`)
 
-  return issues.map(function mapIssue(issue) {
+  const ideaIssues = (await ideaRes.json()) as Array<GitHubIssue>
+  const reviewIssues = (await reviewRes.json()) as Array<GitHubIssue>
+
+  const seen = new Set<number>()
+  const allIssues: Array<GitHubIssue> = []
+  for (const issue of [...ideaIssues, ...reviewIssues]) {
+    if (!seen.has(issue.number)) {
+      seen.add(issue.number)
+      allIssues.push(issue)
+    }
+  }
+
+  return allIssues.map(function mapIssue(issue) {
     const labelNames = issue.labels.map(function getName(l) {
       return l.name
     })
+    const needsReview = labelNames.includes('needs-review')
     const tags = labelNames.filter(function isTag(l) {
-      return l !== 'idea'
+      return l !== 'idea' && l !== 'needs-review'
     })
 
     return {
@@ -73,6 +93,7 @@ export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
       content: issue.body ?? '',
       created: issue.created_at,
       issueUrl: issue.html_url,
+      needsReview,
       prNumber: issue.pull_request ? issue.number : undefined,
       prUrl: issue.pull_request?.html_url,
     }

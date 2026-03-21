@@ -169,6 +169,7 @@ export type IdeaFile = {
   content: string
   created: string
   issueUrl: string
+  needsReview: boolean
   prNumber?: number
   prUrl?: string
 }
