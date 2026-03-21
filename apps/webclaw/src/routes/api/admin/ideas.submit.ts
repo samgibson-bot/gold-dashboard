@@ -57,7 +57,7 @@ function buildProjectPrompt(params: {
     '',
     `1. **Understand the vision** — What is being built? Who is it for? What problem does it solve?`,
     '',
-    `2. **Create a GitHub Issue** in \`samgibson-bot/gold-ideas\` with label \`project\`. Do NOT apply \`idea\`, \`seed\`, or any lifecycle labels. ${title ? `The issue title should be the project name exactly as given (clean it up only if there's an obvious typo — don't reformat it).` : `Generate a concise, descriptive title from the description.`}`,
+    `2. **Create a GitHub Issue** in \`samgibson-bot/gold-ideas\` with labels \`project\` and \`needs-review\`. Do NOT apply \`idea\`, \`seed\`, or any lifecycle labels. ${title ? `The issue title should be the project name exactly as given (clean it up only if there's an obvious typo — don't reformat it).` : `Generate a concise, descriptive title from the description.`}`,
     '',
     `   The issue body should be a concise product brief with these sections:`,
     `   - **Problem / Goal** — What problem does this solve? What's the desired outcome?`,
@@ -184,7 +184,7 @@ function buildSeedPrompt(params: {
     `   - \`reuses-infrastructure-from\` — leverages technical work from another issue`,
     `   If the auto-fetched historical context above contains relevant matches, reference those. Also search for any others not listed.`,
     '',
-    `5. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` — review the suggested title "${title}" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like "Integration: X" or "Feature: Y" or "Enhancement: Z".` : ' — generate a concise, descriptive, standardized title based on the analysis.'}. Include all source links (if provided), integration pathways, synergy analysis, and the Ancestry section. **Apply these labels:** \`idea\`, \`seed\`, and any relevant tag labels (e.g. \`automation\`, \`agents\`, \`infrastructure\`). The issue IS the idea — do NOT create any .md files.`,
+    `5. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` — review the suggested title "${title}" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like "Integration: X" or "Feature: Y" or "Enhancement: Z".` : ' — generate a concise, descriptive, standardized title based on the analysis.'}. Include all source links (if provided), integration pathways, synergy analysis, and the Ancestry section. **Apply these labels:** \`idea\`, \`seed\`, \`needs-review\`, and any relevant tag labels (e.g. \`automation\`, \`agents\`, \`infrastructure\`). The issue IS the idea — do NOT create any .md files.`,
     '',
     `6. **Thinking Cycle** — After creating the issue, add a focused first comment with your honest assessment: what it would realistically take to build this, the strongest argument against it, and any non-obvious connections to other open ideas. Be specific to this idea — a sharp 200-word comment beats a padded template. The comment MUST begin with exactly this sentinel on the first line: <!-- roadmap-posted -->`,
   ]
