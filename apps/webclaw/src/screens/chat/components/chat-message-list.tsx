@@ -82,7 +82,9 @@ function ChatMessageListComponent({
 
   const lastAssistantText = useMemo(() => {
     if (typeof lastAssistantIndex !== 'number') return ''
-    const msg = displayMessages[lastAssistantIndex] as (typeof displayMessages)[number] | undefined
+    const msg = displayMessages[lastAssistantIndex] as
+      | (typeof displayMessages)[number]
+      | undefined
     if (!msg || msg.role === 'user') return ''
     return textFromMessage(msg)
   }, [displayMessages, lastAssistantIndex])

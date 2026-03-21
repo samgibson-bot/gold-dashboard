@@ -34,7 +34,9 @@ export const Route = createFileRoute('/api/admin/cron')({
           >
           if (body.action === 'describe') {
             const payload =
-              typeof body.payload === 'string' ? body.payload.slice(0, 1000) : ''
+              typeof body.payload === 'string'
+                ? body.payload.slice(0, 1000)
+                : ''
             if (!payload.trim()) {
               return json(
                 { ok: false, error: 'payload required' },
@@ -43,10 +45,7 @@ export const Route = createFileRoute('/api/admin/cron')({
             }
             const apiKey = await getOpenRouterApiKey()
             if (!apiKey) {
-              return json(
-                { ok: false, error: 'no api key' },
-                { status: 503 },
-              )
+              return json({ ok: false, error: 'no api key' }, { status: 503 })
             }
             const raw = await openRouterComplete(apiKey, {
               model: 'google/gemini-2.0-flash-lite-001',
@@ -98,10 +97,7 @@ export const Route = createFileRoute('/api/admin/cron')({
           >
           const jobId = typeof body.id === 'string' ? body.id : ''
           if (!jobId) {
-            return json(
-              { ok: false, error: 'id required' },
-              { status: 400 },
-            )
+            return json({ ok: false, error: 'id required' }, { status: 400 })
           }
           const { id: _id, ...patch } = body
           const result = await gatewayRpc<Record<string, unknown>>(

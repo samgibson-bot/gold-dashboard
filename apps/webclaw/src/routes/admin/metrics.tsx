@@ -86,15 +86,20 @@ function formatCost(cost: number): string {
   return `$${cost.toFixed(4)}`
 }
 
-
 export const Route = createFileRoute('/admin/metrics')({
   component: MetricsPage,
 })
 
 function MetricsPage() {
   const [range, setRange] = useState('7d')
-  const [modelSort, setModelSort] = useState<{ col: ModelSortCol; dir: SortDir }>({ col: 'cost', dir: 'desc' })
-  const [callSort, setCallSort] = useState<{ col: CallSortCol; dir: SortDir }>({ col: 'date', dir: 'desc' })
+  const [modelSort, setModelSort] = useState<{
+    col: ModelSortCol
+    dir: SortDir
+  }>({ col: 'cost', dir: 'desc' })
+  const [callSort, setCallSort] = useState<{ col: CallSortCol; dir: SortDir }>({
+    col: 'date',
+    dir: 'desc',
+  })
 
   const metricsQuery = useQuery({
     queryKey: adminQueryKeys.metrics(range),
@@ -159,13 +164,17 @@ function MetricsPage() {
 
   function handleModelSort(col: ModelSortCol) {
     setModelSort((prev) =>
-      prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' },
+      prev.col === col
+        ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+        : { col, dir: 'desc' },
     )
   }
 
   function handleCallSort(col: CallSortCol) {
     setCallSort((prev) =>
-      prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' },
+      prev.col === col
+        ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+        : { col, dir: 'desc' },
     )
   }
 
@@ -175,8 +184,10 @@ function MetricsPage() {
     let cmp = 0
     if (modelSort.col === 'model') cmp = am.localeCompare(bm)
     else if (modelSort.col === 'requests') cmp = au.requests - bu.requests
-    else if (modelSort.col === 'input') cmp = au.prompt_tokens - bu.prompt_tokens
-    else if (modelSort.col === 'output') cmp = au.completion_tokens - bu.completion_tokens
+    else if (modelSort.col === 'input')
+      cmp = au.prompt_tokens - bu.prompt_tokens
+    else if (modelSort.col === 'output')
+      cmp = au.completion_tokens - bu.completion_tokens
     else cmp = au.usage - bu.usage
     return modelSort.dir === 'asc' ? cmp : -cmp
   })
@@ -190,7 +201,8 @@ function MetricsPage() {
     else if (callSort.col === 'model') cmp = a.model.localeCompare(b.model)
     else if (callSort.col === 'requests') cmp = a.requests - b.requests
     else if (callSort.col === 'input') cmp = a.prompt_tokens - b.prompt_tokens
-    else if (callSort.col === 'output') cmp = a.completion_tokens - b.completion_tokens
+    else if (callSort.col === 'output')
+      cmp = a.completion_tokens - b.completion_tokens
     else cmp = a.usage - b.usage
     return callSort.dir === 'asc' ? cmp : -cmp
   })
@@ -372,11 +384,56 @@ function MetricsPage() {
             <table className="w-full text-sm">
               <thead className="bg-primary-50 border-b border-primary-200">
                 <tr>
-                  <SortTh align="left" active={modelSort.col === 'model'} dir={modelSort.dir} onClick={function () { handleModelSort('model') }}>Model</SortTh>
-                  <SortTh align="right" active={modelSort.col === 'requests'} dir={modelSort.dir} onClick={function () { handleModelSort('requests') }}>Requests</SortTh>
-                  <SortTh align="right" active={modelSort.col === 'input'} dir={modelSort.dir} onClick={function () { handleModelSort('input') }}>Input</SortTh>
-                  <SortTh align="right" active={modelSort.col === 'output'} dir={modelSort.dir} onClick={function () { handleModelSort('output') }}>Output</SortTh>
-                  <SortTh align="right" active={modelSort.col === 'cost'} dir={modelSort.dir} onClick={function () { handleModelSort('cost') }}>Cost</SortTh>
+                  <SortTh
+                    align="left"
+                    active={modelSort.col === 'model'}
+                    dir={modelSort.dir}
+                    onClick={function () {
+                      handleModelSort('model')
+                    }}
+                  >
+                    Model
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={modelSort.col === 'requests'}
+                    dir={modelSort.dir}
+                    onClick={function () {
+                      handleModelSort('requests')
+                    }}
+                  >
+                    Requests
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={modelSort.col === 'input'}
+                    dir={modelSort.dir}
+                    onClick={function () {
+                      handleModelSort('input')
+                    }}
+                  >
+                    Input
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={modelSort.col === 'output'}
+                    dir={modelSort.dir}
+                    onClick={function () {
+                      handleModelSort('output')
+                    }}
+                  >
+                    Output
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={modelSort.col === 'cost'}
+                    dir={modelSort.dir}
+                    onClick={function () {
+                      handleModelSort('cost')
+                    }}
+                  >
+                    Cost
+                  </SortTh>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary-100">
@@ -417,20 +474,78 @@ function MetricsPage() {
             <table className="w-full text-sm">
               <thead className="bg-primary-50 border-b border-primary-200">
                 <tr>
-                  <SortTh align="left" active={callSort.col === 'date'} dir={callSort.dir} onClick={function () { handleCallSort('date') }}>Date</SortTh>
-                  <SortTh align="left" active={callSort.col === 'model'} dir={callSort.dir} onClick={function () { handleCallSort('model') }}>Model</SortTh>
-                  <SortTh align="right" active={callSort.col === 'requests'} dir={callSort.dir} onClick={function () { handleCallSort('requests') }}>Requests</SortTh>
-                  <SortTh align="right" active={callSort.col === 'input'} dir={callSort.dir} onClick={function () { handleCallSort('input') }}>Input</SortTh>
-                  <SortTh align="right" active={callSort.col === 'output'} dir={callSort.dir} onClick={function () { handleCallSort('output') }}>Output</SortTh>
-                  <SortTh align="right" active={callSort.col === 'cost'} dir={callSort.dir} onClick={function () { handleCallSort('cost') }}>Cost</SortTh>
+                  <SortTh
+                    align="left"
+                    active={callSort.col === 'date'}
+                    dir={callSort.dir}
+                    onClick={function () {
+                      handleCallSort('date')
+                    }}
+                  >
+                    Date
+                  </SortTh>
+                  <SortTh
+                    align="left"
+                    active={callSort.col === 'model'}
+                    dir={callSort.dir}
+                    onClick={function () {
+                      handleCallSort('model')
+                    }}
+                  >
+                    Model
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={callSort.col === 'requests'}
+                    dir={callSort.dir}
+                    onClick={function () {
+                      handleCallSort('requests')
+                    }}
+                  >
+                    Requests
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={callSort.col === 'input'}
+                    dir={callSort.dir}
+                    onClick={function () {
+                      handleCallSort('input')
+                    }}
+                  >
+                    Input
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={callSort.col === 'output'}
+                    dir={callSort.dir}
+                    onClick={function () {
+                      handleCallSort('output')
+                    }}
+                  >
+                    Output
+                  </SortTh>
+                  <SortTh
+                    align="right"
+                    active={callSort.col === 'cost'}
+                    dir={callSort.dir}
+                    onClick={function () {
+                      handleCallSort('cost')
+                    }}
+                  >
+                    Cost
+                  </SortTh>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary-100">
                 {sortedActivity.map(function renderCall(item, i) {
                   return (
                     <tr key={`${item.date}-${item.model}-${i}`}>
-                      <td className="px-3 py-2 text-primary-500 tabular-nums">{item.date}</td>
-                      <td className="px-3 py-2 text-primary-900">{item.model}</td>
+                      <td className="px-3 py-2 text-primary-500 tabular-nums">
+                        {item.date}
+                      </td>
+                      <td className="px-3 py-2 text-primary-900">
+                        {item.model}
+                      </td>
                       <td className="px-3 py-2 text-right text-primary-700 tabular-nums">
                         {item.requests.toLocaleString()}
                       </td>
@@ -508,13 +623,23 @@ function SortTh(props: {
     >
       <span className="inline-flex items-center gap-1">
         {props.align === 'right' && (
-          <span className={cn('text-[10px]', props.active ? 'text-primary-700' : 'text-primary-300')}>
+          <span
+            className={cn(
+              'text-[10px]',
+              props.active ? 'text-primary-700' : 'text-primary-300',
+            )}
+          >
             {props.active ? (props.dir === 'asc' ? '↑' : '↓') : '↕'}
           </span>
         )}
         {props.children}
         {props.align === 'left' && (
-          <span className={cn('text-[10px]', props.active ? 'text-primary-700' : 'text-primary-300')}>
+          <span
+            className={cn(
+              'text-[10px]',
+              props.active ? 'text-primary-700' : 'text-primary-300',
+            )}
+          >
             {props.active ? (props.dir === 'asc' ? '↑' : '↓') : '↕'}
           </span>
         )}

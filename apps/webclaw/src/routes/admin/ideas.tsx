@@ -21,8 +21,19 @@ type IdeasResponse = {
   ideas?: Array<IdeaFile>
 }
 
-const TAG_TYPES = ['product', 'infrastructure', 'research', 'automation'] as const
-const TAG_DOMAINS = ['personal', 'finance', 'health', 'social', 'business'] as const
+const TAG_TYPES = [
+  'product',
+  'infrastructure',
+  'research',
+  'automation',
+] as const
+const TAG_DOMAINS = [
+  'personal',
+  'finance',
+  'health',
+  'social',
+  'business',
+] as const
 const ALL_TAGS = [...TAG_TYPES, ...TAG_DOMAINS] as const
 type IdeaTag = (typeof ALL_TAGS)[number]
 
@@ -123,12 +134,8 @@ function IdeasPage() {
         </div>
       </div>
 
-      {isLoading && (
-        <p className="text-sm text-primary-500">Loading...</p>
-      )}
-      {error && (
-        <p className="text-sm text-red-500">Failed to load ideas</p>
-      )}
+      {isLoading && <p className="text-sm text-primary-500">Loading...</p>}
+      {error && <p className="text-sm text-red-500">Failed to load ideas</p>}
 
       {TAG_TYPES.map(function renderTypeGroup(type) {
         const group = grouped[type] ?? []
@@ -327,10 +334,7 @@ function IdeaDetail({
       </div>
 
       {/* Chat input */}
-      <IdeaChatInput
-        ideaTitle={file.title}
-        ideaNumber={file.issueNumber}
-      />
+      <IdeaChatInput ideaTitle={file.title} ideaNumber={file.issueNumber} />
     </div>
   )
 }
@@ -633,7 +637,8 @@ function CreateIdeaDialog({ onClose, onCreated }: CreateIdeaDialogProps) {
         </div>
 
         <DialogDescription className="sr-only">
-          Choose between submitting an idea for research or recording a build project
+          Choose between submitting an idea for research or recording a build
+          project
         </DialogDescription>
         <div className="mt-2 text-sm text-primary-600 space-y-1">
           {activeTab === 'idea' ? (

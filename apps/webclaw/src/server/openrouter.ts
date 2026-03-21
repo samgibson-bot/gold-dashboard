@@ -17,7 +17,10 @@ export async function getOpenRouterApiKey(): Promise<string | null> {
   }
 }
 
-type OpenRouterMessage = { role: 'system' | 'user' | 'assistant'; content: string }
+type OpenRouterMessage = {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
 
 type OpenRouterOptions = {
   messages: Array<OpenRouterMessage>

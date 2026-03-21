@@ -65,8 +65,7 @@ export const Route = createFileRoute('/api/admin/tokens')({
           ])
 
           const balance = keyResult?.data ?? null
-          const activityItems: Array<ActivityItem> =
-            activityResult?.data ?? []
+          const activityItems: Array<ActivityItem> = activityResult?.data ?? []
 
           // Group by model
           const byModel: Partial<

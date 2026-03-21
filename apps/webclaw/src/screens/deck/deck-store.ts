@@ -98,7 +98,9 @@ export const useDeckStore = create<DeckStore>()(
           columns: state.columns.map((col) => {
             if (col.id !== columnId) return col
             const messages = [...col.messages]
-            const last = messages[messages.length - 1] as (typeof messages)[number] | undefined
+            const last = messages[messages.length - 1] as
+              | (typeof messages)[number]
+              | undefined
             if (last && last.role === 'assistant' && last.streaming) {
               messages[messages.length - 1] = {
                 ...last,

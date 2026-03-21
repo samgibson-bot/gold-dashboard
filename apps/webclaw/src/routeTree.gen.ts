@@ -57,6 +57,7 @@ import { Route as ApiAdminBrowserRouteImport } from './routes/api/admin/browser'
 import { Route as ApiAdminApprovalsRouteImport } from './routes/api/admin/approvals'
 import { Route as ApiAdminActivityRouteImport } from './routes/api/admin/activity'
 import { Route as ApiAdminIdeasSubmitRouteImport } from './routes/api/admin/ideas.submit'
+import { Route as ApiAdminIdeasPublishRouteImport } from './routes/api/admin/ideas.publish'
 import { Route as ApiAdminIdeasChatRouteImport } from './routes/api/admin/ideas.chat'
 
 const NewRoute = NewRouteImport.update({
@@ -299,6 +300,11 @@ const ApiAdminIdeasSubmitRoute = ApiAdminIdeasSubmitRouteImport.update({
   path: '/submit',
   getParentRoute: () => ApiAdminIdeasRoute,
 } as any)
+const ApiAdminIdeasPublishRoute = ApiAdminIdeasPublishRouteImport.update({
+  id: '/publish',
+  path: '/publish',
+  getParentRoute: () => ApiAdminIdeasRoute,
+} as any)
 const ApiAdminIdeasChatRoute = ApiAdminIdeasChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -354,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/webhooks': typeof ApiAdminWebhooksRoute
   '/api/admin/workflows': typeof ApiAdminWorkflowsRoute
   '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
+  '/api/admin/ideas/publish': typeof ApiAdminIdeasPublishRoute
   '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
 }
 export interface FileRoutesByTo {
@@ -404,6 +411,7 @@ export interface FileRoutesByTo {
   '/api/admin/webhooks': typeof ApiAdminWebhooksRoute
   '/api/admin/workflows': typeof ApiAdminWorkflowsRoute
   '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
+  '/api/admin/ideas/publish': typeof ApiAdminIdeasPublishRoute
   '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
 }
 export interface FileRoutesById {
@@ -456,6 +464,7 @@ export interface FileRoutesById {
   '/api/admin/webhooks': typeof ApiAdminWebhooksRoute
   '/api/admin/workflows': typeof ApiAdminWorkflowsRoute
   '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
+  '/api/admin/ideas/publish': typeof ApiAdminIdeasPublishRoute
   '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
 }
 export interface FileRouteTypes {
@@ -509,6 +518,7 @@ export interface FileRouteTypes {
     | '/api/admin/webhooks'
     | '/api/admin/workflows'
     | '/api/admin/ideas/chat'
+    | '/api/admin/ideas/publish'
     | '/api/admin/ideas/submit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/api/admin/webhooks'
     | '/api/admin/workflows'
     | '/api/admin/ideas/chat'
+    | '/api/admin/ideas/publish'
     | '/api/admin/ideas/submit'
   id:
     | '__root__'
@@ -610,6 +621,7 @@ export interface FileRouteTypes {
     | '/api/admin/webhooks'
     | '/api/admin/workflows'
     | '/api/admin/ideas/chat'
+    | '/api/admin/ideas/publish'
     | '/api/admin/ideas/submit'
   fileRoutesById: FileRoutesById
 }
@@ -984,6 +996,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminIdeasSubmitRouteImport
       parentRoute: typeof ApiAdminIdeasRoute
     }
+    '/api/admin/ideas/publish': {
+      id: '/api/admin/ideas/publish'
+      path: '/publish'
+      fullPath: '/api/admin/ideas/publish'
+      preLoaderRoute: typeof ApiAdminIdeasPublishRouteImport
+      parentRoute: typeof ApiAdminIdeasRoute
+    }
     '/api/admin/ideas/chat': {
       id: '/api/admin/ideas/chat'
       path: '/chat'
@@ -1038,11 +1057,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ApiAdminIdeasRouteChildren {
   ApiAdminIdeasChatRoute: typeof ApiAdminIdeasChatRoute
+  ApiAdminIdeasPublishRoute: typeof ApiAdminIdeasPublishRoute
   ApiAdminIdeasSubmitRoute: typeof ApiAdminIdeasSubmitRoute
 }
 
 const ApiAdminIdeasRouteChildren: ApiAdminIdeasRouteChildren = {
   ApiAdminIdeasChatRoute: ApiAdminIdeasChatRoute,
+  ApiAdminIdeasPublishRoute: ApiAdminIdeasPublishRoute,
   ApiAdminIdeasSubmitRoute: ApiAdminIdeasSubmitRoute,
 }
 

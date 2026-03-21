@@ -57,7 +57,10 @@ export const Route = createFileRoute('/api/follow-ups')({
 
           const apiKey = await getOpenRouterApiKey()
           if (!apiKey) {
-            return json({ ok: true, suggestions: [] } satisfies FollowUpsResponse)
+            return json({
+              ok: true,
+              suggestions: [],
+            } satisfies FollowUpsResponse)
           }
 
           const truncatedResponse = responseText.slice(0, 1500)
