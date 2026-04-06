@@ -278,160 +278,162 @@ function IdeaDetail({
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[85vh]">
-      <div className="p-5 flex-1 overflow-auto">
-        {/* Draft banner */}
-        {file.needsReview ? (
-          <div className="flex items-center justify-between gap-3 mb-4 p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <span className="text-xs text-amber-700 dark:text-amber-300">
-              Draft — review before publishing
-            </span>
-            <div className="flex items-center gap-2 shrink-0">
-              {!editing ? (
+    <DialogContent className="w-[min(640px,92vw)]">
+      <div className="flex flex-col h-full max-h-[85vh]">
+        <div className="p-5 flex-1 overflow-auto">
+          {/* Draft banner */}
+          {file.needsReview ? (
+            <div className="flex items-center justify-between gap-3 mb-4 p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <span className="text-xs text-amber-700 dark:text-amber-300">
+                Draft — review before publishing
+              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                {!editing ? (
+                  <button
+                    onClick={startEditing}
+                    className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
+                  >
+                    Edit
+                  </button>
+                ) : null}
                 <button
-                  onClick={startEditing}
-                  className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
+                  onClick={function handlePublish() {
+                    publishMutation.mutate()
+                  }}
+                  disabled={publishMutation.isPending || editing}
+                  className="text-[11px] px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-50"
                 >
-                  Edit
+                  {publishMutation.isPending ? 'Publishing...' : 'Publish'}
                 </button>
-              ) : null}
-              <button
-                onClick={function handlePublish() {
-                  publishMutation.mutate()
-                }}
-                disabled={publishMutation.isPending || editing}
-                className="text-[11px] px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-50"
-              >
-                {publishMutation.isPending ? 'Publishing...' : 'Publish'}
-              </button>
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {/* Header */}
-        <div className="flex items-start justify-between mb-2">
-          {editing ? (
-            <input
-              type="text"
-              value={editTitle}
-              onChange={function handleTitle(e) {
-                setEditTitle(e.target.value)
-              }}
-              className="flex-1 text-sm font-medium px-2 py-1 border border-primary-200 dark:border-primary-600 rounded-md bg-surface text-primary-900 focus:outline-none focus:ring-1 focus:ring-primary-400 mr-3"
-            />
-          ) : (
-            <DialogTitle className="text-sm font-medium pr-3">
-              {file.title}
-            </DialogTitle>
-          )}
-          <div className="flex gap-2 shrink-0 ml-3">
-            <a
-              href={file.issueUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] px-2 py-1 rounded border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors"
-            >
-              Issue #{file.issueNumber}
-            </a>
-            {file.prUrl ? (
+          {/* Header */}
+          <div className="flex items-start justify-between mb-2">
+            {editing ? (
+              <input
+                type="text"
+                value={editTitle}
+                onChange={function handleTitle(e) {
+                  setEditTitle(e.target.value)
+                }}
+                className="flex-1 text-sm font-medium px-2 py-1 border border-primary-200 dark:border-primary-600 rounded-md bg-surface text-primary-900 focus:outline-none focus:ring-1 focus:ring-primary-400 mr-3"
+              />
+            ) : (
+              <DialogTitle className="text-sm font-medium pr-3">
+                {file.title}
+              </DialogTitle>
+            )}
+            <div className="flex gap-2 shrink-0 ml-3">
               <a
-                href={file.prUrl}
+                href={file.issueUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900 transition-colors"
+                className="text-[11px] px-2 py-1 rounded border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors"
               >
-                PR #{file.prNumber}
+                Issue #{file.issueNumber}
               </a>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Date */}
-        {file.created ? (
-          <div className="text-xs text-primary-400 mb-3">
-            {new Date(file.created).toLocaleDateString()}
-          </div>
-        ) : null}
-
-        {/* Tags */}
-        {file.tags.length > 0 ? (
-          <div className="flex gap-1.5 mb-4 flex-wrap">
-            {file.tags.map(function renderTag(tag) {
-              return (
-                <span
-                  key={tag}
-                  className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
+              {file.prUrl ? (
+                <a
+                  href={file.prUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900 transition-colors"
                 >
-                  {tag}
-                </span>
-              )
-            })}
-          </div>
-        ) : null}
-
-        {/* Related Issues */}
-        {!editing ? <RelatedIssueLinks content={file.content} /> : null}
-
-        {/* Content — edit or view */}
-        <DialogDescription className="sr-only">
-          Idea details and content
-        </DialogDescription>
-        {editing ? (
-          <div className="space-y-3">
-            <textarea
-              value={editContent}
-              onChange={function handleContent(e) {
-                setEditContent(e.target.value)
-              }}
-              rows={20}
-              className="w-full text-sm px-3 py-2 border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 resize-y font-mono"
-            />
-            {updateMutation.isError ? (
-              <div className="text-xs text-red-600 dark:text-red-400">
-                {updateMutation.error instanceof Error
-                  ? updateMutation.error.message
-                  : 'Failed to save'}
-              </div>
-            ) : null}
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={cancelEditing}
-                disabled={updateMutation.isPending}
-                className="text-xs px-3 py-1.5 rounded-md border border-primary-200 dark:border-primary-600 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={function handleSave() {
-                  updateMutation.mutate()
-                }}
-                disabled={updateMutation.isPending || !editTitle.trim()}
-                className="text-xs px-3 py-1.5 rounded-md bg-primary-900 text-primary-50 dark:bg-primary-100 dark:text-primary-900 hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {updateMutation.isPending ? 'Saving...' : 'Save'}
-              </button>
+                  PR #{file.prNumber}
+                </a>
+              ) : null}
             </div>
           </div>
-        ) : (
-          <div className="text-sm text-primary-800 dark:text-primary-200 prose prose-sm dark:prose-invert max-w-none">
-            {file.content ? (
-              <Markdown>{file.content}</Markdown>
-            ) : (
-              <span className="text-primary-400">No content available</span>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* Chat input */}
-      {!editing ? (
-        <IdeaChatInput
-          ideaTitle={file.title}
-          ideaNumber={file.issueNumber}
-          sessionKey={file.sessionKey}
-        />
-      ) : null}
-    </div>
+          {/* Date */}
+          {file.created ? (
+            <div className="text-xs text-primary-400 mb-3">
+              {new Date(file.created).toLocaleDateString()}
+            </div>
+          ) : null}
+
+          {/* Tags */}
+          {file.tags.length > 0 ? (
+            <div className="flex gap-1.5 mb-4 flex-wrap">
+              {file.tags.map(function renderTag(tag) {
+                return (
+                  <span
+                    key={tag}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-300"
+                  >
+                    {tag}
+                  </span>
+                )
+              })}
+            </div>
+          ) : null}
+
+          {/* Related Issues */}
+          {!editing ? <RelatedIssueLinks content={file.content} /> : null}
+
+          {/* Content — edit or view */}
+          <DialogDescription className="sr-only">
+            Idea details and content
+          </DialogDescription>
+          {editing ? (
+            <div className="space-y-3">
+              <textarea
+                value={editContent}
+                onChange={function handleContent(e) {
+                  setEditContent(e.target.value)
+                }}
+                rows={20}
+                className="w-full text-sm px-3 py-2 border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 resize-y font-mono"
+              />
+              {updateMutation.isError ? (
+                <div className="text-xs text-red-600 dark:text-red-400">
+                  {updateMutation.error instanceof Error
+                    ? updateMutation.error.message
+                    : 'Failed to save'}
+                </div>
+              ) : null}
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={cancelEditing}
+                  disabled={updateMutation.isPending}
+                  className="text-xs px-3 py-1.5 rounded-md border border-primary-200 dark:border-primary-600 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={function handleSave() {
+                    updateMutation.mutate()
+                  }}
+                  disabled={updateMutation.isPending || !editTitle.trim()}
+                  className="text-xs px-3 py-1.5 rounded-md bg-primary-900 text-primary-50 dark:bg-primary-100 dark:text-primary-900 hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {updateMutation.isPending ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-primary-800 dark:text-primary-200 prose prose-sm dark:prose-invert max-w-none">
+              {file.content ? (
+                <Markdown>{file.content}</Markdown>
+              ) : (
+                <span className="text-primary-400">No content available</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Chat input */}
+        {!editing ? (
+          <IdeaChatInput
+            ideaTitle={file.title}
+            ideaNumber={file.issueNumber}
+            sessionKey={file.sessionKey}
+          />
+        ) : null}
+      </div>
+    </DialogContent>
   )
 }
 
