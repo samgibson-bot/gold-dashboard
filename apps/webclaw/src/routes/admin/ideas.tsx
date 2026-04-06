@@ -425,7 +425,11 @@ function IdeaDetail({
 
       {/* Chat input */}
       {!editing ? (
-        <IdeaChatInput ideaTitle={file.title} ideaNumber={file.issueNumber} />
+        <IdeaChatInput
+          ideaTitle={file.title}
+          ideaNumber={file.issueNumber}
+          sessionKey={file.sessionKey}
+        />
       ) : null}
     </div>
   )
@@ -436,9 +440,11 @@ function IdeaDetail({
 function IdeaChatInput({
   ideaTitle,
   ideaNumber,
+  sessionKey,
 }: {
   ideaTitle: string
   ideaNumber: number
+  sessionKey?: string
 }) {
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
@@ -452,6 +458,7 @@ function IdeaChatInput({
           message: msg,
           ideaTitle,
           ideaNumber,
+          sessionKey,
         }),
       })
       if (!res.ok) {

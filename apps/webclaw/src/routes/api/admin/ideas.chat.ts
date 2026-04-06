@@ -22,6 +22,10 @@ export const Route = createFileRoute('/api/admin/ideas/chat')({
             typeof body.ideaTitle === 'string' ? body.ideaTitle.trim() : ''
           const ideaNumber =
             typeof body.ideaNumber === 'number' ? body.ideaNumber : 0
+          const sessionKey =
+            typeof body.sessionKey === 'string'
+              ? body.sessionKey.trim()
+              : undefined
 
           if (!message) {
             return json(
@@ -37,17 +41,20 @@ export const Route = createFileRoute('/api/admin/ideas/chat')({
             )
           }
 
+          // Use the idea's own session if available, otherwise create a new one
+          const targetSession =
+            sessionKey || `ideas:${randomUUID().slice(0, 8)}`
           const contextualMessage = `Re: "${ideaTitle}"${ideaNumber ? ` (issue #${ideaNumber})` : ''}\n\n${message}`
 
           const res = await gatewayRpc<{ runId: string }>('chat.send', {
-            sessionKey: 'ideas',
+            sessionKey: targetSession,
             message: contextualMessage,
             deliver: false,
             timeoutMs: 120_000,
             idempotencyKey: randomUUID(),
           })
 
-          return json({ ok: true, sessionKey: 'ideas', ...res })
+          return json({ ok: true, sessionKey: targetSession, ...res })
         } catch (err) {
           return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }

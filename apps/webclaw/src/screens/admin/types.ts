@@ -170,6 +170,7 @@ export type IdeaFile = {
   created: string
   issueUrl: string
   needsReview: boolean
+  sessionKey?: string
   prNumber?: number
   prUrl?: string
 }

@@ -45,6 +45,7 @@ export type IdeaFromGitHub = {
   created: string
   issueUrl: string
   needsReview: boolean
+  sessionKey?: string
   prNumber?: number
   prUrl?: string
 }
@@ -90,17 +91,24 @@ export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
     })
     const needsReview = labelNames.includes('needs-review')
     const tags = labelNames.filter(function isTag(l) {
-      return l !== 'idea' && l !== 'needs-review'
+      return l !== 'idea' && l !== 'needs-review' && l !== 'project'
     })
+
+    // Parse session key from hidden HTML comment in issue body
+    const body = issue.body ?? ''
+    const sessionKeyMatch = body.match(
+      /<!-- session-key: (ideas:[a-z0-9-]+) -->/,
+    )
 
     return {
       issueNumber: issue.number,
       title: issue.title,
       tags,
-      content: issue.body ?? '',
+      content: body,
       created: issue.created_at,
       issueUrl: issue.html_url,
       needsReview,
+      sessionKey: sessionKeyMatch ? sessionKeyMatch[1] : undefined,
       prNumber: issue.pull_request ? issue.number : undefined,
       prUrl: issue.pull_request?.html_url,
     }

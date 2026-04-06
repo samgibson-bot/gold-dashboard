@@ -42,8 +42,9 @@ function buildProjectPrompt(params: {
   context: string
   title?: string
   tags?: Array<string>
+  sessionKey: string
 }): string {
-  const { context, title, tags } = params
+  const { context, title, tags, sessionKey } = params
 
   const parts = [
     `## New Project Submission`,
@@ -67,6 +68,11 @@ function buildProjectPrompt(params: {
     `   - **First 3 Steps** — Concrete actions to start building`,
     '',
     `   Keep it tight. This is a backlog item, not a research report.`,
+    '',
+    `3. **Session tracking** — Include this exact line at the very end of the issue body (it links the dashboard back to this conversation):`,
+    '   ```',
+    `   <!-- session-key: ${sessionKey} -->`,
+    '   ```',
   ]
 
   return parts.filter(Boolean).join('\n')
@@ -80,6 +86,7 @@ function buildSeedPrompt(params: {
   tags?: Array<string>
   relatedIssues?: Array<RelatedIssue>
   crossRepoMatches?: Array<CrossRepoMatch>
+  sessionKey: string
 }): string {
   const {
     sources,
@@ -89,6 +96,7 @@ function buildSeedPrompt(params: {
     tags,
     relatedIssues,
     crossRepoMatches,
+    sessionKey,
   } = params
 
   const urlListText =
@@ -186,7 +194,12 @@ function buildSeedPrompt(params: {
     '',
     `5. **Create GitHub Issue** in \`samgibson-bot/gold-ideas\` with the full research summary. Use a descriptive title${title ? ` — review the suggested title "${title}" and rewrite it for clarity, standardization, and context if needed. Use a consistent format like "Integration: X" or "Feature: Y" or "Enhancement: Z".` : ' — generate a concise, descriptive, standardized title based on the analysis.'}. Include all source links (if provided), integration pathways, synergy analysis, and the Ancestry section. **Apply these labels:** \`idea\`, \`seed\`, \`needs-review\`, and any relevant tag labels (e.g. \`automation\`, \`agents\`, \`infrastructure\`). The issue IS the idea — do NOT create any .md files.`,
     '',
-    `6. **Thinking Cycle** — After creating the issue, add a focused first comment with your honest assessment: what it would realistically take to build this, the strongest argument against it, and any non-obvious connections to other open ideas. Be specific to this idea — a sharp 200-word comment beats a padded template. The comment MUST begin with exactly this sentinel on the first line: <!-- roadmap-posted -->`,
+    `6. **Session tracking** — Include this exact line at the very end of the issue body (it links the dashboard back to this conversation):`,
+    '   ```',
+    `   <!-- session-key: ${sessionKey} -->`,
+    '   ```',
+    '',
+    `7. **Thinking Cycle** — After creating the issue, add a focused first comment with your honest assessment: what it would realistically take to build this, the strongest argument against it, and any non-obvious connections to other open ideas. Be specific to this idea — a sharp 200-word comment beats a padded template. The comment MUST begin with exactly this sentinel on the first line: <!-- roadmap-posted -->`,
   ]
 
   return parts.filter(Boolean).join('\n')
@@ -273,6 +286,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
               context,
               title: title || undefined,
               tags: tags.length > 0 ? tags : undefined,
+              sessionKey,
             })
           } else {
             // Build a search query from title + context keywords
@@ -306,6 +320,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
                 relatedIssues.length > 0 ? relatedIssues : undefined,
               crossRepoMatches:
                 crossRepoMatches.length > 0 ? crossRepoMatches : undefined,
+              sessionKey,
             })
 
             message = screenshot
@@ -313,15 +328,17 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
               : seedPrompt
           }
 
+          const sessionKey = `ideas:${randomUUID().slice(0, 8)}`
+
           const res = await gatewayRpc<{ runId: string }>('chat.send', {
-            sessionKey: 'ideas',
+            sessionKey,
             message,
             deliver: false,
             timeoutMs: 120_000,
             idempotencyKey: randomUUID(),
           })
 
-          return json({ ok: true, sessionKey: 'ideas', ...res })
+          return json({ ok: true, sessionKey, ...res })
         } catch (err) {
           return json({ ok: false, error: sanitizeError(err) }, { status: 500 })
         }
