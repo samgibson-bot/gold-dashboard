@@ -52,7 +52,7 @@ export type IdeaFromGitHub = {
 // ---------- List ideas ----------
 
 export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
-  const [ideaRes, reviewRes] = await Promise.all([
+  const [ideaRes, reviewRes, projectRes] = await Promise.all([
     fetch(
       `${API_BASE}/repos/${OWNER}/${REPO}/issues?labels=idea&state=all&per_page=100`,
       { headers: headers() },
@@ -61,16 +61,23 @@ export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
       `${API_BASE}/repos/${OWNER}/${REPO}/issues?labels=needs-review&state=all&per_page=100`,
       { headers: headers() },
     ),
+    fetch(
+      `${API_BASE}/repos/${OWNER}/${REPO}/issues?labels=project&state=all&per_page=100`,
+      { headers: headers() },
+    ),
   ])
   if (!ideaRes.ok) throw new Error(`GitHub API error: ${ideaRes.status}`)
   if (!reviewRes.ok) throw new Error(`GitHub API error: ${reviewRes.status}`)
+  if (!projectRes.ok)
+    throw new Error(`GitHub API error: ${projectRes.status}`)
 
   const ideaIssues = (await ideaRes.json()) as Array<GitHubIssue>
   const reviewIssues = (await reviewRes.json()) as Array<GitHubIssue>
+  const projectIssues = (await projectRes.json()) as Array<GitHubIssue>
 
   const seen = new Set<number>()
   const allIssues: Array<GitHubIssue> = []
-  for (const issue of [...ideaIssues, ...reviewIssues]) {
+  for (const issue of [...ideaIssues, ...reviewIssues, ...projectIssues]) {
     if (!seen.has(issue.number)) {
       seen.add(issue.number)
       allIssues.push(issue)
@@ -161,6 +168,39 @@ export async function createIdea(
     issueNumber: issue.number,
     issueUrl: issue.html_url,
   }
+}
+
+// ---------- Update idea ----------
+
+export type UpdateIdeaInput = {
+  issueNumber: number
+  title?: string
+  body?: string
+  labels?: Array<string>
+}
+
+export async function updateIdea(
+  input: UpdateIdeaInput,
+): Promise<{ issueNumber: number; issueUrl: string }> {
+  const patch: Record<string, unknown> = {}
+  if (input.title !== undefined) patch.title = input.title
+  if (input.body !== undefined) patch.body = input.body
+  if (input.labels !== undefined) patch.labels = input.labels
+
+  const res = await fetch(
+    `${API_BASE}/repos/${OWNER}/${REPO}/issues/${input.issueNumber}`,
+    {
+      method: 'PATCH',
+      headers: headers(),
+      body: JSON.stringify(patch),
+    },
+  )
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`Failed to update issue: ${res.status} ${errText}`)
+  }
+  const issue = (await res.json()) as { number: number; html_url: string }
+  return { issueNumber: issue.number, issueUrl: issue.html_url }
 }
 
 // ---------- Search related issues (keyword relevance, not fixed N) ----------

@@ -56,6 +56,7 @@ import { Route as ApiAdminConfigRouteImport } from './routes/api/admin/config'
 import { Route as ApiAdminBrowserRouteImport } from './routes/api/admin/browser'
 import { Route as ApiAdminApprovalsRouteImport } from './routes/api/admin/approvals'
 import { Route as ApiAdminActivityRouteImport } from './routes/api/admin/activity'
+import { Route as ApiAdminIdeasUpdateRouteImport } from './routes/api/admin/ideas.update'
 import { Route as ApiAdminIdeasSubmitRouteImport } from './routes/api/admin/ideas.submit'
 import { Route as ApiAdminIdeasPublishRouteImport } from './routes/api/admin/ideas.publish'
 import { Route as ApiAdminIdeasChatRouteImport } from './routes/api/admin/ideas.chat'
@@ -295,6 +296,11 @@ const ApiAdminActivityRoute = ApiAdminActivityRouteImport.update({
   path: '/api/admin/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminIdeasUpdateRoute = ApiAdminIdeasUpdateRouteImport.update({
+  id: '/update',
+  path: '/update',
+  getParentRoute: () => ApiAdminIdeasRoute,
+} as any)
 const ApiAdminIdeasSubmitRoute = ApiAdminIdeasSubmitRouteImport.update({
   id: '/submit',
   path: '/submit',
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
   '/api/admin/ideas/publish': typeof ApiAdminIdeasPublishRoute
   '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
+  '/api/admin/ideas/update': typeof ApiAdminIdeasUpdateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -413,6 +420,7 @@ export interface FileRoutesByTo {
   '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
   '/api/admin/ideas/publish': typeof ApiAdminIdeasPublishRoute
   '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
+  '/api/admin/ideas/update': typeof ApiAdminIdeasUpdateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -466,6 +474,7 @@ export interface FileRoutesById {
   '/api/admin/ideas/chat': typeof ApiAdminIdeasChatRoute
   '/api/admin/ideas/publish': typeof ApiAdminIdeasPublishRoute
   '/api/admin/ideas/submit': typeof ApiAdminIdeasSubmitRoute
+  '/api/admin/ideas/update': typeof ApiAdminIdeasUpdateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -520,6 +529,7 @@ export interface FileRouteTypes {
     | '/api/admin/ideas/chat'
     | '/api/admin/ideas/publish'
     | '/api/admin/ideas/submit'
+    | '/api/admin/ideas/update'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -571,6 +581,7 @@ export interface FileRouteTypes {
     | '/api/admin/ideas/chat'
     | '/api/admin/ideas/publish'
     | '/api/admin/ideas/submit'
+    | '/api/admin/ideas/update'
   id:
     | '__root__'
     | '/'
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/api/admin/ideas/chat'
     | '/api/admin/ideas/publish'
     | '/api/admin/ideas/submit'
+    | '/api/admin/ideas/update'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -989,6 +1001,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/ideas/update': {
+      id: '/api/admin/ideas/update'
+      path: '/update'
+      fullPath: '/api/admin/ideas/update'
+      preLoaderRoute: typeof ApiAdminIdeasUpdateRouteImport
+      parentRoute: typeof ApiAdminIdeasRoute
+    }
     '/api/admin/ideas/submit': {
       id: '/api/admin/ideas/submit'
       path: '/submit'
@@ -1059,12 +1078,14 @@ interface ApiAdminIdeasRouteChildren {
   ApiAdminIdeasChatRoute: typeof ApiAdminIdeasChatRoute
   ApiAdminIdeasPublishRoute: typeof ApiAdminIdeasPublishRoute
   ApiAdminIdeasSubmitRoute: typeof ApiAdminIdeasSubmitRoute
+  ApiAdminIdeasUpdateRoute: typeof ApiAdminIdeasUpdateRoute
 }
 
 const ApiAdminIdeasRouteChildren: ApiAdminIdeasRouteChildren = {
   ApiAdminIdeasChatRoute: ApiAdminIdeasChatRoute,
   ApiAdminIdeasPublishRoute: ApiAdminIdeasPublishRoute,
   ApiAdminIdeasSubmitRoute: ApiAdminIdeasSubmitRoute,
+  ApiAdminIdeasUpdateRoute: ApiAdminIdeasUpdateRoute,
 }
 
 const ApiAdminIdeasRouteWithChildren = ApiAdminIdeasRoute._addFileChildren(

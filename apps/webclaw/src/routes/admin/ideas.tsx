@@ -188,6 +188,9 @@ function IdeasPage() {
               setSelected(null)
               refetch()
             }}
+            onUpdated={function handleUpdated() {
+              refetch()
+            }}
           />
         )}
       </DialogRoot>
@@ -217,10 +220,16 @@ function IdeasPage() {
 function IdeaDetail({
   file,
   onPublished,
+  onUpdated,
 }: {
   file: IdeaFile
   onPublished?: () => void
+  onUpdated?: () => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(file.title)
+  const [editContent, setEditContent] = useState(file.content)
+
   const publishMutation = useMutation({
     mutationFn: async function publishIdea() {
       const res = await fetch('/api/admin/ideas/publish', {
@@ -236,6 +245,38 @@ function IdeaDetail({
     },
   })
 
+  const updateMutation = useMutation({
+    mutationFn: async function saveIdea() {
+      const res = await fetch('/api/admin/ideas/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issueNumber: file.issueNumber,
+          title: editTitle,
+          content: editContent,
+        }),
+      })
+      const data = (await res.json()) as { ok: boolean; error?: string }
+      if (!data.ok) throw new Error(data.error ?? 'Failed to save')
+    },
+    onSuccess: function handleSaved() {
+      setEditing(false)
+      onUpdated?.()
+    },
+  })
+
+  function startEditing() {
+    setEditTitle(file.title)
+    setEditContent(file.content)
+    setEditing(true)
+  }
+
+  function cancelEditing() {
+    setEditing(false)
+    setEditTitle(file.title)
+    setEditContent(file.content)
+  }
+
   return (
     <div className="flex flex-col h-full max-h-[85vh]">
       <div className="p-5 flex-1 overflow-auto">
@@ -246,19 +287,19 @@ function IdeaDetail({
               Draft — review before publishing
             </span>
             <div className="flex items-center gap-2 shrink-0">
-              <a
-                href={`${file.issueUrl}/edit`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
-              >
-                Edit on GitHub
-              </a>
+              {!editing ? (
+                <button
+                  onClick={startEditing}
+                  className="text-[11px] px-2 py-1 rounded border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
+                >
+                  Edit
+                </button>
+              ) : null}
               <button
                 onClick={function handlePublish() {
                   publishMutation.mutate()
                 }}
-                disabled={publishMutation.isPending}
+                disabled={publishMutation.isPending || editing}
                 className="text-[11px] px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-50"
               >
                 {publishMutation.isPending ? 'Publishing...' : 'Publish'}
@@ -269,9 +310,20 @@ function IdeaDetail({
 
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
-          <DialogTitle className="text-sm font-medium pr-3">
-            {file.title}
-          </DialogTitle>
+          {editing ? (
+            <input
+              type="text"
+              value={editTitle}
+              onChange={function handleTitle(e) {
+                setEditTitle(e.target.value)
+              }}
+              className="flex-1 text-sm font-medium px-2 py-1 border border-primary-200 dark:border-primary-600 rounded-md bg-surface text-primary-900 focus:outline-none focus:ring-1 focus:ring-primary-400 mr-3"
+            />
+          ) : (
+            <DialogTitle className="text-sm font-medium pr-3">
+              {file.title}
+            </DialogTitle>
+          )}
           <div className="flex gap-2 shrink-0 ml-3">
             <a
               href={file.issueUrl}
@@ -318,23 +370,63 @@ function IdeaDetail({
         ) : null}
 
         {/* Related Issues */}
-        <RelatedIssueLinks content={file.content} />
+        {!editing ? <RelatedIssueLinks content={file.content} /> : null}
 
-        {/* Markdown content */}
+        {/* Content — edit or view */}
         <DialogDescription className="sr-only">
           Idea details and content
         </DialogDescription>
-        <div className="text-sm text-primary-800 dark:text-primary-200 prose prose-sm dark:prose-invert max-w-none">
-          {file.content ? (
-            <Markdown>{file.content}</Markdown>
-          ) : (
-            <span className="text-primary-400">No content available</span>
-          )}
-        </div>
+        {editing ? (
+          <div className="space-y-3">
+            <textarea
+              value={editContent}
+              onChange={function handleContent(e) {
+                setEditContent(e.target.value)
+              }}
+              rows={20}
+              className="w-full text-sm px-3 py-2 border border-primary-200 dark:border-primary-600 rounded-lg bg-surface text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 resize-y font-mono"
+            />
+            {updateMutation.isError ? (
+              <div className="text-xs text-red-600 dark:text-red-400">
+                {updateMutation.error instanceof Error
+                  ? updateMutation.error.message
+                  : 'Failed to save'}
+              </div>
+            ) : null}
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={cancelEditing}
+                disabled={updateMutation.isPending}
+                className="text-xs px-3 py-1.5 rounded-md border border-primary-200 dark:border-primary-600 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={function handleSave() {
+                  updateMutation.mutate()
+                }}
+                disabled={updateMutation.isPending || !editTitle.trim()}
+                className="text-xs px-3 py-1.5 rounded-md bg-primary-900 text-primary-50 dark:bg-primary-100 dark:text-primary-900 hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {updateMutation.isPending ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-primary-800 dark:text-primary-200 prose prose-sm dark:prose-invert max-w-none">
+            {file.content ? (
+              <Markdown>{file.content}</Markdown>
+            ) : (
+              <span className="text-primary-400">No content available</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Chat input */}
-      <IdeaChatInput ideaTitle={file.title} ideaNumber={file.issueNumber} />
+      {!editing ? (
+        <IdeaChatInput ideaTitle={file.title} ideaNumber={file.issueNumber} />
+      ) : null}
     </div>
   )
 }
