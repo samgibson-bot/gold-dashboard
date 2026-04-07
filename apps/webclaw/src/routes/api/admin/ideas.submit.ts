@@ -1,4 +1,7 @@
 import { randomUUID } from 'node:crypto'
+import { mkdir, readdir, stat, unlink, writeFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { gatewayRpc } from '../../../server/gateway'
@@ -11,6 +14,39 @@ import {
 
 const MAX_CONTEXT_LENGTH = 5000
 const MAX_SOURCE_LENGTH = 2 * 1024 * 1024 // 2MB for base64 screenshots
+const SCREENSHOT_DIR = join(homedir(), '.openclaw', 'workspace', 'idea-screenshots')
+const SCREENSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+async function saveScreenshot(base64Data: string): Promise<string> {
+  await mkdir(SCREENSHOT_DIR, { recursive: true })
+
+  // Strip data URI prefix if present
+  const raw = base64Data.replace(/^data:image\/[^;]+;base64,/, '')
+  const ext = base64Data.startsWith('data:image/png') ? 'png' : 'jpg'
+  const filename = `idea-${randomUUID().slice(0, 8)}.${ext}`
+  const filepath = join(SCREENSHOT_DIR, filename)
+
+  await writeFile(filepath, Buffer.from(raw, 'base64'))
+  return filepath
+}
+
+async function cleanOldScreenshots(): Promise<void> {
+  try {
+    const files = await readdir(SCREENSHOT_DIR)
+    const now = Date.now()
+    await Promise.all(
+      files.map(async function maybeDelete(f) {
+        const fp = join(SCREENSHOT_DIR, f)
+        const s = await stat(fp).catch(() => null)
+        if (s && now - s.mtimeMs > SCREENSHOT_MAX_AGE_MS) {
+          await unlink(fp).catch(() => {})
+        }
+      }),
+    )
+  } catch {
+    // Directory may not exist yet — that's fine
+  }
+}
 
 function isValidUrl(s: string): boolean {
   try {
@@ -110,7 +146,9 @@ function buildSeedPrompt(params: {
 
   const sourceSection = [
     urlListText ? `**Source URLs:**\n${urlListText}` : null,
-    screenshot ? `Source: screenshot attached (analyze with vision)` : null,
+    screenshot
+      ? `**Screenshot:** saved to \`${screenshot}\` — analyze with the \`image\` tool using this exact path`
+      : null,
     !urlListText && !screenshot
       ? `No source provided — analyze the description below`
       : null,
@@ -122,7 +160,9 @@ function buildSeedPrompt(params: {
     urlListText
       ? `Use \`web_fetch\` to crawl and understand each URL listed above.`
       : null,
-    screenshot ? `Analyze the attached screenshot using vision.` : null,
+    screenshot
+      ? `Analyze the screenshot at \`${screenshot}\` using the \`image\` tool with this exact file path.`
+      : null,
     `Also scan the context/description for any embedded URLs and fetch those too.`,
     !urlListText && !screenshot
       ? `Deeply analyze the description and context provided by the user.`
@@ -279,6 +319,14 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
             )
           }
 
+          // Save screenshot to disk so OpenClaw can access it via file path
+          let screenshotPath = ''
+          if (screenshot) {
+            // Clean old screenshots, then save new one
+            await cleanOldScreenshots()
+            screenshotPath = await saveScreenshot(screenshot)
+          }
+
           const sessionKey = `ideas:${randomUUID().slice(0, 8)}`
           let message: string
 
@@ -313,7 +361,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
 
             const seedPrompt = buildSeedPrompt({
               sources: sources.length > 0 ? sources : undefined,
-              screenshot: screenshot || undefined,
+              screenshot: screenshotPath || undefined,
               context,
               title: title || undefined,
               tags: tags.length > 0 ? tags : undefined,
@@ -324,9 +372,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
               sessionKey,
             })
 
-            message = screenshot
-              ? `${seedPrompt}\n\n[Screenshot data attached as base64]\n${screenshot}`
-              : seedPrompt
+            message = seedPrompt
           }
 
           const res = await gatewayRpc<{ runId: string }>('chat.send', {
