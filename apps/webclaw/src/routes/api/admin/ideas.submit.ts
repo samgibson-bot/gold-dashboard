@@ -216,10 +216,10 @@ function buildSeedPrompt(params: {
     '',
     `1. **Analyze all sources** — ${analyzeInstruction} Extract key concepts, technologies, and potential applications from every source.`,
     '',
-    `2. **Cross-reference with historical context** — Review the auto-fetched related issues above (if any). Also check existing \`samgibson-bot/gold-ideas\` Issues for overlaps or synergies. Scan OpenClaw docs for integration points with existing infrastructure. Pay special attention to closed/completed issues — the idea may build on prior work.`,
+    `2. **Cross-reference with workspace knowledge** — Run \`memory_search\` for the idea's core topic before proceeding. Review the auto-fetched related issues above (if any). Also check existing \`samgibson-bot/gold-ideas\` Issues for overlaps or synergies. Cross-reference with your workspace files (MEMORY.md, TOOLS.md) for integration points with existing infrastructure. Read \`shared-context/priorities.md\` to understand current priority rankings. Pay special attention to closed/completed issues — the idea may build on prior work.`,
     '',
     `3. **Deep integration analysis** — Generate 5-10 specific integration pathways, each with:`,
-    `   - A concrete description of how this idea connects to OpenClaw's existing infrastructure (cron jobs, browser agent, specialist agents, tools, nodes, sessions, skills)`,
+    `   - A concrete description of how this idea connects to existing infrastructure (use your workspace knowledge — don't guess)`,
     `   - **Synergies**: how this idea amplifies or is amplified by other pending ideas in \`gold-ideas\` — e.g. "combining this with the Twitter monitoring idea unlocks real-time trend → prototype pipeline"`,
     `   - **Unlocks**: what new capabilities or workflows become possible that weren't before — e.g. "this enables OpenClaw to autonomously discover and prototype integrations without human prompting"`,
     `   - **Insights**: non-obvious connections, second-order effects, or creative applications the submitter might not have considered`,
@@ -239,7 +239,7 @@ function buildSeedPrompt(params: {
     `   <!-- session-key: ${sessionKey} -->`,
     '   ```',
     '',
-    `7. **Thinking Cycle** — After creating the issue, add a focused first comment with your honest assessment: what it would realistically take to build this, the strongest argument against it, and any non-obvious connections to other open ideas. Be specific to this idea — a sharp 200-word comment beats a padded template. The comment MUST begin with exactly this sentinel on the first line: <!-- roadmap-posted -->`,
+    `7. **Thinking Cycle** — After creating the issue, add a focused first comment with your honest assessment: what it would realistically take to build this, the strongest argument against it, how it ranks against current priorities (from shared-context/priorities.md), and any non-obvious connections to other open ideas. Be specific to this idea — a sharp 200-word comment beats a padded template. The comment MUST begin with exactly this sentinel on the first line: <!-- roadmap-posted -->`,
   ]
 
   return parts.filter(Boolean).join('\n')
