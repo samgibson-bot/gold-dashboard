@@ -184,3 +184,27 @@
 **Patterns worth carrying forward:**
 - SSH edits to VPS should be done directly, not delegated to subagents (permission boundary)
 - `pnpm check` reformats files as a side effect — always commit linter changes separately from feature changes
+
+---
+
+## 2026-04-06 — Ideas Draft Editing, Session Isolation, Screenshot Fix
+
+**What was built:**
+- Inline draft editing in `/admin/ideas` detail modal — editable title + markdown body, Save/Cancel, saves back to GitHub via `POST /api/admin/ideas/update`
+- Fixed draft visibility: `listIdeas()` now queries `project` label alongside `idea` and `needs-review`
+- Per-idea session keys: each submission gets `ideas:<uuid>` instead of shared `ideas` session. Session key embedded in issue body as `<!-- session-key: ideas:... -->`, parsed back for follow-up chat.
+- Screenshot disk storage: screenshots saved to `~/.openclaw/workspace/idea-screenshots/` as real files instead of base64 in prompt. Auto-cleaned after 24h.
+- Reset two stuck OpenClaw sessions (context overflow + image tool loop)
+
+**What was tricky:**
+- **Temporal dead zone bug**: Added `sessionKey` variable declaration after code that used it in `buildProjectPrompt`/`buildSeedPrompt`. The `const` hadn't been evaluated yet, causing a ReferenceError. Hidden behind `sanitizeError()` — the user saw "Internal server error" with no way to debug. Took reproducing via `curl` on VPS to diagnose.
+- **Missing DialogContent wrapper**: `IdeaDetail` returned a raw `<div>` without wrapping in `<DialogContent>` (which provides Portal + Backdrop + Popup). Clicking an idea did nothing — no modal rendered. Should have checked how `CreateIdeaDialog` was structured first.
+- **OpenClaw image tool loop**: Screenshots sent as base64 in prompt text, but Gemini Flash's image tool expects a file path. It tried `input_file_0.png` ~25 times, each failing with "Local media file not found". Session never created the GitHub issue. Fix: save to disk, pass path.
+- **No CLI abort for sessions**: `openclaw` has no `rpc` subcommand or session abort. Only reliable way to kill a stuck session: delete its `.jsonl` transcript file + `openclaw sessions cleanup --enforce --fix-missing`.
+
+**Patterns worth carrying forward:**
+- **Declare variables before all usage sites** — especially when multiple code branches reference the same variable. `const` temporal dead zone is invisible behind error sanitization.
+- **Always check existing dialog patterns** when adding a new modal — if other modals use `<DialogContent>`, yours must too.
+- **Never send base64 images in OpenClaw prompts** — save to disk and pass the file path. Models use tool-based image analysis, not inline base64 parsing.
+- **Unique session keys per task** — shared sessions accumulate tokens across all uses. Context overflow is silent and unrecoverable.
+- **Killing stuck OpenClaw sessions**: delete transcript `.jsonl` → run `openclaw sessions cleanup --enforce --fix-missing`
