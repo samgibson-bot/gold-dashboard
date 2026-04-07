@@ -180,7 +180,12 @@ apps/webclaw/src/
 
 ### Ideas System
 - All submissions use AI analysis — no static path
-- Flow: Submit → OpenClaw `ideas` session → research → GitHub issue + roadmap
+- Flow: Submit → OpenClaw `ideas:<uuid>` session → research → GitHub issue + roadmap
+- **Per-idea sessions:** each submission gets a unique session key (`ideas:<uuid>`), NOT a shared `ideas` session (shared sessions hit context overflow)
+- Session key embedded in issue body as `<!-- session-key: ideas:abc123 -->` — parsed back for follow-up chat
+- **Screenshots:** saved to `~/.openclaw/workspace/idea-screenshots/` as real files, NOT embedded as base64 (Gemini's image tool needs a file path, not inline base64). Auto-cleaned after 24h.
+- `listIdeas()` queries three labels: `idea`, `needs-review`, `project` — all needed
+- Inline draft editing via `POST /api/admin/ideas/update` (PATCHes GitHub issue)
 - GitHub: `samgibson-bot/gold-ideas` issues
 
 ---
