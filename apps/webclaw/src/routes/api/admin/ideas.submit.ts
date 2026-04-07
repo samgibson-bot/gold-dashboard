@@ -279,6 +279,7 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
             )
           }
 
+          const sessionKey = `ideas:${randomUUID().slice(0, 8)}`
           let message: string
 
           if (type === 'project') {
@@ -327,8 +328,6 @@ export const Route = createFileRoute('/api/admin/ideas/submit')({
               ? `${seedPrompt}\n\n[Screenshot data attached as base64]\n${screenshot}`
               : seedPrompt
           }
-
-          const sessionKey = `ideas:${randomUUID().slice(0, 8)}`
 
           const res = await gatewayRpc<{ runId: string }>('chat.send', {
             sessionKey,
