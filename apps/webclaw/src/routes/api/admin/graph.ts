@@ -37,8 +37,12 @@ export const Route = createFileRoute('/api/admin/graph')({
           }
           if (section === 'neighbors') {
             const id = url.searchParams.get('id') ?? ''
-            const depth = Math.min(Math.max(Number(url.searchParams.get('depth')) || 1, 1), 3)
-            if (!id) return json({ ok: false, error: 'id required' }, { status: 400 })
+            const depth = Math.min(
+              Math.max(Number(url.searchParams.get('depth')) || 1, 1),
+              3,
+            )
+            if (!id)
+              return json({ ok: false, error: 'id required' }, { status: 400 })
             return await handleNeighbors(id, depth)
           }
           if (section === 'clusters') {
@@ -48,7 +52,8 @@ export const Route = createFileRoute('/api/admin/graph')({
           }
           if (section === 'cluster') {
             const id = url.searchParams.get('id') ?? ''
-            if (!id) return json({ ok: false, error: 'id required' }, { status: 400 })
+            if (!id)
+              return json({ ok: false, error: 'id required' }, { status: 400 })
             return await handleClusterDetail(id)
           }
           if (section === 'search') {
@@ -69,7 +74,7 @@ export const Route = createFileRoute('/api/admin/graph')({
 async function handleOverview() {
   const countResult = await graphQuery(
     `MATCH (n) WHERE n:Person OR n:Project OR n:Company OR n:Concept OR n:ActionItem OR n:Decision OR n:Cluster OR n:Idea OR n:Insight
-     RETURN labels(n)[0] AS label, count(n) AS cnt`
+     RETURN labels(n)[0] AS label, count(n) AS cnt`,
   )
   const nodeCounts: Partial<Record<string, number>> = {}
   for (const row of countResult.rows) {
@@ -82,17 +87,19 @@ async function handleOverview() {
   const edgeCount = Number(edgeResult.rows[0]?.[0] ?? 0)
 
   const clusterResult = await graphQuery(
-    `MATCH (c:Cluster) RETURN c ORDER BY c.score DESC LIMIT 10`
+    `MATCH (c:Cluster) RETURN c ORDER BY c.score DESC LIMIT 10`,
   )
-  const topClusters: Array<ClusterSummary> = clusterResult.rows.map(function mapCluster(row) {
-    const props = parseCompactNode(row[0]) ?? {}
-    return {
-      id: String(props.id ?? ''),
-      name: String(props.name ?? props.title ?? ''),
-      score: Number(props.score ?? 0),
-      status: String(props.status ?? 'unknown'),
-    }
-  })
+  const topClusters: Array<ClusterSummary> = clusterResult.rows.map(
+    function mapCluster(row) {
+      const props = parseCompactNode(row[0]) ?? {}
+      return {
+        id: String(props.id ?? ''),
+        name: String(props.name ?? props.title ?? ''),
+        score: Number(props.score ?? 0),
+        status: String(props.status ?? 'unknown'),
+      }
+    },
+  )
 
   const overview: GraphOverview = { nodeCounts, edgeCount, topClusters }
   return json({ ok: true, ...overview })
@@ -101,7 +108,7 @@ async function handleOverview() {
 async function handleGraph(limit: number) {
   const nodeResult = await graphQuery(
     `MATCH (n) WHERE n:Person OR n:Project OR n:Company OR n:Concept OR n:ActionItem OR n:Decision
-     RETURN n, labels(n)[0] AS label LIMIT ${limit}`
+     RETURN n, labels(n)[0] AS label LIMIT ${limit}`,
   )
   const nodes: Array<GraphNode> = []
   const nodeIds = new Set<string>()
@@ -119,7 +126,7 @@ async function handleGraph(limit: number) {
     `MATCH (a)-[r]->(b)
      WHERE (a:Person OR a:Project OR a:Company OR a:Concept OR a:ActionItem OR a:Decision)
        AND (b:Person OR b:Project OR b:Company OR b:Concept OR b:ActionItem OR b:Decision)
-     RETURN a.id, type(r), b.id LIMIT ${limit * 3}`
+     RETURN a.id, type(r), b.id LIMIT ${limit * 3}`,
   )
   const edges: Array<GraphEdge> = []
   for (const row of edgeResult.rows) {
@@ -139,7 +146,7 @@ async function handleNeighbors(id: string, depth: number) {
   const safeId = id.replace(/'/g, "\\'")
   const nodeResult = await graphQuery(
     `MATCH (start {id: '${safeId}'})-[*1..${depth}]-(connected)
-     RETURN DISTINCT connected, labels(connected)[0] AS label LIMIT 50`
+     RETURN DISTINCT connected, labels(connected)[0] AS label LIMIT 50`,
   )
   const nodes: Array<GraphNode> = []
   const nodeIds = new Set<string>()
@@ -161,7 +168,7 @@ async function handleNeighbors(id: string, depth: number) {
      WITH collect(DISTINCT connected) + collect(DISTINCT start) AS allNodes
      UNWIND allNodes AS a
      MATCH (a)-[r]-(b) WHERE b IN allNodes
-     RETURN DISTINCT a.id, type(r), b.id`
+     RETURN DISTINCT a.id, type(r), b.id`,
   )
   const edges: Array<GraphEdge> = []
   const edgeSeen = new Set<string>()
@@ -185,31 +192,35 @@ async function handleClusters(status: string, minScore: number) {
       ? `WHERE c.score >= ${minScore} AND c.status = '${status.replace(/'/g, "\\'")}'`
       : `WHERE c.score >= ${minScore}`
   const result = await graphQuery(
-    `MATCH (c:Cluster) ${whereClause} RETURN c ORDER BY c.score DESC LIMIT 50`
+    `MATCH (c:Cluster) ${whereClause} RETURN c ORDER BY c.score DESC LIMIT 50`,
   )
-  const clusters: Array<ClusterSummary> = result.rows.map(function mapCluster(row) {
-    const props = parseCompactNode(row[0]) ?? {}
-    return {
-      id: String(props.id ?? ''),
-      name: String(props.name ?? props.title ?? ''),
-      score: Number(props.score ?? 0),
-      status: String(props.status ?? 'unknown'),
-      signalCount: Number(props.signal_count ?? props.signalCount ?? 0),
-    }
-  })
+  const clusters: Array<ClusterSummary> = result.rows.map(
+    function mapCluster(row) {
+      const props = parseCompactNode(row[0]) ?? {}
+      return {
+        id: String(props.id ?? ''),
+        name: String(props.name ?? props.title ?? ''),
+        score: Number(props.score ?? 0),
+        status: String(props.status ?? 'unknown'),
+        signalCount: Number(props.signal_count ?? props.signalCount ?? 0),
+      }
+    },
+  )
   return json({ ok: true, clusters })
 }
 
 async function handleClusterDetail(id: string) {
   const safeId = id.replace(/'/g, "\\'")
-  const clusterResult = await graphQuery(`MATCH (c:Cluster {id: '${safeId}'}) RETURN c`)
+  const clusterResult = await graphQuery(
+    `MATCH (c:Cluster {id: '${safeId}'}) RETURN c`,
+  )
   if (clusterResult.rows.length === 0) {
     return json({ ok: false, error: 'cluster not found' }, { status: 404 })
   }
-  const props = parseCompactNode(clusterResult.rows[0]![0]) ?? {}
+  const props = parseCompactNode(clusterResult.rows[0][0]) ?? {}
 
   const signalResult = await graphQuery(
-    `MATCH (c:Cluster {id: '${safeId}'})<-[:MEMBER_OF]-(s:Signal) RETURN s ORDER BY s.captured_at DESC LIMIT 50`
+    `MATCH (c:Cluster {id: '${safeId}'})<-[:MEMBER_OF]-(s:Signal) RETURN s ORDER BY s.captured_at DESC LIMIT 50`,
   )
   const signals = signalResult.rows.map(function mapSignal(row) {
     const sp = parseCompactNode(row[0]) ?? {}
@@ -225,13 +236,15 @@ async function handleClusterDetail(id: string) {
   const entityResult = await graphQuery(
     `MATCH (c:Cluster {id: '${safeId}'})<-[:MEMBER_OF]-(s:Signal)-[:MENTIONS]->(e)
      WHERE e:Person OR e:Project OR e:Company OR e:Concept
-     RETURN DISTINCT e, labels(e)[0] AS label LIMIT 20`
+     RETURN DISTINCT e, labels(e)[0] AS label LIMIT 20`,
   )
-  const entities: Array<GraphNode> = entityResult.rows.map(function mapEntity(row) {
-    const ep = parseCompactNode(row[0]) ?? {}
-    const label = String(row[1] ?? 'Unknown')
-    return toGraphNode({ ...ep, _label: label })
-  })
+  const entities: Array<GraphNode> = entityResult.rows.map(
+    function mapEntity(row) {
+      const ep = parseCompactNode(row[0]) ?? {}
+      const label = String(row[1] ?? 'Unknown')
+      return toGraphNode({ ...ep, _label: label })
+    },
+  )
 
   const detail: ClusterDetail = {
     id: String(props.id ?? ''),
@@ -249,7 +262,7 @@ async function handleSearch(q: string) {
   const safeQ = q.replace(/'/g, "\\'").toLowerCase()
   const result = await graphQuery(
     `MATCH (n) WHERE toLower(n.name) CONTAINS '${safeQ}'
-     RETURN n, labels(n)[0] AS label LIMIT 20`
+     RETURN n, labels(n)[0] AS label LIMIT 20`,
   )
   const nodes: Array<GraphNode> = result.rows.map(function mapNode(row) {
     const props = parseCompactNode(row[0]) ?? {}

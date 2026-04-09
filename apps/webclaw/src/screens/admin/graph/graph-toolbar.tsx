@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { cn } from '@/lib/utils'
 import { useGraphSearch } from './graph-queries'
 import { ENTITY_COLORS, ENTITY_LABELS } from './graph-types'
 import type { GraphNode } from './graph-types'
+import { cn } from '@/lib/utils'
 
 type GraphToolbarProps = {
   hiddenLabels: Set<string>
@@ -36,20 +36,17 @@ export function GraphToolbar({
     [searchText],
   )
 
-  useEffect(
-    function handleClickOutside() {
-      function onClickOutside(e: MouseEvent) {
-        if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-          setShowResults(false)
-        }
+  useEffect(function handleClickOutside() {
+    function onClickOutside(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false)
       }
-      document.addEventListener('mousedown', onClickOutside)
-      return function cleanup() {
-        document.removeEventListener('mousedown', onClickOutside)
-      }
-    },
-    [],
-  )
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return function cleanup() {
+      document.removeEventListener('mousedown', onClickOutside)
+    }
+  }, [])
 
   const searchResults = useGraphSearch(debouncedSearch)
 
@@ -91,10 +88,14 @@ export function GraphToolbar({
                 >
                   <span
                     className="inline-block h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: ENTITY_COLORS[node.label] ?? '#6b7280' }}
+                    style={{
+                      backgroundColor: ENTITY_COLORS[node.label] ?? '#6b7280',
+                    }}
                   />
                   <span className="truncate text-primary-900">{node.name}</span>
-                  <span className="ml-auto text-xs text-primary-500">{node.label}</span>
+                  <span className="ml-auto text-xs text-primary-500">
+                    {node.label}
+                  </span>
                 </button>
               )
             })}

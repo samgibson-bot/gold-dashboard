@@ -1,13 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useRef, useState } from 'react'
-import { cn } from '@/lib/utils'
-import { useGraphData, useGraphOverview } from '@/screens/admin/graph/graph-queries'
-import { GraphCanvas } from '@/screens/admin/graph/graph-canvas'
 import type { GraphCanvasHandle } from '@/screens/admin/graph/graph-canvas'
+import type { GraphData, GraphNode } from '@/screens/admin/graph/graph-types'
+import { cn } from '@/lib/utils'
+import {
+  useGraphData,
+  useGraphOverview,
+} from '@/screens/admin/graph/graph-queries'
+import { GraphCanvas } from '@/screens/admin/graph/graph-canvas'
 import { GraphToolbar } from '@/screens/admin/graph/graph-toolbar'
 import { NodeDetailPanel } from '@/screens/admin/graph/node-detail-panel'
 import { ClusterList } from '@/screens/admin/graph/cluster-list'
-import type { GraphData, GraphNode } from '@/screens/admin/graph/graph-types'
 
 export const Route = createFileRoute('/admin/graph')({
   component: GraphPage,
@@ -24,7 +27,9 @@ function GraphPage() {
   const overview = useGraphOverview()
   const graphData = useGraphData()
 
-  const handleNodeClick = useCallback(function handleNodeClick(node: GraphNode | null) {
+  const handleNodeClick = useCallback(function handleNodeClick(
+    node: GraphNode | null,
+  ) {
     setSelectedNode(node)
   }, [])
 
@@ -85,7 +90,7 @@ function GraphPage() {
           })
           .map(function toNeighbor(e) {
             const otherId = e.source === selectedNode.id ? e.target : e.source
-            const otherNode = graphData.data!.nodes.find(function match(n) {
+            const otherNode = graphData.data.nodes.find(function match(n) {
               return n.id === otherId
             })
             return {
@@ -101,19 +106,27 @@ function GraphPage() {
     <div className="flex h-full flex-col gap-4 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-balance text-lg font-medium text-primary-900">Knowledge Graph</h1>
+        <h1 className="text-balance text-lg font-medium text-primary-900">
+          Knowledge Graph
+        </h1>
         <p className="text-pretty text-sm text-primary-500">
-          Explore entities, relationships, and clusters from your knowledge graph
+          Explore entities, relationships, and clusters from your knowledge
+          graph
         </p>
       </div>
 
       {/* Overview stats */}
       {overview.data && (
         <div className="flex gap-4">
-          {Object.entries(overview.data.nodeCounts).map(function renderStat([label, count]) {
+          {Object.entries(overview.data.nodeCounts).map(function renderStat([
+            label,
+            count,
+          ]) {
             return (
               <div key={label} className="rounded-lg bg-primary-100 px-3 py-2">
-                <div className="text-lg font-medium tabular-nums text-primary-900">{count}</div>
+                <div className="text-lg font-medium tabular-nums text-primary-900">
+                  {count}
+                </div>
                 <div className="text-xs text-primary-500">{label}s</div>
               </div>
             )

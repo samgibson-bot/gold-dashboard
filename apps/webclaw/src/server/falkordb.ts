@@ -51,7 +51,12 @@ function parseResultSet(raw: unknown): FalkorResult {
 
 export async function graphQuery(cypher: string): Promise<FalkorResult> {
   const r = getRedis()
-  const result = await r.call('GRAPH.QUERY', 'knowledge_graph', cypher, '--compact')
+  const result = await r.call(
+    'GRAPH.QUERY',
+    'knowledge_graph',
+    cypher,
+    '--compact',
+  )
   return parseResultSet(result)
 }
 

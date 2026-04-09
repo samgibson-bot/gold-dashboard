@@ -70,10 +70,14 @@ export function ClusterList({ onNavigateToEntity }: ClusterListProps) {
 
       {/* List */}
       {clustersQuery.isLoading && (
-        <p className="py-8 text-center text-sm text-primary-400">Loading clusters...</p>
+        <p className="py-8 text-center text-sm text-primary-400">
+          Loading clusters...
+        </p>
       )}
       {!clustersQuery.isLoading && sorted.length === 0 && (
-        <p className="py-8 text-center text-sm text-primary-400">No clusters found</p>
+        <p className="py-8 text-center text-sm text-primary-400">
+          No clusters found
+        </p>
       )}
       <div className="space-y-3">
         {sorted.map(function renderCluster(cluster) {

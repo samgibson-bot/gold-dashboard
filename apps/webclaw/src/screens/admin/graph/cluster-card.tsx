@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { cn } from '@/lib/utils'
 import { useClusterDetail } from './graph-queries'
 import { ENTITY_COLORS } from './graph-types'
 import type { ClusterSummary } from './graph-types'
+import { cn } from '@/lib/utils'
 
 type ClusterCardProps = {
   cluster: ClusterSummary
@@ -23,11 +23,17 @@ export function ClusterCard({ cluster, onNavigateToEntity }: ClusterCardProps) {
         className="flex w-full items-center gap-3 p-4 text-left"
       >
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-medium text-primary-900">{cluster.name || 'Unnamed cluster'}</h3>
+          <h3 className="text-sm font-medium text-primary-900">
+            {cluster.name || 'Unnamed cluster'}
+          </h3>
           <div className="mt-1 flex items-center gap-3 text-xs text-primary-500">
-            <span className="tabular-nums">Score: {cluster.score.toFixed(1)}</span>
+            <span className="tabular-nums">
+              Score: {cluster.score.toFixed(1)}
+            </span>
             {cluster.signalCount ? (
-              <span className="tabular-nums">Signals: {cluster.signalCount}</span>
+              <span className="tabular-nums">
+                Signals: {cluster.signalCount}
+              </span>
             ) : null}
             <span
               className={cn(
@@ -42,7 +48,10 @@ export function ClusterCard({ cluster, onNavigateToEntity }: ClusterCardProps) {
           </div>
         </div>
         <svg
-          className={cn('h-4 w-4 text-primary-400 transition-transform', expanded && 'rotate-180')}
+          className={cn(
+            'h-4 w-4 text-primary-400 transition-transform',
+            expanded && 'rotate-180',
+          )}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -62,7 +71,9 @@ export function ClusterCard({ cluster, onNavigateToEntity }: ClusterCardProps) {
               {/* Entities */}
               {detail.data.entities.length > 0 && (
                 <div>
-                  <h4 className="mb-1.5 text-xs font-medium text-primary-500">Entities</h4>
+                  <h4 className="mb-1.5 text-xs font-medium text-primary-500">
+                    Entities
+                  </h4>
                   <div className="flex flex-wrap gap-1.5">
                     {detail.data.entities.map(function renderEntity(entity) {
                       return (
@@ -74,13 +85,17 @@ export function ClusterCard({ cluster, onNavigateToEntity }: ClusterCardProps) {
                           }}
                           className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs hover:opacity-80"
                           style={{
-                            backgroundColor: (ENTITY_COLORS[entity.label] ?? '#6b7280') + '20',
+                            backgroundColor:
+                              (ENTITY_COLORS[entity.label] ?? '#6b7280') + '20',
                             color: ENTITY_COLORS[entity.label] ?? '#6b7280',
                           }}
                         >
                           <span
                             className="inline-block h-1.5 w-1.5 rounded-full"
-                            style={{ backgroundColor: ENTITY_COLORS[entity.label] ?? '#6b7280' }}
+                            style={{
+                              backgroundColor:
+                                ENTITY_COLORS[entity.label] ?? '#6b7280',
+                            }}
                           />
                           {entity.name}
                         </button>
@@ -93,16 +108,25 @@ export function ClusterCard({ cluster, onNavigateToEntity }: ClusterCardProps) {
               {/* Signals */}
               {detail.data.signals.length > 0 && (
                 <div>
-                  <h4 className="mb-1.5 text-xs font-medium text-primary-500">Signals</h4>
+                  <h4 className="mb-1.5 text-xs font-medium text-primary-500">
+                    Signals
+                  </h4>
                   <div className="space-y-1.5">
                     {detail.data.signals.map(function renderSignal(signal) {
                       return (
-                        <div key={signal.id} className="rounded bg-primary-100 px-2.5 py-1.5 text-xs">
+                        <div
+                          key={signal.id}
+                          className="rounded bg-primary-100 px-2.5 py-1.5 text-xs"
+                        >
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-primary-700">{signal.source}</span>
+                            <span className="font-medium text-primary-700">
+                              {signal.source}
+                            </span>
                             {signal.captured_at && (
                               <span className="text-primary-400">
-                                {new Date(Number(signal.captured_at) * 1000).toLocaleDateString()}
+                                {new Date(
+                                  Number(signal.captured_at) * 1000,
+                                ).toLocaleDateString()}
                               </span>
                             )}
                           </div>
