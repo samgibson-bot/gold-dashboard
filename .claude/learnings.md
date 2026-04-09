@@ -1,5 +1,28 @@
 # Learnings Log
 
+## 2026-04-09 — Knowledge graph visualization + rich digest pipeline
+
+**What was built:**
+- `/admin/graph` page: interactive Sigma.js force-directed graph + scored cluster list, direct FalkorDB connection via ioredis
+- Rich digest pipeline: universal LLM enrichment step (`pipeline/digest.py`) that runs before entity extraction for all KG sources
+- Enhanced GitHub stars adapter: replaced REST README fetch with GraphQL query (full README, deps, languages, commits, releases in one call)
+- Re-enriched all 31 existing GitHub star signals — digests went from "Nascar API. Language: Python" to full analyzed summaries
+- Improved idea submission prompt to leverage OpenClaw's native session context (MEMORY.md, TOOLS.md, memory_search)
+
+**What was tricky:**
+- FalkorDB compact format: nodes are `[8, [id, [labels], [props]]]` with numeric property key IDs that need resolving via `db.propertyKeys()`. Took three debug iterations.
+- No direct entity-to-entity edges in the graph — everything connects through Signal nodes. Initial edge query returned 0 results until switched to co-occurrence pattern.
+- FalkorDB Python client's `params={}` kwarg silently doesn't interpolate. Had to use f-strings with manual escaping.
+- Subagent added `eslint-disable-next-line react-hooks/exhaustive-deps` for a rule that doesn't exist in this project's config.
+- OpenRouter model IDs need `openrouter/` prefix stripped when calling the API directly.
+
+**Patterns worth carrying forward:**
+- For VPS pipeline work, test with small Python scripts via SSH before wiring into orchestrator
+- Subagent-driven development works well for parallel UI components but SSH-based VPS work must be done inline
+- When building against an unfamiliar database wire format, always query the real database first (`redis-cli` / `node -e`) before writing parsers
+
+---
+
 ## 2026-02-21 — Issues #32, #38, #44: Full feature pyramid
 
 **What was built:**
