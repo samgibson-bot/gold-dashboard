@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useGraphData, useGraphOverview } from '@/screens/admin/graph/graph-queries'
 import { GraphCanvas } from '@/screens/admin/graph/graph-canvas'
+import type { GraphCanvasHandle } from '@/screens/admin/graph/graph-canvas'
 import { GraphToolbar } from '@/screens/admin/graph/graph-toolbar'
 import { NodeDetailPanel } from '@/screens/admin/graph/node-detail-panel'
 import { ClusterList } from '@/screens/admin/graph/cluster-list'
@@ -18,7 +19,7 @@ function GraphPage() {
   const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(new Set())
   const [depth, setDepth] = useState(1)
   const [pendingCenter, setPendingCenter] = useState<string | null>(null)
-  const canvasRef = useRef<{ mergeData: (data: GraphData) => void }>(null)
+  const canvasRef = useRef<GraphCanvasHandle>(null)
 
   const overview = useGraphOverview()
   const graphData = useGraphData()
@@ -161,6 +162,7 @@ function GraphPage() {
           />
           <div className="flex min-h-0 flex-1 gap-0">
             <GraphCanvas
+              ref={canvasRef}
               data={graphData.data}
               selectedNode={selectedNode?.id ?? null}
               onNodeClick={handleNodeClick}

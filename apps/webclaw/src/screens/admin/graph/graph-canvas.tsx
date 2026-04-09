@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import Graph from 'graphology'
 import Sigma from 'sigma'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
@@ -16,15 +16,13 @@ type GraphCanvasProps = {
   onCenterComplete: () => void
 }
 
-export function GraphCanvas({
-  data,
-  selectedNode,
-  onNodeClick,
-  onNodeExpand,
-  hiddenLabels,
-  pendingCenter,
-  onCenterComplete,
-}: GraphCanvasProps) {
+export type GraphCanvasHandle = { mergeData: (data: GraphData) => void }
+
+export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
+  function GraphCanvas(
+    { data, selectedNode, onNodeClick, onNodeExpand, hiddenLabels, pendingCenter, onCenterComplete },
+    ref,
+  ) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sigmaRef = useRef<Sigma | null>(null)
   const graphRef = useRef<Graph | null>(null)
@@ -238,8 +236,9 @@ export function GraphCanvas({
     setEdgeCount(graph.size)
   }, [])
 
-  // Expose mergeData for parent use (will be wired via forwardRef in a later task)
-  void mergeData
+  useImperativeHandle(ref, function exposeApi() {
+    return { mergeData }
+  }, [mergeData])
 
   return (
     <div className="relative flex-1">
@@ -250,4 +249,4 @@ export function GraphCanvas({
       </div>
     </div>
   )
-}
+})
