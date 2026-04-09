@@ -1,7 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { sanitizeError } from '../../../server/errors'
-import { graphQuery, parseCompactNode } from '../../../server/falkordb'
+import {
+  graphQuery,
+  parseCompactNode,
+  unwrapScalar,
+} from '../../../server/falkordb'
 import type {
   ClusterDetail,
   ClusterSummary,
@@ -78,13 +82,13 @@ async function handleOverview() {
   )
   const nodeCounts: Partial<Record<string, number>> = {}
   for (const row of countResult.rows) {
-    const label = String(row[0] ?? '')
-    const count = Number(row[1] ?? 0)
+    const label = String(unwrapScalar(row[0]) ?? '')
+    const count = Number(unwrapScalar(row[1]) ?? 0)
     if (label) nodeCounts[label] = count
   }
 
   const edgeResult = await graphQuery(`MATCH ()-[r]->() RETURN count(r) AS cnt`)
-  const edgeCount = Number(edgeResult.rows[0]?.[0] ?? 0)
+  const edgeCount = Number(unwrapScalar(edgeResult.rows[0]?.[0]) ?? 0)
 
   const clusterResult = await graphQuery(
     `MATCH (c:Cluster) RETURN c ORDER BY c.score DESC LIMIT 10`,
@@ -114,7 +118,7 @@ async function handleGraph(limit: number) {
   const nodeIds = new Set<string>()
   for (const row of nodeResult.rows) {
     const props = parseCompactNode(row[0]) ?? {}
-    const label = String(row[1] ?? props._label ?? 'Unknown')
+    const label = String(unwrapScalar(row[1]) ?? props._label ?? 'Unknown')
     const node = toGraphNode({ ...props, _label: label })
     if (node.id && !nodeIds.has(node.id)) {
       nodeIds.add(node.id)
@@ -130,9 +134,9 @@ async function handleGraph(limit: number) {
   )
   const edges: Array<GraphEdge> = []
   for (const row of edgeResult.rows) {
-    const source = String(row[0] ?? '')
-    const type = String(row[1] ?? '')
-    const target = String(row[2] ?? '')
+    const source = String(unwrapScalar(row[0]) ?? '')
+    const type = String(unwrapScalar(row[1]) ?? '')
+    const target = String(unwrapScalar(row[2]) ?? '')
     if (source && target && nodeIds.has(source) && nodeIds.has(target)) {
       edges.push({ source, target, type })
     }
@@ -152,7 +156,7 @@ async function handleNeighbors(id: string, depth: number) {
   const nodeIds = new Set<string>()
   for (const row of nodeResult.rows) {
     const props = parseCompactNode(row[0]) ?? {}
-    const label = String(row[1] ?? 'Unknown')
+    const label = String(unwrapScalar(row[1]) ?? 'Unknown')
     const node = toGraphNode({ ...props, _label: label })
     if (node.id && !nodeIds.has(node.id)) {
       nodeIds.add(node.id)
@@ -173,9 +177,9 @@ async function handleNeighbors(id: string, depth: number) {
   const edges: Array<GraphEdge> = []
   const edgeSeen = new Set<string>()
   for (const row of edgeResult.rows) {
-    const source = String(row[0] ?? '')
-    const type = String(row[1] ?? '')
-    const target = String(row[2] ?? '')
+    const source = String(unwrapScalar(row[0]) ?? '')
+    const type = String(unwrapScalar(row[1]) ?? '')
+    const target = String(unwrapScalar(row[2]) ?? '')
     const edgeKey = [source, type, target].sort().join('::')
     if (source && target && !edgeSeen.has(edgeKey)) {
       edgeSeen.add(edgeKey)
@@ -241,7 +245,7 @@ async function handleClusterDetail(id: string) {
   const entities: Array<GraphNode> = entityResult.rows.map(
     function mapEntity(row) {
       const ep = parseCompactNode(row[0]) ?? {}
-      const label = String(row[1] ?? 'Unknown')
+      const label = String(unwrapScalar(row[1]) ?? 'Unknown')
       return toGraphNode({ ...ep, _label: label })
     },
   )
@@ -266,7 +270,7 @@ async function handleSearch(q: string) {
   )
   const nodes: Array<GraphNode> = result.rows.map(function mapNode(row) {
     const props = parseCompactNode(row[0]) ?? {}
-    const label = String(row[1] ?? 'Unknown')
+    const label = String(unwrapScalar(row[1]) ?? 'Unknown')
     return toGraphNode({ ...props, _label: label })
   })
   return json({ ok: true, nodes })
