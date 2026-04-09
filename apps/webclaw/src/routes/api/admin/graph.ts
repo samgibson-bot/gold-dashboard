@@ -98,7 +98,7 @@ async function handleOverview() {
       const props = parseCompactNode(row[0]) ?? {}
       return {
         id: String(props.id ?? ''),
-        name: String(props.name ?? props.title ?? ''),
+        name: String(props.theme ?? props.name ?? props.title ?? ''),
         score: Number(props.score ?? 0),
         status: String(props.status ?? 'unknown'),
       }
@@ -203,7 +203,7 @@ async function handleClusters(status: string, minScore: number) {
       const props = parseCompactNode(row[0]) ?? {}
       return {
         id: String(props.id ?? ''),
-        name: String(props.name ?? props.title ?? ''),
+        name: String(props.theme ?? props.name ?? props.title ?? ''),
         score: Number(props.score ?? 0),
         status: String(props.status ?? 'unknown'),
         signalCount: Number(props.signal_count ?? props.signalCount ?? 0),
