@@ -126,19 +126,25 @@ async function handleGraph(limit: number) {
     }
   }
 
+  // Entities connect through shared Signals (co-occurrence), not directly
   const edgeResult = await graphQuery(
-    `MATCH (a)-[r]->(b)
-     WHERE (a:Person OR a:Project OR a:Company OR a:Concept OR a:ActionItem OR a:Decision)
+    `MATCH (a)<-[:MENTIONS]-(s:Signal)-[:MENTIONS]->(b)
+     WHERE id(a) < id(b)
+       AND (a:Person OR a:Project OR a:Company OR a:Concept OR a:ActionItem OR a:Decision)
        AND (b:Person OR b:Project OR b:Company OR b:Concept OR b:ActionItem OR b:Decision)
-     RETURN a.id, type(r), b.id LIMIT ${limit * 3}`,
+     RETURN DISTINCT a.id, b.id, count(s) AS weight LIMIT ${limit * 3}`,
   )
   const edges: Array<GraphEdge> = []
+  const edgeSeen = new Set<string>()
   for (const row of edgeResult.rows) {
     const source = String(unwrapScalar(row[0]) ?? '')
-    const type = String(unwrapScalar(row[1]) ?? '')
-    const target = String(unwrapScalar(row[2]) ?? '')
+    const target = String(unwrapScalar(row[1]) ?? '')
     if (source && target && nodeIds.has(source) && nodeIds.has(target)) {
-      edges.push({ source, target, type })
+      const key = `${source}::${target}`
+      if (!edgeSeen.has(key)) {
+        edgeSeen.add(key)
+        edges.push({ source, target, type: 'CO_OCCURS' })
+      }
     }
   }
 
@@ -148,9 +154,12 @@ async function handleGraph(limit: number) {
 
 async function handleNeighbors(id: string, depth: number) {
   const safeId = id.replace(/'/g, "\\'")
+  // Find entities connected through shared Signals (co-occurrence neighbors)
+  // Depth 1 = direct co-occurrence, 2+ = co-occurrence of co-occurrences
   const nodeResult = await graphQuery(
-    `MATCH (start {id: '${safeId}'})-[*1..${depth}]-(connected)
-     RETURN DISTINCT connected, labels(connected)[0] AS label LIMIT 50`,
+    `MATCH (start {id: '${safeId}'})<-[:MENTIONS]-(s:Signal)-[:MENTIONS]->(neighbor)
+     WHERE NOT neighbor:Signal AND neighbor.id <> '${safeId}'
+     RETURN DISTINCT neighbor, labels(neighbor)[0] AS label LIMIT 50`,
   )
   const nodes: Array<GraphNode> = []
   const nodeIds = new Set<string>()
@@ -167,23 +176,35 @@ async function handleNeighbors(id: string, depth: number) {
   // Include the start node
   nodeIds.add(id)
 
-  const edgeResult = await graphQuery(
-    `MATCH (start {id: '${safeId}'})-[*1..${depth}]-(connected)
-     WITH collect(DISTINCT connected) + collect(DISTINCT start) AS allNodes
-     UNWIND allNodes AS a
-     MATCH (a)-[r]-(b) WHERE b IN allNodes
-     RETURN DISTINCT a.id, type(r), b.id`,
-  )
+  // Find co-occurrence edges between all returned nodes
+  const allIds = [...nodeIds]
   const edges: Array<GraphEdge> = []
   const edgeSeen = new Set<string>()
-  for (const row of edgeResult.rows) {
-    const source = String(unwrapScalar(row[0]) ?? '')
-    const type = String(unwrapScalar(row[1]) ?? '')
-    const target = String(unwrapScalar(row[2]) ?? '')
-    const edgeKey = [source, type, target].sort().join('::')
-    if (source && target && !edgeSeen.has(edgeKey)) {
-      edgeSeen.add(edgeKey)
-      edges.push({ source, target, type })
+  // Connect start node to each neighbor
+  for (const node of nodes) {
+    const key = `${id}::${node.id}`
+    if (!edgeSeen.has(key)) {
+      edgeSeen.add(key)
+      edges.push({ source: id, target: node.id, type: 'CO_OCCURS' })
+    }
+  }
+
+  // If depth > 1, also find inter-neighbor connections
+  if (depth > 1 && allIds.length > 1) {
+    const idList = allIds.map(function quote(i) { return `'${i.replace(/'/g, "\\'")}'` }).join(', ')
+    const interResult = await graphQuery(
+      `MATCH (a)<-[:MENTIONS]-(s:Signal)-[:MENTIONS]->(b)
+       WHERE a.id IN [${idList}] AND b.id IN [${idList}] AND id(a) < id(b)
+       RETURN DISTINCT a.id, b.id`,
+    )
+    for (const row of interResult.rows) {
+      const source = String(unwrapScalar(row[0]) ?? '')
+      const target = String(unwrapScalar(row[1]) ?? '')
+      const key = [source, target].sort().join('::')
+      if (source && target && !edgeSeen.has(key)) {
+        edgeSeen.add(key)
+        edges.push({ source, target, type: 'CO_OCCURS' })
+      }
     }
   }
 
