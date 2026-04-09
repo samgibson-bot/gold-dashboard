@@ -6,6 +6,7 @@ import {
   Clock01Icon,
   DashboardSquare01Icon,
   File01Icon,
+  FlowConnectionIcon,
   FolderDetailsIcon,
   FolderOpenIcon,
   Idea01Icon,
@@ -55,6 +56,7 @@ export const navSections: Array<NavSection> = [
         icon: WorkflowSquare01Icon,
       },
       { to: '/admin/memory', label: 'Memory', icon: FolderDetailsIcon },
+      { to: '/admin/graph', label: 'Graph', icon: FlowConnectionIcon },
       {
         to: '/admin/approvals',
         label: 'Approvals',

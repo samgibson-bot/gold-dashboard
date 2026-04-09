@@ -14,7 +14,12 @@ import {
 
 const MAX_CONTEXT_LENGTH = 5000
 const MAX_SOURCE_LENGTH = 2 * 1024 * 1024 // 2MB for base64 screenshots
-const SCREENSHOT_DIR = join(homedir(), '.openclaw', 'workspace', 'idea-screenshots')
+const SCREENSHOT_DIR = join(
+  homedir(),
+  '.openclaw',
+  'workspace',
+  'idea-screenshots',
+)
 const SCREENSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 async function saveScreenshot(base64Data: string): Promise<string> {

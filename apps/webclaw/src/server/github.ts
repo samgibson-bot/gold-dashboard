@@ -69,8 +69,7 @@ export async function listIdeas(): Promise<Array<IdeaFromGitHub>> {
   ])
   if (!ideaRes.ok) throw new Error(`GitHub API error: ${ideaRes.status}`)
   if (!reviewRes.ok) throw new Error(`GitHub API error: ${reviewRes.status}`)
-  if (!projectRes.ok)
-    throw new Error(`GitHub API error: ${projectRes.status}`)
+  if (!projectRes.ok) throw new Error(`GitHub API error: ${projectRes.status}`)
 
   const ideaIssues = (await ideaRes.json()) as Array<GitHubIssue>
   const reviewIssues = (await reviewRes.json()) as Array<GitHubIssue>
