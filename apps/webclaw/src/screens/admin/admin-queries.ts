@@ -24,4 +24,19 @@ export const adminQueryKeys = {
   cronRuns: function cronRuns(jobId: string) {
     return ['admin', 'cron', 'runs', jobId] as const
   },
+  graph: ['admin', 'graph'] as const,
+  graphOverview: ['admin', 'graph', 'overview'] as const,
+  graphData: ['admin', 'graph', 'data'] as const,
+  graphClusters: function graphClusters(status?: string) {
+    return ['admin', 'graph', 'clusters', status ?? 'all'] as const
+  },
+  graphCluster: function graphCluster(id: string) {
+    return ['admin', 'graph', 'cluster', id] as const
+  },
+  graphSearch: function graphSearch(q: string) {
+    return ['admin', 'graph', 'search', q] as const
+  },
+  graphNeighbors: function graphNeighbors(id: string, depth: number) {
+    return ['admin', 'graph', 'neighbors', id, depth] as const
+  },
 } as const
