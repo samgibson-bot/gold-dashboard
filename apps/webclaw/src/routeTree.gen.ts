@@ -33,6 +33,7 @@ import { Route as AdminMetricsRouteImport } from './routes/admin/metrics'
 import { Route as AdminMemoryRouteImport } from './routes/admin/memory'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminIdeasRouteImport } from './routes/admin/ideas'
+import { Route as AdminGraphRouteImport } from './routes/admin/graph'
 import { Route as AdminFleetRouteImport } from './routes/admin/fleet'
 import { Route as AdminFilesRouteImport } from './routes/admin/files'
 import { Route as AdminCronRouteImport } from './routes/admin/cron'
@@ -49,6 +50,7 @@ import { Route as ApiAdminMetricsRouteImport } from './routes/api/admin/metrics'
 import { Route as ApiAdminMemoryRouteImport } from './routes/api/admin/memory'
 import { Route as ApiAdminLogsRouteImport } from './routes/api/admin/logs'
 import { Route as ApiAdminIdeasRouteImport } from './routes/api/admin/ideas'
+import { Route as ApiAdminGraphRouteImport } from './routes/api/admin/graph'
 import { Route as ApiAdminFleetRouteImport } from './routes/api/admin/fleet'
 import { Route as ApiAdminFilesRouteImport } from './routes/api/admin/files'
 import { Route as ApiAdminCronRouteImport } from './routes/api/admin/cron'
@@ -181,6 +183,11 @@ const AdminIdeasRoute = AdminIdeasRouteImport.update({
   path: '/ideas',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGraphRoute = AdminGraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFleetRoute = AdminFleetRouteImport.update({
   id: '/fleet',
   path: '/fleet',
@@ -261,6 +268,11 @@ const ApiAdminIdeasRoute = ApiAdminIdeasRouteImport.update({
   path: '/api/admin/ideas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminGraphRoute = ApiAdminGraphRouteImport.update({
+  id: '/api/admin/graph',
+  path: '/api/admin/graph',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminFleetRoute = ApiAdminFleetRouteImport.update({
   id: '/api/admin/fleet',
   path: '/api/admin/fleet',
@@ -330,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/admin/cron': typeof AdminCronRoute
   '/admin/files': typeof AdminFilesRoute
   '/admin/fleet': typeof AdminFleetRoute
+  '/admin/graph': typeof AdminGraphRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
@@ -356,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/cron': typeof ApiAdminCronRoute
   '/api/admin/files': typeof ApiAdminFilesRoute
   '/api/admin/fleet': typeof ApiAdminFleetRoute
+  '/api/admin/graph': typeof ApiAdminGraphRoute
   '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/memory': typeof ApiAdminMemoryRoute
@@ -382,6 +396,7 @@ export interface FileRoutesByTo {
   '/admin/cron': typeof AdminCronRoute
   '/admin/files': typeof AdminFilesRoute
   '/admin/fleet': typeof AdminFleetRoute
+  '/admin/graph': typeof AdminGraphRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
@@ -408,6 +423,7 @@ export interface FileRoutesByTo {
   '/api/admin/cron': typeof ApiAdminCronRoute
   '/api/admin/files': typeof ApiAdminFilesRoute
   '/api/admin/fleet': typeof ApiAdminFleetRoute
+  '/api/admin/graph': typeof ApiAdminGraphRoute
   '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/memory': typeof ApiAdminMemoryRoute
@@ -436,6 +452,7 @@ export interface FileRoutesById {
   '/admin/cron': typeof AdminCronRoute
   '/admin/files': typeof AdminFilesRoute
   '/admin/fleet': typeof AdminFleetRoute
+  '/admin/graph': typeof AdminGraphRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/memory': typeof AdminMemoryRoute
@@ -462,6 +479,7 @@ export interface FileRoutesById {
   '/api/admin/cron': typeof ApiAdminCronRoute
   '/api/admin/files': typeof ApiAdminFilesRoute
   '/api/admin/fleet': typeof ApiAdminFleetRoute
+  '/api/admin/graph': typeof ApiAdminGraphRoute
   '/api/admin/ideas': typeof ApiAdminIdeasRouteWithChildren
   '/api/admin/logs': typeof ApiAdminLogsRoute
   '/api/admin/memory': typeof ApiAdminMemoryRoute
@@ -491,6 +509,7 @@ export interface FileRouteTypes {
     | '/admin/cron'
     | '/admin/files'
     | '/admin/fleet'
+    | '/admin/graph'
     | '/admin/ideas'
     | '/admin/logs'
     | '/admin/memory'
@@ -517,6 +536,7 @@ export interface FileRouteTypes {
     | '/api/admin/cron'
     | '/api/admin/files'
     | '/api/admin/fleet'
+    | '/api/admin/graph'
     | '/api/admin/ideas'
     | '/api/admin/logs'
     | '/api/admin/memory'
@@ -543,6 +563,7 @@ export interface FileRouteTypes {
     | '/admin/cron'
     | '/admin/files'
     | '/admin/fleet'
+    | '/admin/graph'
     | '/admin/ideas'
     | '/admin/logs'
     | '/admin/memory'
@@ -569,6 +590,7 @@ export interface FileRouteTypes {
     | '/api/admin/cron'
     | '/api/admin/files'
     | '/api/admin/fleet'
+    | '/api/admin/graph'
     | '/api/admin/ideas'
     | '/api/admin/logs'
     | '/api/admin/memory'
@@ -596,6 +618,7 @@ export interface FileRouteTypes {
     | '/admin/cron'
     | '/admin/files'
     | '/admin/fleet'
+    | '/admin/graph'
     | '/admin/ideas'
     | '/admin/logs'
     | '/admin/memory'
@@ -622,6 +645,7 @@ export interface FileRouteTypes {
     | '/api/admin/cron'
     | '/api/admin/files'
     | '/api/admin/fleet'
+    | '/api/admin/graph'
     | '/api/admin/ideas'
     | '/api/admin/logs'
     | '/api/admin/memory'
@@ -659,6 +683,7 @@ export interface RootRouteChildren {
   ApiAdminCronRoute: typeof ApiAdminCronRoute
   ApiAdminFilesRoute: typeof ApiAdminFilesRoute
   ApiAdminFleetRoute: typeof ApiAdminFleetRoute
+  ApiAdminGraphRoute: typeof ApiAdminGraphRoute
   ApiAdminIdeasRoute: typeof ApiAdminIdeasRouteWithChildren
   ApiAdminLogsRoute: typeof ApiAdminLogsRoute
   ApiAdminMemoryRoute: typeof ApiAdminMemoryRoute
@@ -840,6 +865,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIdeasRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/graph': {
+      id: '/admin/graph'
+      path: '/graph'
+      fullPath: '/admin/graph'
+      preLoaderRoute: typeof AdminGraphRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/fleet': {
       id: '/admin/fleet'
       path: '/fleet'
@@ -952,6 +984,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminIdeasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/graph': {
+      id: '/api/admin/graph'
+      path: '/api/admin/graph'
+      fullPath: '/api/admin/graph'
+      preLoaderRoute: typeof ApiAdminGraphRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/fleet': {
       id: '/api/admin/fleet'
       path: '/api/admin/fleet'
@@ -1040,6 +1079,7 @@ interface AdminRouteChildren {
   AdminCronRoute: typeof AdminCronRoute
   AdminFilesRoute: typeof AdminFilesRoute
   AdminFleetRoute: typeof AdminFleetRoute
+  AdminGraphRoute: typeof AdminGraphRoute
   AdminIdeasRoute: typeof AdminIdeasRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminMemoryRoute: typeof AdminMemoryRoute
@@ -1060,6 +1100,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCronRoute: AdminCronRoute,
   AdminFilesRoute: AdminFilesRoute,
   AdminFleetRoute: AdminFleetRoute,
+  AdminGraphRoute: AdminGraphRoute,
   AdminIdeasRoute: AdminIdeasRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminMemoryRoute: AdminMemoryRoute,
@@ -1114,6 +1155,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminCronRoute: ApiAdminCronRoute,
   ApiAdminFilesRoute: ApiAdminFilesRoute,
   ApiAdminFleetRoute: ApiAdminFleetRoute,
+  ApiAdminGraphRoute: ApiAdminGraphRoute,
   ApiAdminIdeasRoute: ApiAdminIdeasRouteWithChildren,
   ApiAdminLogsRoute: ApiAdminLogsRoute,
   ApiAdminMemoryRoute: ApiAdminMemoryRoute,
