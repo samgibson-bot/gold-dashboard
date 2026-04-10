@@ -13,6 +13,7 @@ type NodeDetailPanelProps = {
   onClose: () => void
   onExpand: (nodeId: string) => void
   onNavigateToNode: (nodeId: string) => void
+  onOpenDetail: () => void
 }
 
 const SKIP_PROPERTIES = new Set([
@@ -32,6 +33,7 @@ export function NodeDetailPanel({
   onClose,
   onExpand,
   onNavigateToNode,
+  onOpenDetail,
 }: NodeDetailPanelProps) {
   if (!node) return null
 
@@ -46,7 +48,7 @@ export function NodeDetailPanel({
       {/* Header */}
       <div className="flex items-start justify-between border-b border-primary-200 p-4">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-medium text-primary-900">
+          <h3 className="text-balance text-sm font-medium text-primary-900">
             {node.name}
           </h3>
           <div className="mt-1 flex items-center gap-1.5">
@@ -76,8 +78,15 @@ export function NodeDetailPanel({
         </button>
       </div>
 
-      {/* Expand button */}
-      <div className="border-b border-primary-200 p-3">
+      {/* Actions */}
+      <div className="flex flex-col gap-2 border-b border-primary-200 p-3">
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          className="w-full rounded-md bg-primary-900 px-3 py-1.5 text-xs font-medium text-primary-50 hover:bg-primary-800"
+        >
+          View full details
+        </button>
         <button
           type="button"
           onClick={function expand() {
@@ -100,7 +109,7 @@ export function NodeDetailPanel({
               return (
                 <div key={key} className="flex gap-2 text-xs">
                   <dt className="shrink-0 text-primary-500">{key}</dt>
-                  <dd className="truncate text-primary-800">
+                  <dd className="break-words text-pretty text-primary-800">
                     {formatValue(value)}
                   </dd>
                 </div>

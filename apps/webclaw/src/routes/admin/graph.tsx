@@ -10,6 +10,7 @@ import {
 import { GraphCanvas } from '@/screens/admin/graph/graph-canvas'
 import { GraphToolbar } from '@/screens/admin/graph/graph-toolbar'
 import { NodeDetailPanel } from '@/screens/admin/graph/node-detail-panel'
+import { NodeDetailModal } from '@/screens/admin/graph/node-detail-modal'
 import { ClusterList } from '@/screens/admin/graph/cluster-list'
 
 export const Route = createFileRoute('/admin/graph')({
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/admin/graph')({
 function GraphPage() {
   const [activeTab, setActiveTab] = useState<'graph' | 'clusters'>('graph')
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [hiddenLabels, setHiddenLabels] = useState<Set<string>>(new Set())
   const [depth, setDepth] = useState(1)
   const [pendingCenter, setPendingCenter] = useState<string | null>(null)
@@ -31,6 +33,7 @@ function GraphPage() {
     node: GraphNode | null,
   ) {
     setSelectedNode(node)
+    if (!node) setIsDetailOpen(false)
   }, [])
 
   const handleNodeExpand = useCallback(
@@ -189,8 +192,21 @@ function GraphPage() {
               neighbors={neighbors}
               onClose={function close() {
                 setSelectedNode(null)
+                setIsDetailOpen(false)
               }}
               onExpand={handleNodeExpand}
+              onNavigateToNode={handleNavigateToNode}
+              onOpenDetail={function openDetail() {
+                setIsDetailOpen(true)
+              }}
+            />
+            <NodeDetailModal
+              node={selectedNode}
+              neighbors={neighbors}
+              isOpen={isDetailOpen}
+              onClose={function closeDetail() {
+                setIsDetailOpen(false)
+              }}
               onNavigateToNode={handleNavigateToNode}
             />
           </div>

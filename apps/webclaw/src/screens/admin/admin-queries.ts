@@ -39,4 +39,7 @@ export const adminQueryKeys = {
   graphNeighbors: function graphNeighbors(id: string, depth: number) {
     return ['admin', 'graph', 'neighbors', id, depth] as const
   },
+  graphNodeDetail: function graphNodeDetail(id: string) {
+    return ['admin', 'graph', 'node-detail', id] as const
+  },
 } as const
