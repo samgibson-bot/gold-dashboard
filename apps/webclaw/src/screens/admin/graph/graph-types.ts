@@ -67,3 +67,24 @@ export const ENTITY_COLORS: Record<string, string> = {
   Insight: '#06b6d4',
   Signal: '#6b7280',
 }
+
+export type NodeSignal = {
+  id: string
+  source: string
+  title: string
+  digest: string
+  captured_at: string
+  url?: string
+}
+
+export type NodeClusterSummary = {
+  id: string
+  name: string
+  score: number
+}
+
+export type NodeDetailData = {
+  signals: Array<NodeSignal>
+  clusters: Array<NodeClusterSummary>
+  connectionWeights: Record<string, number>
+}
