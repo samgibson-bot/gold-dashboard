@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { ENTITY_COLORS } from './graph-types'
 import type { GraphNode } from './graph-types'
 import { useNodeDetail } from './graph-queries'
-import { cn } from '@/lib/utils'
 
 type Neighbor = {
   id: string
@@ -56,7 +55,6 @@ export function NodeDetailModal({
   )
 
   if (!isOpen || !node) return null
-  if (typeof document === 'undefined') return null
 
   const description = String(node.properties.description ?? '').trim()
   const displayProps = Object.entries(node.properties).filter(
@@ -80,6 +78,7 @@ export function NodeDetailModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
+      aria-labelledby="node-detail-title"
     >
       <div
         className="flex max-h-[85vh] w-[90vw] max-w-[900px] flex-col overflow-hidden rounded-lg border border-primary-200 bg-primary-50 shadow-xl"
@@ -101,7 +100,10 @@ export function NodeDetailModal({
                 {node.label}
               </span>
             </div>
-            <h2 className="text-balance text-lg font-medium text-primary-900">
+            <h2
+              id="node-detail-title"
+              className="text-balance text-lg font-medium text-primary-900"
+            >
               {node.name}
             </h2>
           </div>
@@ -109,6 +111,7 @@ export function NodeDetailModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
+            autoFocus
             className="ml-3 shrink-0 text-primary-400 hover:text-primary-700"
           >
             <svg
@@ -261,10 +264,7 @@ export function NodeDetailModal({
                         onNavigateToNode(n.id)
                         onClose()
                       }}
-                      className={cn(
-                        'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm',
-                        'hover:bg-primary-200',
-                      )}
+                      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-primary-200"
                     >
                       <span
                         className="inline-block h-2 w-2 shrink-0 rounded-full"
