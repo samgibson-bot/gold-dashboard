@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ENTITY_COLORS } from './graph-types'
-import type { GraphNode } from './graph-types'
 import { useNodeDetail } from './graph-queries'
+import type { GraphNode } from './graph-types'
 
 type Neighbor = {
   id: string

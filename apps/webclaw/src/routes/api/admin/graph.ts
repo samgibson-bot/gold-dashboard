@@ -199,7 +199,11 @@ async function handleNeighbors(id: string, depth: number) {
 
   // If depth > 1, also find inter-neighbor connections
   if (depth > 1 && allIds.length > 1) {
-    const idList = allIds.map(function quote(i) { return `'${i.replace(/'/g, "\\'")}'` }).join(', ')
+    const idList = allIds
+      .map(function quote(i) {
+        return `'${i.replace(/'/g, "\\'")}'`
+      })
+      .join(', ')
     const interResult = await graphQuery(
       `MATCH (a)<-[:MENTIONS]-(s:Signal)-[:MENTIONS]->(b)
        WHERE a.id IN [${idList}] AND b.id IN [${idList}] AND id(a) < id(b)
