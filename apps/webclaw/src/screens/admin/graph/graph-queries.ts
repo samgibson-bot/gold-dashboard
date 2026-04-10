@@ -5,6 +5,7 @@ import type {
   GraphData,
   GraphNode,
   GraphOverview,
+  NodeDetailData,
 } from './graph-types'
 import { adminQueryKeys } from '@/screens/admin/admin-queries'
 
@@ -99,5 +100,19 @@ export function useGraphSearch(q: string) {
     },
     enabled: q.length >= 2,
     staleTime: 30_000,
+  })
+}
+
+export function useNodeDetail(id: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: adminQueryKeys.graphNodeDetail(id ?? ''),
+    queryFn: async function fetchNodeDetail() {
+      const data = (await fetchGraph('node', { id: id ?? '' })) as {
+        ok: boolean
+      } & NodeDetailData
+      return data
+    },
+    enabled: enabled && !!id,
+    staleTime: 5 * 60_000,
   })
 }
