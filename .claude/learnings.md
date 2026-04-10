@@ -231,3 +231,24 @@
 - **Never send base64 images in OpenClaw prompts** — save to disk and pass the file path. Models use tool-based image analysis, not inline base64 parsing.
 - **Unique session keys per task** — shared sessions accumulate tokens across all uses. Context overflow is silent and unrecoverable.
 - **Killing stuck OpenClaw sessions**: delete transcript `.jsonl` → run `openclaw sessions cleanup --enforce --fix-missing`
+
+---
+
+## 2026-04-10 — Rich graph node detail modal (PR #34)
+
+**What was built:**
+- Two-tier node detail surface on `/admin/graph`: un-truncated sidebar glance + portaled "View full details" modal (~900px)
+- New API handler `?section=node&id=<id>` — 3 Cypher queries (signals, clusters, connection weights), no AI calls
+- Modal shows full description, all properties, source signals with digests, cluster chips, connections sorted by signal weight
+- Brainstormed → spec'd → planned → executed via subagent-driven-development (6 implementation tasks, 2-stage review per task)
+
+**What was tricky:**
+- **FalkorDB is VPS-only (localhost:16379)** — local `pnpm dev` can't hit the real graph. Had to defer runtime verification to post-deploy SSH curl instead of running it during implementation. Build + TypeScript were the local gate.
+- **Code review caught a11y gaps the plan missed**: SSR guard placed after hooks (dead code + Rules of Hooks violation), missing `aria-labelledby`, no `autoFocus` on close button, unused `cn()` wrapping a static class. Fix subagent applied all four in one pass.
+- **Committed spec to main before branching** — CLAUDE.md says docs/plans go on the feature branch, not main. Local-only commit, so safe to `git branch feat/... && git reset --hard HEAD~1 && git checkout feat/...` to move it.
+
+**Patterns worth carrying forward:**
+- **Flag VPS-only dependencies during planning**, not mid-execution. If the test path requires SSH, say so in the plan — don't put unrunnable verification tasks in the local flow.
+- **Default modal checklist**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing at the heading, `autoFocus` on a dismissible element, Escape key handler with cleanup, backdrop click stops propagation on inner panel. Bake these into any plan that creates a dialog.
+- **Code quality reviewer ran `pnpm check` and committed formatting** — technically mission creep (reviewers should review, not modify), but the net effect collapsed Task 9 into the review and saved a round trip. Worth it here; keep an eye on it elsewhere.
+- **Subagent-driven-development flow was smooth**: 8 commits in one session, each with spec + quality review, zero rework loops beyond the one a11y fix. The two-stage review is worth the cost for anything touching UI/a11y.
