@@ -13,6 +13,8 @@ import type {
   GraphEdge,
   GraphNode,
   GraphOverview,
+  NodeDetailData,
+  NodeSignal,
 } from '../../../screens/admin/graph/graph-types'
 
 function toGraphNode(props: Record<string, unknown>): GraphNode {
@@ -64,6 +66,12 @@ export const Route = createFileRoute('/api/admin/graph')({
             const q = url.searchParams.get('q') ?? ''
             if (!q) return json({ ok: true, nodes: [] })
             return await handleSearch(q)
+          }
+          if (section === 'node') {
+            const id = url.searchParams.get('id') ?? ''
+            if (!id)
+              return json({ ok: false, error: 'id required' }, { status: 400 })
+            return await handleNodeDetail(id)
           }
 
           return json({ ok: false, error: 'unknown section' }, { status: 400 })
@@ -295,4 +303,54 @@ async function handleSearch(q: string) {
     return toGraphNode({ ...props, _label: label })
   })
   return json({ ok: true, nodes })
+}
+
+async function handleNodeDetail(id: string) {
+  const safeId = id.replace(/'/g, "\\'")
+
+  const signalResult = await graphQuery(
+    `MATCH (e {id: '${safeId}'})<-[:MENTIONS]-(s:Signal)
+     RETURN s ORDER BY s.captured_at DESC LIMIT 20`,
+  )
+  const signals: Array<NodeSignal> = signalResult.rows.map(
+    function mapSignal(row) {
+      const sp = parseCompactNode(row[0]) ?? {}
+      return {
+        id: String(sp.id ?? ''),
+        source: String(sp.source ?? ''),
+        title: String(sp.title ?? sp.raw_summary ?? ''),
+        digest: String(sp.digest ?? sp.key_insight ?? ''),
+        captured_at: String(sp.captured_at ?? ''),
+        url: sp.url ? String(sp.url) : undefined,
+      }
+    },
+  )
+
+  const clusterResult = await graphQuery(
+    `MATCH (e {id: '${safeId}'})<-[:MENTIONS]-(s:Signal)-[:MEMBER_OF]->(c:Cluster)
+     RETURN DISTINCT c LIMIT 10`,
+  )
+  const clusters = clusterResult.rows.map(function mapCluster(row) {
+    const cp = parseCompactNode(row[0]) ?? {}
+    return {
+      id: String(cp.id ?? ''),
+      name: String(cp.theme ?? cp.name ?? cp.title ?? ''),
+      score: Number(cp.score ?? 0),
+    }
+  })
+
+  const weightResult = await graphQuery(
+    `MATCH (e {id: '${safeId}'})<-[:MENTIONS]-(s:Signal)-[:MENTIONS]->(neighbor)
+     WHERE neighbor.id <> '${safeId}' AND NOT neighbor:Signal
+     RETURN neighbor.id AS id, count(s) AS weight`,
+  )
+  const connectionWeights: Record<string, number> = {}
+  for (const row of weightResult.rows) {
+    const nid = String(unwrapScalar(row[0]) ?? '')
+    const weight = Number(unwrapScalar(row[1]) ?? 0)
+    if (nid) connectionWeights[nid] = weight
+  }
+
+  const data: NodeDetailData = { signals, clusters, connectionWeights }
+  return json({ ok: true, ...data })
 }
